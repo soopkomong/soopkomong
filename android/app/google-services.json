@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1012942978199",
+    "project_id": "soopkomong",
+    "storage_bucket": "soopkomong.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1012942978199:android:062a73fa7eb54df74d3dd2",
+        "android_client_info": {
+          "package_name": "com.example.soopkomong"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9fDEglMSRpBD9i6rZgfNi5ehAmVymLcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
