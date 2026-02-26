@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/presentation/mypage/my_page.dart';
+import 'package:soopkomong/presentation/settings/settings_page.dart';
 import 'app_route.dart';
 import '../../presentation/home/home_page.dart';
 import '../../presentation/collection/collection_page.dart';
@@ -65,6 +66,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.mypage.path,
         name: AppRoute.mypage.name,
         builder: (context, state) => const MyPage(),
+      ),
+      GoRoute(
+        path: AppRoute.settings.path,
+        name: AppRoute.settings.name,
+        builder: (context, state) => const SettingsPage(),
       ),
     ],
     errorBuilder: (context, state) =>
