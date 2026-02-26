@@ -4,7 +4,7 @@ enum AppRoute {
   explore(name: 'explore', path: '/explore'),
   friends(name: 'friends', path: '/friends'),
   details(name: 'details', path: 'details'),
-  profile(name: 'profile', path: 'profile');
+  mypage(name: 'mypage', path: '/mypage');
 
   const AppRoute({required this.name, required this.path});
   final String name;

@@ -6,8 +6,8 @@ class CollectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Collection')),
-      body: const Center(child: Text('Collection Page')),
+      appBar: AppBar(title: const Text('도감')),
+      body: const Center(child: Text('도감 페이지')),
     );
   }
 }

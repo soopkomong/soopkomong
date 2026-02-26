@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soopkomong/presentation/mypage/my_page.dart';
 import 'app_route.dart';
 import '../../presentation/home/home_page.dart';
 import '../../presentation/collection/collection_page.dart';
 import '../../presentation/explore/explore_page.dart';
 import '../../presentation/friends/friends_page.dart';
-import '../../presentation/home/main_page.dart';
+import '../../presentation/layout/app_shell.dart';
 
 export 'app_route.dart';
 
@@ -59,6 +60,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoute.mypage.path,
+        name: AppRoute.mypage.name,
+        builder: (context, state) => const MyPage(),
       ),
     ],
     errorBuilder: (context, state) =>

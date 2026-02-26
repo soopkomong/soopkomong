@@ -6,8 +6,8 @@ class FriendsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Friends')),
-      body: const Center(child: Text('Friends Page')),
+      appBar: AppBar(title: const Text('친구')),
+      body: const Center(child: Text('친구 페이지')),
     );
   }
 }
