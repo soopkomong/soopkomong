@@ -19,30 +19,65 @@ class AppBottomNavigationBar extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return NavigationBar(
-      selectedIndex: navigationShell.currentIndex,
-      onDestinationSelected: (index) => _onTap(index, ref),
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
-          label: '홈',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.collections_outlined),
-          selectedIcon: Icon(Icons.collections),
-          label: '도감',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.explore_outlined),
-          selectedIcon: Icon(Icons.explore),
-          label: '정보',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.people_outlined),
-          selectedIcon: Icon(Icons.people),
-          label: '친구',
+  Widget build(BuildContext context) {
+    final currentIndex = navigationShell.currentIndex;
+
+    final labels = ['홈', '도감', '생태공원', '친구'];
+    final icons = [Icons.home, Icons.book, Icons.explore, Icons.people];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 357,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(70),
+            ),
+            shadows: const [
+              BoxShadow(color: Color(0x3F000000), blurRadius: 24),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(labels.length, (index) {
+              final isSelected = currentIndex == index;
+
+              return GestureDetector(
+                onTap: () => _onTap(index),
+                behavior: HitTestBehavior.translucent,
+                child: AnimatedScale(
+                  scale: isSelected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        icons[index],
+                        size: 24,
+                        color: isSelected
+                            ? const Color(0xFF191919)
+                            : const Color(0x66191919),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        labels[index],
+                        style: TextStyle(
+                          fontSize: 12,
+
+                          color: isSelected
+                              ? const Color(0xFF191919)
+                              : const Color(0x66191919),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
         ),
       ],
     );

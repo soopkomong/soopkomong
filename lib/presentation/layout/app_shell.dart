@@ -10,9 +10,16 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: AppBottomNavigationBar(
-        navigationShell: navigationShell,
+      body: Stack(
+        children: [
+          navigationShell,
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: AppBottomNavigationBar(navigationShell: navigationShell),
+            ),
+          ),
+        ],
       ),
     );
   }

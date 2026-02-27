@@ -4,7 +4,7 @@ import 'package:soopkomong/presentation/collection/widgets/collection_sliding_ta
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
-import 'package:soopkomong/presentation/collection/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 
 class CollectionPage extends StatefulWidget {
@@ -20,7 +20,9 @@ class _CollectionPageState extends State<CollectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -68,7 +70,7 @@ class _CollectionPageState extends State<CollectionPage> {
                   children: [_buildParkGrid(), _buildCharacterGrid()],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
             ],
           ),
         ),
@@ -101,6 +103,7 @@ class _CollectionPageState extends State<CollectionPage> {
           onTap: () {
             showModalBottomSheet(
               context: context,
+              useRootNavigator: true,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (context) => ParkDetailSheet(
@@ -142,6 +145,7 @@ class _CollectionPageState extends State<CollectionPage> {
           onTap: () {
             showModalBottomSheet(
               context: context,
+              useRootNavigator: true,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (context) => SoopkomongDetailSheet(
