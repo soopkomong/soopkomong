@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:soopkomong/core/router/app_route.dart';
-import '../../core/utils/map_helper.dart';
-import '../../core/utils/turf_helper.dart';
+import 'package:soopkomong/core/utils/map_helper.dart';
+import 'package:soopkomong/core/utils/turf_helper.dart';
 import 'home_viewmodel.dart';
-import '../../domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
 
 /// [Presentation Layer] - View
 /// 사용자에게 직접 보여지는 화면을 구성하는 위젯입니다.

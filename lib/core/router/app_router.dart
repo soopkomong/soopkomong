@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:soopkomong/presentation/mypage/my_page.dart';
 import 'package:soopkomong/presentation/auth/sign_in_screen.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
-import 'app_route.dart';
-import '../../presentation/home/home_page.dart';
-import '../../presentation/collection/collection_page.dart';
-import '../../presentation/explore/explore_page.dart';
-import '../../presentation/friends/friends_page.dart';
-import '../../presentation/layout/app_shell.dart';
-import '../../domain/entities/app_user.dart';
+import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/presentation/home/home_page.dart';
+import 'package:soopkomong/presentation/collection/collection_page.dart';
+import 'package:soopkomong/presentation/explore/explore_page.dart';
+import 'package:soopkomong/presentation/friends/friends_page.dart';
+import 'package:soopkomong/presentation/layout/app_shell.dart';
+import 'package:soopkomong/domain/entities/app_user.dart';
 
 export 'app_route.dart';
 

@@ -1,4 +1,4 @@
-import '../entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
 
 /// [Domain Layer] - Repository Interface
 /// Data Layer와 소통하기 위한 인터페이스입니다.

@@ -1,4 +1,4 @@
-import '../../domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
 
 /// [Data Layer] - Model
 /// Domain Layer의 Entity를 상속받아 외부 데이터(JSON 등)와의 매핑을 담당합니다.

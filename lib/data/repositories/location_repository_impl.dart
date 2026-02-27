@@ -1,6 +1,6 @@
-import '../../domain/entities/pet_location.dart';
-import '../../domain/repositories/location_repository.dart';
-import '../datasources/local_location_datasource.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/repositories/location_repository.dart';
+import 'package:soopkomong/data/datasources/local_location_datasource.dart';
 
 /// [Data Layer] - Repository Implementation
 /// Domain Layer에서 정의된 [LocationRepository] 인터페이스를 실제로 구현합니다.
