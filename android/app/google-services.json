@@ -12,7 +12,20 @@
           "package_name": "com.example.soopkomong"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1012942978199-p9bq1nu7qj8qcaho0m3ak051sa6f5031.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.soopkomong",
+            "certificate_hash": "635c8ed0dd35abac80dd9ba4d3b98e64811aa740"
+          }
+        },
+        {
+          "client_id": "1012942978199-m7svhit8qoisjdhpaudg83of0s3boag8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC9fDEglMSRpBD9i6rZgfNi5ehAmVymLcw"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1012942978199-m7svhit8qoisjdhpaudg83of0s3boag8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1012942978199-27557m8tl5oh993t0rtf5g73n3tj1or3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.soopkomong"
+              }
+            }
+          ]
         }
       }
     }
