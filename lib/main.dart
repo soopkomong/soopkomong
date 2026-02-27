@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:soopkomong/firebase_options.dart';
-import 'core/router/app_router.dart';
+import 'package:soopkomong/core/router/app_router.dart';
+import 'package:soopkomong/core/app_initializer.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await AppInitializer.init();
   await GoogleSignIn.instance.initialize();
   runApp(const ProviderScope(child: MyApp()));
 }
