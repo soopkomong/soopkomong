@@ -101,6 +101,7 @@ class _CollectionPageState extends State<CollectionPage> {
           onTap: () {
             showModalBottomSheet(
               context: context,
+              useRootNavigator: true,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (context) => ParkDetailSheet(
@@ -142,6 +143,7 @@ class _CollectionPageState extends State<CollectionPage> {
           onTap: () {
             showModalBottomSheet(
               context: context,
+              useRootNavigator: true,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (context) => SoopkomongDetailSheet(
