@@ -4,7 +4,7 @@ import 'package:soopkomong/presentation/collection/widgets/collection_sliding_ta
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
-import 'package:soopkomong/presentation/collection/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 
 class CollectionPage extends StatefulWidget {
