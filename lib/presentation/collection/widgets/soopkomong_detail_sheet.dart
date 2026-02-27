@@ -22,7 +22,7 @@ class SoopkomongDetailSheet extends StatelessWidget {
       maxChildSize: 0.9,
       expand: false,
       snap: true,
-      snapSizes: const [0.5, 0.85],
+      snapSizes: const [0.4, 0.85],
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
