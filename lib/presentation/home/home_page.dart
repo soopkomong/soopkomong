@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:soopkomong/core/router/app_route.dart';
 import '../../core/utils/map_helper.dart';
 import '../../core/utils/turf_helper.dart';
 import 'home_viewmodel.dart';
@@ -289,14 +291,20 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          'EcoPetGo 지도',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              context.pushNamed(AppRoute.mypage.name);
+            },
+            style: IconButton.styleFrom(backgroundColor: Colors.white),
+          ),
+        ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.black,
       ),
       body: Stack(
         children: [
