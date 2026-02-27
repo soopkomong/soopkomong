@@ -20,7 +20,9 @@ class _CollectionPageState extends State<CollectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -68,7 +70,7 @@ class _CollectionPageState extends State<CollectionPage> {
                   children: [_buildParkGrid(), _buildCharacterGrid()],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
             ],
           ),
         ),

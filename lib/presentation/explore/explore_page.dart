@@ -14,32 +14,42 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            // 상단 헤더 (중앙 정렬 해결)
-            Center(
-              child: Column(
-                children: [
-                  Image.asset('assets/images/park.png', width: 64, height: 64),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '생태 공원',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+              // 상단 헤더 (중앙 정렬 해결)
+              Center(
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/park.png',
+                      width: 64,
+                      height: 64,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '생태 공원',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            RegionFilterBar(onChanged: (region) {}),
-            const SizedBox(height: 16),
-            // 공원 리스트
-            Expanded(
-              child: ListView.builder(
+              const SizedBox(height: 24),
+              RegionFilterBar(onChanged: (region) {}),
+              const SizedBox(height: 16),
+              // 공원 리스트
+              ListView.builder(
                 itemCount: 10,
-                padding: const EdgeInsets.only(bottom: 24),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 100),
                 itemBuilder: (context, index) {
                   return ExploreParkCard(
                     region: '강원도',
@@ -64,8 +74,8 @@ class _ExplorePageState extends State<ExplorePage> {
                   );
                 },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
