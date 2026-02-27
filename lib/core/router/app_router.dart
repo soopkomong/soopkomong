@@ -2,21 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/presentation/mypage/my_page.dart';
+import 'package:soopkomong/presentation/auth/sign_in_screen.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'app_route.dart';
 import '../../presentation/home/home_page.dart';
 import '../../presentation/collection/collection_page.dart';
 import '../../presentation/explore/explore_page.dart';
 import '../../presentation/friends/friends_page.dart';
 import '../../presentation/layout/app_shell.dart';
+import '../../domain/entities/app_user.dart';
 
 export 'app_route.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateChangesProvider);
+
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
+    redirect: (context, state) {
+      final user = authState.value;
+      final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
+
+      if (user == null) {
+        return isLoggingIn ? null : AppRoute.signIn.path;
+      }
+
+      if (isLoggingIn) {
+        return AppRoute.home.path;
+      }
+
+      return null;
+    },
+    refreshListenable: ValueNotifier<AppUser?>(authState.value),
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -65,6 +85,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.mypage.path,
         name: AppRoute.mypage.name,
         builder: (context, state) => const MyPage(),
+      ),
+      GoRoute(
+        path: AppRoute.signIn.path,
+        name: AppRoute.signIn.name,
+        builder: (context, state) => const SignInScreen(),
       ),
     ],
     errorBuilder: (context, state) =>

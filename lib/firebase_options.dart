@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'soopkomong.firebasestorage.app',
     iosBundleId: 'com.example.soopkomong',
   );
+
 }
