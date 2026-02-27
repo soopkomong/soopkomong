@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class CollectionSlidingTab extends StatefulWidget {
-  const CollectionSlidingTab({super.key});
+  // 부모에게 인덱스를 전달할 함수를 추가합니다.
+  final ValueChanged<int> onChanged;
+
+  const CollectionSlidingTab({super.key, required this.onChanged});
 
   @override
   State<CollectionSlidingTab> createState() => _CollectionSlidingTabState();
@@ -40,6 +43,7 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
                     ),
                   ),
                 ),
+
                 Row(children: [_buildTab(0, '생태공원'), _buildTab(1, '캐릭터')]),
               ],
             );
@@ -53,19 +57,18 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
     final isSelected = selectedIndex == index;
 
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(40),
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          onTap: () {
-            if (selectedIndex != index) {
-              setState(() {
-                selectedIndex = index;
-              });
-            }
-          },
+      child: GestureDetector(
+        onTap: () {
+          if (selectedIndex != index) {
+            setState(() {
+              selectedIndex = index;
+            });
+
+            widget.onChanged(index);
+          }
+        },
+        child: Container(
+          color: Colors.transparent,
           child: Center(
             child: Text(
               title,
