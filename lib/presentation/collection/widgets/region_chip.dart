@@ -20,7 +20,9 @@ class RegionChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: ShapeDecoration(
-          color: selected ? const Color(0xFF191919) : const Color(0xFFE6E6E6),
+          color: selected
+              ? const Color.fromARGB(255, 78, 74, 74)
+              : const Color(0xFFE6E6E6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),

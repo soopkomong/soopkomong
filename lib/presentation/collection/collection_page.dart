@@ -4,6 +4,8 @@ import 'package:soopkomong/presentation/collection/widgets/collection_sliding_ta
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
+import 'package:soopkomong/presentation/collection/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
@@ -60,13 +62,10 @@ class _CollectionPageState extends State<CollectionPage> {
               const SizedBox(height: 24),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: IndexedStack(
                   index: _selectedTabIndex,
-                  children: [
-                    _buildParkGrid(), // 0: 생태공원 탭
-                    _buildCharacterGrid(), // 1: 캐릭터 탭
-                  ],
+                  children: [_buildParkGrid(), _buildCharacterGrid()],
                 ),
               ),
               const SizedBox(height: 32),
@@ -90,10 +89,28 @@ class _CollectionPageState extends State<CollectionPage> {
       ),
       itemCount: 30,
       itemBuilder: (context, index) {
+        final isVisited = index % 5 == 0;
+        final name = '서울숲공원';
+        final id = (index + 1).toString().padLeft(3, '0');
+
         return ParkCard(
-          id: (index + 1).toString().padLeft(3, '0'),
-          name: '생태 공원',
-          isVisited: index % 5 == 0,
+          id: id,
+          name: name,
+          isVisited: isVisited,
+          index: index,
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => ParkDetailSheet(
+                id: id,
+                name: name,
+                index: index,
+                isVisited: isVisited,
+              ),
+            );
+          },
         );
       },
     );
@@ -112,11 +129,29 @@ class _CollectionPageState extends State<CollectionPage> {
       ),
       itemCount: 30,
       itemBuilder: (context, index) {
+        final id = (index + 1).toString().padLeft(3, '0');
+        final name = '숲코몽';
+        final parkName = '서울숲공원';
+        final isDiscovered = index % 5 == 0;
+
         return SoopkomongCard(
-          id: (index + 1).toString().padLeft(3, '0'),
-          name: '숲코몽',
-          parkName: '--공원',
-          isDiscovered: index % 5 == 0,
+          id: id,
+          name: name,
+          parkName: parkName,
+          isDiscovered: isDiscovered,
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => SoopkomongDetailSheet(
+                id: id,
+                name: name,
+                parkName: parkName,
+                isDiscovered: isDiscovered,
+              ),
+            );
+          },
         );
       },
     );
