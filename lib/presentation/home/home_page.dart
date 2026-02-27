@@ -141,6 +141,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
+
+    // 나침반 제거
+    await mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
     // Mapbox의 기본 스타일 라벨(텍스트) 모두 숨김 처리
     try {
       final style = mapboxMap.style;

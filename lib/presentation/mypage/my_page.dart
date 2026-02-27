@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:soopkomong/core/router/app_route.dart';
 
 class MyPage extends StatelessWidget {
   const MyPage({super.key});
