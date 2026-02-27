@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/entities/pet_location.dart';
-import '../../domain/repositories/location_repository.dart';
-import '../../domain/usecases/get_locations_usecase.dart';
-import '../../data/repositories/location_repository_impl.dart';
-import '../../data/datasources/local_location_datasource.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/repositories/location_repository.dart';
+import 'package:soopkomong/domain/usecases/get_locations_usecase.dart';
+import 'package:soopkomong/data/repositories/location_repository_impl.dart';
+import 'package:soopkomong/data/datasources/local_location_datasource.dart';
 
 /// Providers for DI
 final locationDataSourceProvider = Provider<LocalLocationDataSource>((ref) {
@@ -66,4 +66,18 @@ class HomeNotifier extends Notifier<HomeState> {
 
 final homeViewModelProvider = NotifierProvider<HomeNotifier, HomeState>(() {
   return HomeNotifier();
+});
+
+/// 맵 줌 리셋 이벤트를 알리기 위한 Notifier
+class MapZoomResetNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void triggerReset() {
+    state++;
+  }
+}
+
+final mapZoomResetProvider = NotifierProvider<MapZoomResetNotifier, int>(() {
+  return MapZoomResetNotifier();
 });

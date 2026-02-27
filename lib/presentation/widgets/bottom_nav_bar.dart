@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 
-class AppBottomNavigationBar extends StatelessWidget {
+class AppBottomNavigationBar extends ConsumerWidget {
   const AppBottomNavigationBar({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  void _onTap(int index) {
+  void _onTap(int index, WidgetRef ref) {
+    if (index == 0) {
+      ref.read(mapZoomResetProvider.notifier).triggerReset();
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -14,10 +19,10 @@ class AppBottomNavigationBar extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return NavigationBar(
       selectedIndex: navigationShell.currentIndex,
-      onDestinationSelected: _onTap,
+      onDestinationSelected: (index) => _onTap(index, ref),
       destinations: const [
         NavigationDestination(
           icon: Icon(Icons.home_outlined),

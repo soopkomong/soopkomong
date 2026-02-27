@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import '../models/pet_location_model.dart';
+import 'package:soopkomong/data/models/pet_location_model.dart';
 
 /// [Data Layer] - DataSource Interface
 /// 로컬 자원(Asset JSON)이나 외부 API 등으로부터 원시 데이터를 가져오는 규격을 정의합니다.

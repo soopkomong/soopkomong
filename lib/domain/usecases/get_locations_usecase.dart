@@ -1,5 +1,5 @@
-import '../entities/pet_location.dart';
-import '../repositories/location_repository.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/repositories/location_repository.dart';
 
 /// [Domain Layer] - UseCase
 /// 특정 비즈니스 흐름(위치 정보 가져오기)을 전담하는 단일 책임 클래스입니다.
