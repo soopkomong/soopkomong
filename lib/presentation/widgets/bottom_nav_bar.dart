@@ -19,7 +19,7 @@ class AppBottomNavigationBar extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = navigationShell.currentIndex;
 
     final labels = ['홈', '도감', '생태공원', '친구'];
@@ -46,7 +46,7 @@ class AppBottomNavigationBar extends ConsumerWidget {
               final isSelected = currentIndex == index;
 
               return GestureDetector(
-                onTap: () => _onTap(index),
+                onTap: () => _onTap(index, ref),
                 behavior: HitTestBehavior.translucent,
                 child: AnimatedScale(
                   scale: isSelected ? 1.1 : 1.0,

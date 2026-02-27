@@ -12,10 +12,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/pet_location.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/core/router/app_route.dart';
-import 'package:soopkomong/core/utils/map_helper.dart';
-import 'package:soopkomong/core/utils/turf_helper.dart';
-import 'home_viewmodel.dart';
-import 'package:soopkomong/domain/entities/pet_location.dart';
 
 /// [Presentation Layer] - View
 /// 사용자에게 직접 보여지는 화면을 구성하는 위젯입니다.
@@ -177,6 +173,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 카메라 줌인 한계(minZoom) 설정 - 가장 멀리보는 최대 반경 14.5
     await mapboxMap.setBounds(CameraBoundsOptions(minZoom: 14.5));
 
+    if (!mounted) return;
     final size = MediaQuery.of(context).size;
 
     // 화면 이동(스크롤) 제스처 비활성화하여 내 위치 중심 고정
@@ -250,29 +247,27 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       );
       // 한번 셋팅 후, 실시간으로 위치가 바뀔 때마다 카메라를 내 위치로 이동시키는 리스너 등록
-      if (_positionStreamSubscription == null) {
-        _positionStreamSubscription =
-            geo.Geolocator.getPositionStream(
-              locationSettings: const geo.LocationSettings(
-                accuracy: geo.LocationAccuracy.high,
-                distanceFilter: 5, // 5미터 이동할 때마다 업데이트
-              ),
-            ).listen((geo.Position newPosition) {
-              if (mapboxMap != null) {
-                mapboxMap?.setCamera(
-                  CameraOptions(
-                    center: Point(
-                      coordinates: Position(
-                        newPosition.longitude,
-                        newPosition.latitude,
-                      ),
+      _positionStreamSubscription ??=
+          geo.Geolocator.getPositionStream(
+            locationSettings: const geo.LocationSettings(
+              accuracy: geo.LocationAccuracy.high,
+              distanceFilter: 5, // 5미터 이동할 때마다 업데이트
+            ),
+          ).listen((geo.Position newPosition) {
+            if (mapboxMap != null) {
+              mapboxMap?.setCamera(
+                CameraOptions(
+                  center: Point(
+                    coordinates: Position(
+                      newPosition.longitude,
+                      newPosition.latitude,
                     ),
-                    // 줌은 유지하거나 필요시 16.5 등 고정 가능. 일단 이동만 시킴
                   ),
-                );
-              }
-            });
-      }
+                  // 줌은 유지하거나 필요시 16.5 등 고정 가능. 일단 이동만 시킴
+                ),
+              );
+            }
+          });
     } else {
       // 만약 아직 mapboxMap이 생성되기 전이라면 build 메서드의 initialCameraOptions에 영향을 줄 수 있도록
       // 상태로 저장해두는 방법도 있지만, onMapCreated에서 다시 호출하므로 여기서는 무시해도 됩니다.
@@ -401,7 +396,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final state = ref.watch(homeViewModelProvider);
 
     // 다른 탭이나 페이지에서 복귀 시 줌 초기화 이벤트를 수신합니다.
-    ref.listen(mapZoomResetProvider, (_, __) {
+    ref.listen(mapZoomResetProvider, (_, _) {
       _moveToCurrentLocation();
     });
 
