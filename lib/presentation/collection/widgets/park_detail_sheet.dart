@@ -104,7 +104,7 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -220,7 +220,8 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: 3,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 12),
                         itemBuilder: (context, index) {
                           return Container(
                             width: 80,
@@ -233,7 +234,7 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
                               child: Image.asset(
                                 'assets/images/character_silhouette.png',
                                 width: 60,
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                               ),
                             ),
                           );
