@@ -79,20 +79,25 @@ class MyPage extends StatelessWidget {
           // 4. 하단 액션 섹션 (위험 구역)
           const Divider(),
           const SizedBox(height: 10),
-          TextButton(
-            onPressed: () {
-              // 로그아웃 로직
-            },
-            child: const Text('로그아웃', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              // 회원 탈퇴 로직
-            },
-            child: const Text(
-              '회원 탈퇴',
-              style: TextStyle(color: Colors.redAccent),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () {
+                  // 로그아웃 로직
+                },
+                child: const Text('로그아웃', style: TextStyle(color: Colors.grey)),
+              ),
+              TextButton(
+                onPressed: () {
+                  // 회원 탈퇴 로직
+                },
+                child: const Text(
+                  '회원 탈퇴',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 40),
         ],
