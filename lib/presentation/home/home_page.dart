@@ -1,8 +1,16 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:soopkomong/core/utils/map_helper.dart';
+import 'package:soopkomong/core/utils/turf_helper.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
+import 'package:soopkomong/core/router/app_router.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/core/utils/map_helper.dart';
 import 'package:soopkomong/core/utils/turf_helper.dart';
@@ -24,9 +32,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   MapboxMap? mapboxMap;
   PointAnnotationManager? pointAnnotationManager;
   PolygonAnnotationManager? polygonAnnotationManager;
-  bool _isMarkerVisible = false;
   bool _markersAdded = false;
   final Map<String, int> _markerIndexMap = {};
+  Timer? _themeTimer;
+  StreamSubscription<geo.Position>? _positionStreamSubscription;
 
   @override
   void initState() {
@@ -35,6 +44,23 @@ class _HomePageState extends ConsumerState<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeViewModelProvider.notifier).loadData();
     });
+
+    // initState에서도 권한을 먼저 요청하고, 초기 카메라 위치를 잡기 위해 실행
+    _moveToCurrentLocation();
+
+    // 1분(60초)마다 현재 시간 확인하여 테마 갱신
+    _themeTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mapboxMap != null) {
+        _applyDayNightTheme(mapboxMap!);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _themeTimer?.cancel();
+    _positionStreamSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _addMarkers(List<PetLocation> locations) async {
@@ -92,9 +118,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     final annotations =
         await pointAnnotationManager?.createMulti(options) ?? [];
 
-    // 초기 마커 투명도 적용
-    await pointAnnotationManager?.setIconOpacity(_isMarkerVisible ? 1.0 : 0.0);
-
     // 마커 ID와 인덱스 매핑 저장
     _markerIndexMap.clear();
     for (int i = 0; i < annotations.length; i++) {
@@ -114,15 +137,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       },
     );
 
-    // 50m 반경 폴리곤(경계선) 그리기 추가
+    // 공원 주변 500m 반경 폴리곤 생성
     polygonAnnotationManager = await mapboxMap!.annotations
         .createPolygonAnnotationManager();
     List<PolygonAnnotationOptions> polygonOptions = [];
 
     for (var loc in locations) {
       final center = Position(loc.lng, loc.lat);
-      // turf_helper를 사용하여 50미터 반경의 원 형태 폴리곤 생성
-      final circleCoordinates = createCircleCoordinates(center, 50.0);
+      // turf_helper를 사용하여 500미터 반경의 원 형태 폴리곤 생성
+      final circleCoordinates = createCircleCoordinates(center, 500.0);
 
       polygonOptions.add(
         PolygonAnnotationOptions(
@@ -133,36 +156,127 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
     }
     await polygonAnnotationManager?.createMulti(polygonOptions);
-    // 초기 폴리곤 면 투명도 적용
-    await polygonAnnotationManager?.setFillOpacity(
-      _isMarkerVisible ? 1.0 : 0.0,
-    );
   }
 
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
-    // Mapbox의 기본 스타일 라벨(텍스트) 모두 숨김 처리
-    try {
-      final style = mapboxMap.style;
-      final layers = await style.getStyleLayers();
-      // layer id에 label, poi, place 등이 포함되어 있는 레이어 숨김 처리
-      for (var layer in layers) {
-        if (layer == null) continue;
-        final id = layer.id.toLowerCase();
-        if (id.contains('label') ||
-            id.contains('poi') ||
-            id.contains('place')) {
-          await style.setStyleLayerProperty(layer.id, "visibility", "none");
-        }
-      }
-    } catch (e) {
-      debugPrint("레이어 필터링 에러: $e");
-    }
+
+    // UI 컨트롤 숨기기 (나침반, 로고, 속성 ⓘ 아이콘, 스케일바)
+    await mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
+    await mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
+    await mapboxMap.attribution.updateSettings(
+      AttributionSettings(enabled: false),
+    );
+    await mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
+
+    // 내 위치 파란색 점(Puck) 표시 활성화
+    await mapboxMap.location.updateSettings(
+      LocationComponentSettings(enabled: true, puckBearingEnabled: true),
+    );
+
+    // 카메라 줌인 한계(minZoom) 설정 - 가장 멀리보는 최대 반경 14.5
+    await mapboxMap.setBounds(CameraBoundsOptions(minZoom: 14.5));
+
+    final size = MediaQuery.of(context).size;
+
+    // 화면 이동(스크롤) 제스처 비활성화하여 내 위치 중심 고정
+    // 핀치(확대/축소) 및 회전 시에도 화면 중앙 좌표를 축으로 사용하여 이탈 방지
+    await mapboxMap.gestures.updateSettings(
+      GesturesSettings(
+        scrollEnabled: false,
+        pinchPanEnabled: false,
+        focalPoint: ScreenCoordinate(x: size.width / 2.0, y: size.height / 2.0),
+      ),
+    );
 
     // ViewModel의 현재 상태를 가져와 마커 추가 시도
     final state = ref.read(homeViewModelProvider);
     if (!state.isLoading && state.locations.isNotEmpty) {
       _addMarkers(state.locations);
+    }
+
+    // 초기 테마(낮/밤) 적용
+    await _applyDayNightTheme(mapboxMap);
+
+    // 맵 생성 후에도 다시 한번 내 위치로 카메라 이동을 보장
+    await _moveToCurrentLocation();
+  }
+
+  Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
+    final int currentHour = DateTime.now().hour;
+
+    // 6시부터 17시 59분까지는 day, 그 외는 night
+    final String timePreset = (currentHour >= 6 && currentHour < 18)
+        ? "day"
+        : "night";
+
+    // Mapbox Standard 스타일에 timePreset 적용
+    try {
+      await mapbox.style.setStyleImportConfigProperty(
+        "basemap",
+        "lightPreset",
+        timePreset,
+      );
+    } catch (e) {
+      debugPrint("테마 갱신 에러: $e");
+    }
+  }
+
+  Future<void> _moveToCurrentLocation() async {
+    bool serviceEnabled;
+    geo.LocationPermission permission;
+
+    serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await geo.Geolocator.checkPermission();
+    if (permission == geo.LocationPermission.denied) {
+      permission = await geo.Geolocator.requestPermission();
+      if (permission == geo.LocationPermission.denied) return;
+    }
+
+    if (permission == geo.LocationPermission.deniedForever) return;
+
+    final position = await geo.Geolocator.getCurrentPosition();
+
+    // 맵이 아직 렌더링되지 않았을 수도 있으므로 mapboxMap 객체가 있는지 확인
+    if (mapboxMap != null) {
+      mapboxMap?.setCamera(
+        CameraOptions(
+          center: Point(
+            coordinates: Position(position.longitude, position.latitude),
+          ),
+          zoom: 16.5,
+        ),
+      );
+      // 한번 셋팅 후, 실시간으로 위치가 바뀔 때마다 카메라를 내 위치로 이동시키는 리스너 등록
+      if (_positionStreamSubscription == null) {
+        _positionStreamSubscription =
+            geo.Geolocator.getPositionStream(
+              locationSettings: const geo.LocationSettings(
+                accuracy: geo.LocationAccuracy.high,
+                distanceFilter: 5, // 5미터 이동할 때마다 업데이트
+              ),
+            ).listen((geo.Position newPosition) {
+              if (mapboxMap != null) {
+                mapboxMap?.setCamera(
+                  CameraOptions(
+                    center: Point(
+                      coordinates: Position(
+                        newPosition.longitude,
+                        newPosition.latitude,
+                      ),
+                    ),
+                    // 줌은 유지하거나 필요시 16.5 등 고정 가능. 일단 이동만 시킴
+                  ),
+                );
+              }
+            });
+      }
+    } else {
+      // 만약 아직 mapboxMap이 생성되기 전이라면 build 메서드의 initialCameraOptions에 영향을 줄 수 있도록
+      // 상태로 저장해두는 방법도 있지만, onMapCreated에서 다시 호출하므로 여기서는 무시해도 됩니다.
+      debugPrint("mapboxMap이 아직 초기화되지 않았습니다. 맵 생성 후 이동합니다.");
     }
   }
 
@@ -285,6 +399,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
 
+    // 다른 탭이나 페이지에서 복귀 시 줌 초기화 이벤트를 수신합니다.
+    ref.listen(mapZoomResetProvider, (_, __) {
+      _moveToCurrentLocation();
+    });
+
     // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
     if (!state.isLoading && state.locations.isNotEmpty && mapboxMap != null) {
       _addMarkers(state.locations);
@@ -296,8 +415,10 @@ class _HomePageState extends ConsumerState<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () {
-              context.pushNamed(AppRoute.mypage.name);
+            onPressed: () async {
+              await context.pushNamed(AppRoute.mypage.name);
+              // MyPage에서 뒤로가기로 돌아왔을 때 줌 레벨 복구를 위해 이벤트 트리거
+              ref.read(mapZoomResetProvider.notifier).triggerReset();
             },
             style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
@@ -310,27 +431,14 @@ class _HomePageState extends ConsumerState<HomePage> {
         children: [
           MapWidget(
             key: const ValueKey("mapWidget"),
+            // _applyDayNightTheme가 정상적으로 먹게 하려면 Mapbox Standard 스타일을 베이스로 사용합니다
+            styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
             onMapCreated: _onMapCreated,
-            onCameraChangeListener: (CameraChangedEventData event) async {
-              if (mapboxMap == null) return;
-              final cameraState = await mapboxMap!.getCameraState();
-              final double zoom = cameraState.zoom;
-              // 줌 레벨 8.5 이상(약 20km 축척 이하)일 때 표시
-              final bool shouldShow = zoom >= 8.5;
-
-              if (shouldShow != _isMarkerVisible) {
-                // UI를 갱신할 필요 없이 Mapbox의 opacity만 제어하여 퍼포먼스 향상
-                _isMarkerVisible = shouldShow;
-                pointAnnotationManager?.setIconOpacity(shouldShow ? 1.0 : 0.0);
-                polygonAnnotationManager?.setFillOpacity(
-                  shouldShow ? 1.0 : 0.0,
-                );
-              }
-            },
+            // 줌/내비게이션 시에도 완벽하게 내 위치가 가운데 고정되도록 Viewport 사용
+            viewport: FollowPuckViewportState(zoom: 16.5, pitch: 0.0),
             cameraOptions: CameraOptions(
-              // 요구사항에 맞춰 모든 지도 초기 값은 대한민국 중심, 줌레벨 6.0, 피쳐 0, 방향 0
               center: Point(coordinates: Position(127.7669, 35.9078)),
-              zoom: 6.0,
+              zoom: 16.5,
               pitch: 0.0, // 3D 건물이 눕지 않게 완벽한 2D 평면
               bearing: 0.0, // 북쪽 고정
             ),

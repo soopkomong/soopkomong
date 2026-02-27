@@ -67,3 +67,17 @@ class HomeNotifier extends Notifier<HomeState> {
 final homeViewModelProvider = NotifierProvider<HomeNotifier, HomeState>(() {
   return HomeNotifier();
 });
+
+/// 맵 줌 리셋 이벤트를 알리기 위한 Notifier
+class MapZoomResetNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void triggerReset() {
+    state++;
+  }
+}
+
+final mapZoomResetProvider = NotifierProvider<MapZoomResetNotifier, int>(() {
+  return MapZoomResetNotifier();
+});

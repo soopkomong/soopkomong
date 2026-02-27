@@ -15,6 +15,8 @@ import 'package:soopkomong/domain/entities/app_user.dart';
 export 'app_route.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -37,6 +39,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     refreshListenable: ValueNotifier<AppUser?>(authState.value),
+    observers: [routeObserver],
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
