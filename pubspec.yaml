@@ -40,6 +40,8 @@ dependencies:
   cloud_firestore: ^6.1.2
   firebase_auth: ^6.1.4
   google_sign_in: ^7.2.0
+  mapbox_maps_flutter: ^2.19.1
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:

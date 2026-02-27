@@ -67,13 +67,6 @@ class MyPage extends StatelessWidget {
               // 프로필 수정 페이지 이동
             },
           ),
-          _buildMenuTile(
-            icon: Icons.settings_outlined,
-            title: '설정',
-            onTap: () {
-              context.pushNamed(AppRoute.settings.name);
-            },
-          ),
           const SizedBox(height: 40),
 
           // 4. 하단 액션 섹션 (위험 구역)
