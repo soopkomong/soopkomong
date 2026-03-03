@@ -3,15 +3,37 @@ import 'package:flutter/material.dart';
 class CollectionSlidingTab extends StatefulWidget {
   // 부모에게 인덱스를 전달할 함수를 추가합니다.
   final ValueChanged<int> onChanged;
+  final int initialIndex;
 
-  const CollectionSlidingTab({super.key, required this.onChanged});
+  const CollectionSlidingTab({
+    super.key,
+    required this.onChanged,
+    this.initialIndex = 0,
+  });
 
   @override
   State<CollectionSlidingTab> createState() => _CollectionSlidingTabState();
 }
 
 class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
-  int selectedIndex = 0;
+  late int selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialIndex;
+  }
+
+  // 부모로부터 initialIndex가 변경되었을 때, 내부 selectedIndex를 업데이트하기 위한 메서드
+  @override
+  void didUpdateWidget(covariant CollectionSlidingTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) {
+      setState(() {
+        selectedIndex = widget.initialIndex;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
