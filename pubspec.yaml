@@ -43,6 +43,7 @@ dependencies:
   mapbox_maps_flutter: ^2.19.1
   flutter_dotenv: ^6.0.0
   kakao_flutter_sdk: ^1.10.0
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:
