@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/info_card.dart';
 
 class SoopkomongDetailSheet extends StatelessWidget {
   final String id;
@@ -31,7 +32,7 @@ class SoopkomongDetailSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // 상단 핸들 (고정)
+              // 상단 핸들과 닫기 버튼 (고정 영역)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Container(
@@ -43,108 +44,113 @@ class SoopkomongDetailSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              // 스크롤 가능한 영역
+
+              // 스크롤 가능한 컨텐츠 영역
               Expanded(
                 child: ListView(
                   controller: scrollController,
-                  physics: const ClampingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(48),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: isDiscovered
-                          ? Image.asset(
-                              'assets/images/character.png',
-                              fit: BoxFit.contain,
-                            )
-                          : Image.asset(
-                              'assets/images/character_silhouette.png',
-                              color: Colors.grey[400],
-                              fit: BoxFit.contain,
-                            ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Text(
-                        isDiscovered ? name : '???',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
+                    /// 🔹 상단 캐릭터 영역
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        // 캐릭터 이미지
+                        SizedBox(
+                          width: 160,
+                          height: 137,
+                          child: isDiscovered
+                              ? Image.asset(
+                                  'assets/images/character.png',
+                                  fit: BoxFit.contain,
+                                )
+                              : Image.asset(
+                                  'assets/images/character_silhouette.png',
+                                  fit: BoxFit.contain,
+                                ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        /// 이름 + 아이콘
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.location_on,
-                              size: 16,
-                              color: Colors.black54,
+                            Text(
+                              isDiscovered ? name : '???',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              isDiscovered
-                                  ? '$parkName에서 발견됨'
-                                  : '아직 발견되지 않았습니다.',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black54,
-                              ),
-                            ),
+                            isDiscovered
+                                ? const Icon(Icons.edit_outlined, size: 20)
+                                : const SizedBox.shrink(),
                           ],
                         ),
-                        if (isDiscovered) ...[
-                          const SizedBox(height: 4),
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+
+                        const SizedBox(height: 16),
+
+                        /// 진행도 바
+                        if (isDiscovered)
+                          Column(
                             children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 16,
-                                color: Colors.black54,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                '발견한 날 : 2026년 2월 27일',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black54,
+                              SizedBox(
+                                width: 200,
+                                child: LinearProgressIndicator(
+                                  value: 0.75,
+                                  minHeight: 6,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
+                              ),
+
+                              const SizedBox(height: 6),
+                              const Text(
+                                '3000/5000',
+                                style: TextStyle(fontSize: 12),
                               ),
                             ],
                           ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      '캐릭터 설명',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+
+                    const SizedBox(height: 32),
+
+                    if (isDiscovered)
+                      InfoCard(
+                        leading: Icon(Icons.location_on_outlined),
+                        title: '공원 이름',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 16),
+                                SizedBox(width: 4),
+                                Text('발견한 날짜 : 2025년 3월 3일 월요일'),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isDiscovered
-                          ? '이 캐릭터는 숲의 활력을 상징하는 숲코몽입니다. 맑은 공기를 좋아하며 주로 울창한 소나무 아래에서 발견됩니다.'
-                          : '아직 발견되지 않은 캐릭터입니다. 공원을 탐험하여 이 캐릭터를 찾아보세요!',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.black87,
-                        height: 1.4,
+
+                    const SizedBox(height: 20),
+                    if (isDiscovered)
+                      /// 🔹 카드 2 - 캐릭터 설명
+                      InfoCard(
+                        leading: Icon(Icons.description_outlined),
+                        title: '캐릭터 설명',
+                        child: const Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: Text(
+                            'Lorem ipsum dolor sit amet consectetur. Elit ornare rhoncus morbi quis egestas sed leo. Congue amet semper nec tempus ac sagittis posuere urna libero. Aliquam lectus neque massa urna.',
+                            style: TextStyle(fontSize: 13, height: 1.5),
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
