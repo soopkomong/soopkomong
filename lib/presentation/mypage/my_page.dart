@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
-class MyPage extends StatelessWidget {
+class MyPage extends ConsumerWidget {
   const MyPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       body: SafeArea(
@@ -18,7 +20,6 @@ class MyPage extends StatelessWidget {
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios_new),
                 color: Colors.black,
-
                 onPressed: () {
                   Navigator.pop(context);
                 },
@@ -29,20 +30,20 @@ class MyPage extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                 child: Column(
-                  children: const [
-                    _ProfileSection(),
-                    SizedBox(height: 28),
-                    StatsSection(),
-                    SizedBox(height: 28),
-                    SoundSection(),
-                    SizedBox(height: 16),
-                    SettingTile(title: '언어', trailing: '한국어'),
-                    SizedBox(height: 16),
-                    SettingTile(title: '개인정보 처리 방침'),
-                    SizedBox(height: 16),
-                    SettingTile(title: '이용 약관'),
-                    SizedBox(height: 40),
-                    BottomActions(),
+                  children: [
+                    const _ProfileSection(),
+                    const SizedBox(height: 28),
+                    const StatsSection(),
+                    const SizedBox(height: 28),
+                    const SoundSection(),
+                    const SizedBox(height: 16),
+                    const SettingTile(title: '언어', trailing: '한국어'),
+                    const SizedBox(height: 16),
+                    const SettingTile(title: '개인정보 처리 방침'),
+                    const SizedBox(height: 16),
+                    const SettingTile(title: '이용 약관'),
+                    const SizedBox(height: 40),
+                    _BottomActions(ref: ref),
                   ],
                 ),
               ),
@@ -70,7 +71,7 @@ class _ProfileSection extends StatelessWidget {
                 'https://picsum.photos/seed/1/358/199',
               ).image,
             ),
-            Positioned(
+            const Positioned(
               bottom: 0,
               right: 0,
               child: CircleAvatar(
@@ -273,8 +274,33 @@ class Card extends StatelessWidget {
   }
 }
 
-class BottomActions extends StatelessWidget {
-  const BottomActions({super.key});
+class _BottomActions extends StatelessWidget {
+  final WidgetRef ref;
+  const _BottomActions({required this.ref});
+
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('로그아웃 하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('예'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(authRepositoryProvider).signOut();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -282,17 +308,22 @@ class BottomActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         GestureDetector(
-          onTap: () {},
+          onTap: () {
+            // 회원 탈퇴 로직
+          },
           child: const Text(
             '회원탈퇴',
             style: TextStyle(fontSize: 13, color: Colors.grey),
           ),
         ),
-        SizedBox(width: 8),
-        VerticalDivider(),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
+        const SizedBox(
+          height: 12,
+          child: VerticalDivider(color: Colors.grey, thickness: 1, width: 1),
+        ),
+        const SizedBox(width: 8),
         GestureDetector(
-          onTap: () {},
+          onTap: () => _showLogoutDialog(context),
           child: const Text(
             '로그아웃',
             style: TextStyle(fontSize: 13, color: Colors.grey),
