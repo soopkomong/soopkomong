@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/info_card.dart';
 
 class SoopkomongDetailSheet extends StatelessWidget {
   final String id;
@@ -59,10 +60,15 @@ class SoopkomongDetailSheet extends StatelessWidget {
                         SizedBox(
                           width: 160,
                           height: 137,
-                          child: Image.asset(
-                            'assets/images/character.png',
-                            fit: BoxFit.contain,
-                          ),
+                          child: isDiscovered
+                              ? Image.asset(
+                                  'assets/images/character.png',
+                                  fit: BoxFit.contain,
+                                )
+                              : Image.asset(
+                                  'assets/images/character_silhouette.png',
+                                  fit: BoxFit.contain,
+                                ),
                         ),
 
                         const SizedBox(height: 28),
@@ -72,72 +78,79 @@ class SoopkomongDetailSheet extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              name,
+                              isDiscovered ? name : '???',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.edit_outlined, size: 20),
+                            isDiscovered
+                                ? const Icon(Icons.edit_outlined, size: 20)
+                                : const SizedBox.shrink(),
                           ],
                         ),
 
                         const SizedBox(height: 16),
 
                         /// 진행도 바
-                        Column(
-                          children: [
-                            SizedBox(
-                              width: 200,
-                              child: LinearProgressIndicator(
-                                value: 0.75,
-                                minHeight: 6,
-                                borderRadius: BorderRadius.circular(10),
+                        if (isDiscovered)
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: 200,
+                                child: LinearProgressIndicator(
+                                  value: 0.75,
+                                  minHeight: 6,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
-                            ),
 
-                            const SizedBox(height: 6),
-                            const Text('3/4', style: TextStyle(fontSize: 12)),
-                          ],
-                        ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                '3000/5000',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
 
                     const SizedBox(height: 32),
 
-                    _infoCard(
-                      icon: Icons.location_on_outlined,
-                      title: '공원 이름',
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Icon(Icons.calendar_today, size: 16),
-                              SizedBox(width: 4),
-                              Text('발견한 날짜 : 2025년 3월 3일 월요일'),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    /// 🔹 카드 2 - 캐릭터 설명
-                    _infoCard(
-                      icon: Icons.description,
-                      title: '캐릭터 설명',
-                      child: const Padding(
-                        padding: EdgeInsets.only(top: 12),
-                        child: Text(
-                          'Lorem ipsum dolor sit amet consectetur. Elit ornare rhoncus morbi quis egestas sed leo. Congue amet semper nec tempus ac sagittis posuere urna libero. Aliquam lectus neque massa urna.',
-                          style: TextStyle(fontSize: 13, height: 1.5),
+                    if (isDiscovered)
+                      InfoCard(
+                        leading: Icon(Icons.location_on_outlined),
+                        title: '공원 이름',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 16),
+                                SizedBox(width: 4),
+                                Text('발견한 날짜 : 2025년 3월 3일 월요일'),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+
+                    const SizedBox(height: 20),
+                    if (isDiscovered)
+                      /// 🔹 카드 2 - 캐릭터 설명
+                      InfoCard(
+                        leading: Icon(Icons.description_outlined),
+                        title: '캐릭터 설명',
+                        child: const Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: Text(
+                            'Lorem ipsum dolor sit amet consectetur. Elit ornare rhoncus morbi quis egestas sed leo. Congue amet semper nec tempus ac sagittis posuere urna libero. Aliquam lectus neque massa urna.',
+                            style: TextStyle(fontSize: 13, height: 1.5),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -145,40 +158,6 @@ class SoopkomongDetailSheet extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _infoCard({
-    required IconData icon,
-    required String title,
-    required Widget child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Color(0x26000000), blurRadius: 4)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 4),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          child,
-        ],
-      ),
     );
   }
 }

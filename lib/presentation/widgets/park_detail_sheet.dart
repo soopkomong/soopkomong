@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/expandable_text.dart';
+import 'package:soopkomong/presentation/widgets/info_card.dart';
 
 class ParkDetailSheet extends StatelessWidget {
   final String id;
@@ -51,7 +53,7 @@ class ParkDetailSheet extends StatelessWidget {
 
               /// 🔹 상단 이미지
               SizedBox(
-                height: 292,
+                height: 300,
                 child: Stack(
                   children: [
                     Positioned.fill(
@@ -61,7 +63,7 @@ class ParkDetailSheet extends StatelessWidget {
                       ),
                     ),
 
-                    /// 방문 여부 뱃지
+                    /// 이미지 수
                     Positioned(
                       top: 16,
                       right: 16,
@@ -71,13 +73,11 @@ class ParkDetailSheet extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: isVisited
-                              ? Colors.green
-                              : Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          isVisited ? '방문 완료' : '미방문',
+                          '1/3',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -103,7 +103,7 @@ class ParkDetailSheet extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: dotIndex == 0
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.5),
+                                  : Colors.white.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -133,13 +133,21 @@ class ParkDetailSheet extends StatelessWidget {
               /// 🔹 공원 소개 카드
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _card(
-                  icon: Icons.description,
+                child: InfoCard(
+                  leading: const Icon(Icons.description_outlined),
                   title: '공원 소개',
-                  child: const Text(
-                    '이 공원은 산책과 운동을 즐기기에 최적의 장소입니다. '
-                    '사계절 내내 다양한 풍경을 감상할 수 있으며 '
-                    '가족 단위 방문객에게도 인기가 많습니다.',
+                  child: const ExpandableText(
+                    text:
+                        '[제목] 제천솔방죽 생태공원\n'
+                        '[주소] 충청북도 제천시 청전동 240-1 일원\n'
+                        '[개요] 2005년 11월부터 2006년 11월까지 1년간 청전제천 21 실천협의회 연구분과위원회에서 연구, 조사를 위탁하고 모니터링하여 사업비 14억 6천7백만 원 을 들여 시내권 내에 조성한 생태공원이다. 솔방죽의 저수 유입은 비룡담(제2 의림지)으로부터 농업용수를 사용 후 잠시 이곳에 저장된다. 원래의 연못은 1872년에 제작된 군, 현 지도에 ‘유등지’로 표기되었으나 ‘작은 연못’으로 불렸는데 청정제천 21 실천협의회에서 공원화 조성에 따라 ‘솔방죽’으로 이름을 붙였으며 제천시에서 처음으로 생태공원이라는 이름을 붙여 조성한 곳이다. 생태공원의 규모는 연면적 28,096㎡ 로 동서 220m, 남북 80~100m의 크기 저수지에 3개의 지역으로 나누어 조성되었다.\n\n'
+                        '* 문의 : 043-641-6731~3 \n'
+                        '* 휴무일 : 연중무휴 \n\n'
+                        '◎이용안내\n'
+                        '- 이용요금 : 무료\n'
+                        '- 화장실 : 있음(남녀구분) \n'
+                        '- 장애인 편의시설 : 장애인화장실 있음(남녀공용) \n'
+                        '- 주차시설 : 불가능',
                     style: TextStyle(fontSize: 13, height: 1.5),
                   ),
                 ),
@@ -150,8 +158,11 @@ class ParkDetailSheet extends StatelessWidget {
               /// 🔹 얻을 수 있는 캐릭터 카드
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _card(
-                  icon: Icons.pets,
+                child: InfoCard(
+                  leading: Image.asset(
+                    'assets/images/character_silhouette.png',
+                    width: 24,
+                  ),
                   title: '얻을 수 있는 캐릭터',
                   child: Column(
                     children: [
@@ -168,8 +179,11 @@ class ParkDetailSheet extends StatelessWidget {
                                 color: const Color(0xFFEDEDED),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Center(
-                                child: Icon(Icons.person_outline),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Image.asset(
+                                  'assets/images/character_silhouette.png',
+                                ),
                               ),
                             ),
                           ),
@@ -219,7 +233,7 @@ class ParkDetailSheet extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 12), // spacing 대신 사용
+                      const SizedBox(height: 12),
                       // 🔹 텍스트 영역
                       Container(
                         width: double.infinity,
@@ -231,13 +245,7 @@ class ParkDetailSheet extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              clipBehavior: Clip.antiAlias,
-                              decoration: const BoxDecoration(),
-                              child: Stack(), // 아이콘이나 이미지 넣을 수 있음
-                            ),
+                            Icon(Icons.location_on_outlined),
                             const SizedBox(width: 4),
                             const Expanded(
                               child: Text(
@@ -245,9 +253,9 @@ class ParkDetailSheet extends StatelessWidget {
                                 style: TextStyle(
                                   color: Color(0xFF191919),
                                   fontSize: 14,
-                                  fontFamily: 'Pretendard',
                                   fontWeight: FontWeight.w600,
                                   height: 1.5,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
@@ -262,40 +270,6 @@ class ParkDetailSheet extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _card({
-    required IconData icon,
-    required String title,
-    required Widget child,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Color(0x26000000), blurRadius: 4)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          child,
-        ],
-      ),
     );
   }
 }
