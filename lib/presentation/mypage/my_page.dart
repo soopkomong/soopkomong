@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
-class MyPage extends StatelessWidget {
+class MyPage extends ConsumerWidget {
   const MyPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -74,9 +78,7 @@ class MyPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextButton(
-                onPressed: () {
-                  // 로그아웃 로직
-                },
+                onPressed: () => _showLogoutDialog(context, ref),
                 child: const Text('로그아웃', style: TextStyle(color: Colors.grey)),
               ),
               TextButton(
@@ -94,6 +96,31 @@ class MyPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 로그아웃 확인 다이얼로그를 표시합니다.
+  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('로그아웃 하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('아니오'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('예'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(authRepositoryProvider).signOut();
+    }
   }
 
   Widget _buildStatItem(String label, String value) {
