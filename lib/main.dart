@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:soopkomong/core/app_initializer.dart';
 import 'package:soopkomong/firebase_options.dart';
 import 'core/router/app_router.dart';
 
