@@ -171,7 +171,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     // 카메라 줌인 한계(minZoom) 설정 - 가장 멀리보는 최대 반경 14.5
-    await mapboxMap.setBounds(CameraBoundsOptions(minZoom: 14.5));
+    // await mapboxMap.setBounds(CameraBoundsOptions(minZoom: 14.5));
 
     if (!mounted) return;
     final size = MediaQuery.of(context).size;
