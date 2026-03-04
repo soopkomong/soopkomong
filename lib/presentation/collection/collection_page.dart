@@ -6,6 +6,7 @@ import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dar
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
+import 'package:soopkomong/presentation/collection/widgets/undiscovered_character_dialog.dart';
 
 class CollectionPage extends StatefulWidget {
   final int initialTab;
@@ -162,18 +163,25 @@ class _CollectionPageState extends State<CollectionPage> {
           parkName: parkName,
           isDiscovered: isDiscovered,
           onTap: () {
-            showModalBottomSheet(
-              context: context,
-              useRootNavigator: true,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => SoopkomongDetailSheet(
-                id: id,
-                name: name,
-                parkName: parkName,
-                isDiscovered: isDiscovered,
-              ),
-            );
+            if (isDiscovered) {
+              showModalBottomSheet(
+                context: context,
+                useRootNavigator: true,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => SoopkomongDetailSheet(
+                  id: id,
+                  name: name,
+                  parkName: parkName,
+                  isDiscovered: isDiscovered,
+                ),
+              );
+            } else {
+              UndiscoveredCharacterDialog.show(
+                context,
+                availableParks: ['공원이름'], // TODO: 실제 데이터로 교체
+              );
+            }
           },
         );
       },
