@@ -65,16 +65,17 @@ class _ProfileSection extends StatelessWidget {
         Stack(
           clipBehavior: Clip.none,
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 70,
-              backgroundImage: Image.network(
+              backgroundImage: NetworkImage(
                 'https://picsum.photos/seed/1/358/199',
-              ).image,
+              ),
             ),
             Positioned(
               bottom: 0,
               right: 0,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   context.pushNamed(AppRoute.characterCustomize.name);
                 },
