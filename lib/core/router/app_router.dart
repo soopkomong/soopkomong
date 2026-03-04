@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/presentation/mypage/my_page.dart';
+import 'package:soopkomong/presentation/mypage/character_customize_page.dart';
 import 'package:soopkomong/presentation/auth/sign_in_screen.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/core/router/app_route.dart';
@@ -93,6 +94,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.mypage.path,
         name: AppRoute.mypage.name,
         builder: (context, state) => const MyPage(),
+      ),
+      GoRoute(
+        path: AppRoute.characterCustomize.path,
+        name: AppRoute.characterCustomize.name,
+        builder: (context, state) => const CharacterCustomizePage(),
       ),
       GoRoute(
         path: AppRoute.signIn.path,
