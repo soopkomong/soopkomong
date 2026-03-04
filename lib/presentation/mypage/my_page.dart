@@ -71,13 +71,18 @@ class _ProfileSection extends StatelessWidget {
                 'https://picsum.photos/seed/1/358/199',
               ).image,
             ),
-            const Positioned(
+            Positioned(
               bottom: 0,
               right: 0,
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.grey,
-                child: Icon(Icons.edit, size: 18, color: Colors.white),
+              child: GestureDetector(
+                onTap: () {
+                  context.pushNamed(AppRoute.characterCustomize.name);
+                },
+                child: const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.grey,
+                  child: Icon(Icons.edit, size: 18, color: Colors.white),
+                ),
               ),
             ),
           ],

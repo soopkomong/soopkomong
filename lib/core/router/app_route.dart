@@ -5,6 +5,7 @@ enum AppRoute {
   friends(name: 'friends', path: '/friends'),
   details(name: 'details', path: 'details'),
   mypage(name: 'mypage', path: '/mypage'),
+  characterCustomize(name: 'characterCustomize', path: '/characterCustomize'),
   signIn(name: 'signIn', path: '/signIn');
 
   const AppRoute({required this.name, required this.path});
