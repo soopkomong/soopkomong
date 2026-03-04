@@ -60,7 +60,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoute.collection.path,
                 name: AppRoute.collection.name,
-                builder: (context, state) => const CollectionPage(),
+                builder: (context, state) {
+                  final tab =
+                      int.tryParse(state.uri.queryParameters['tab'] ?? '0') ??
+                      0;
+                  return CollectionPage(initialTab: tab);
+                },
               ),
             ],
           ),

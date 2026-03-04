@@ -8,14 +8,32 @@ import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 
 class CollectionPage extends StatefulWidget {
-  const CollectionPage({super.key});
+  final int initialTab;
+  const CollectionPage({super.key, this.initialTab = 0});
 
   @override
   State<CollectionPage> createState() => _CollectionPageState();
 }
 
 class _CollectionPageState extends State<CollectionPage> {
-  int _selectedTabIndex = 0; // 0: 숲코몽, 1: 생태공원
+  late int _selectedTabIndex; // 0: 생태공원, 1: 숲코몽
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTabIndex = widget.initialTab;
+  }
+
+  // 부모로부터 initialIndex가 변경되었을 때, 내부 selectedIndex를 업데이트하기 위한 메서드
+  @override
+  void didUpdateWidget(covariant CollectionPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTab != widget.initialTab) {
+      setState(() {
+        _selectedTabIndex = widget.initialTab;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +57,7 @@ class _CollectionPageState extends State<CollectionPage> {
               SizedBox(
                 width: 230,
                 child: CollectionSlidingTab(
+                  initialIndex: _selectedTabIndex,
                   onChanged: (index) {
                     setState(() {
                       _selectedTabIndex = index;
