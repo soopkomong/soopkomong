@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/repositories/auth_repository.dart';
 
@@ -32,15 +33,18 @@ class AuthRepositoryImpl implements AuthRepository {
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
       // accessToken은 authorizationClient를 통해 명시적으로 scope와 함께 요청해야 함
-      final authz = await googleUser.authorizationClient.authorizeScopes(['email', 'profile']);
+      final authz = await googleUser.authorizationClient.authorizeScopes([
+        'email',
+        'profile',
+      ]);
 
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: authz.accessToken,
         idToken: googleUser.authentication.idToken,
       );
 
-      final UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
+      final UserCredential userCredential = await _firebaseAuth
+          .signInWithCredential(credential);
 
       return _mapFirebaseUser(userCredential.user);
     } catch (e) {
@@ -75,8 +79,32 @@ class AuthRepositoryImpl implements AuthRepository {
         accessToken: token.accessToken,
       );
 
-      final UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
+      final UserCredential userCredential = await _firebaseAuth
+          .signInWithCredential(credential);
+
+      return _mapFirebaseUser(userCredential.user);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<AppUser?> signInWithApple() async {
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final UserCredential userCredential = await _firebaseAuth
+          .signInWithCredential(oauthCredential);
 
       return _mapFirebaseUser(userCredential.user);
     } catch (e) {
@@ -96,4 +124,3 @@ class AuthRepositoryImpl implements AuthRepository {
     await _firebaseAuth.signOut();
   }
 }
-

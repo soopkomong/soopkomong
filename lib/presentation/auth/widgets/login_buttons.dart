@@ -28,14 +28,15 @@ class LoginButtons extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // 카카오 말풍선 아이콘
-                const Icon(Icons.chat_bubble, size: 18, color: Color(0xFF191919)),
+                const Icon(
+                  Icons.chat_bubble,
+                  size: 18,
+                  color: Color(0xFF191919),
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   '카카오로 시작하기',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -66,7 +67,10 @@ class LoginButtons extends ConsumerWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE0E0E0), width: 0.5),
+                    border: Border.all(
+                      color: const Color(0xFFE0E0E0),
+                      width: 0.5,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                   child: const Center(
@@ -83,10 +87,7 @@ class LoginButtons extends ConsumerWidget {
                 const SizedBox(width: 8),
                 const Text(
                   '구글로 시작하기',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -100,15 +101,7 @@ class LoginButtons extends ConsumerWidget {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
-              // TODO: 애플 로그인 로직 구현 예정
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('애플 로그인은 준비 중입니다.'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
+            onPressed: () => _signInWithApple(context, ref),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1A1A1A),
               foregroundColor: Colors.white,
@@ -124,10 +117,7 @@ class LoginButtons extends ConsumerWidget {
                 SizedBox(width: 8),
                 Text(
                   '애플로 시작하기',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -143,9 +133,9 @@ class LoginButtons extends ConsumerWidget {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('구글 로그인 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('구글 로그인 실패: $e')));
       }
     }
   }
@@ -156,9 +146,22 @@ class LoginButtons extends ConsumerWidget {
       await ref.read(authRepositoryProvider).signInWithKakao();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('카카오 로그인 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('카카오 로그인 실패: $e')));
+      }
+    }
+  }
+
+  /// 애플 로그인 처리
+  Future<void> _signInWithApple(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authRepositoryProvider).signInWithApple();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('애플 로그인 실패: $e')));
       }
     }
   }
