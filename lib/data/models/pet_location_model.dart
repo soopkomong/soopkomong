@@ -15,15 +15,14 @@ class PetLocationModel extends PetLocation {
   });
 
   factory PetLocationModel.fromJson(Map<String, dynamic> json) {
-    final coords = json['coords'] as Map<String, dynamic>? ?? {};
     final pet = json['pet'] as Map<String, dynamic>? ?? {};
 
     return PetLocationModel(
-      id: json['id'] as int? ?? 0,
+      id: int.tryParse(json['contentId']?.toString() ?? '') ?? 0,
       region: json['region'] as String? ?? '알 수 없음',
-      name: json['name'] as String? ?? '이름 없음',
-      lat: (coords['lat'] as num?)?.toDouble() ?? 0.0,
-      lng: (coords['lng'] as num?)?.toDouble() ?? 0.0,
+      name: json['title'] as String? ?? '이름 없음',
+      lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
+      lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
       petName: pet['name'] as String? ?? '알 수 없음',
       petType: pet['type'] as String? ?? '알 수 없음',
     );
