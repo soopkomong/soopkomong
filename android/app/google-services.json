@@ -48,6 +48,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1012942978199:android:1c4762ccde85788c4d3dd2",
+        "android_client_info": {
+          "package_name": "soopkomong.com"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1012942978199-sk87p0vdj9a4c01u5ik071s85u11m33i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "soopkomong.com",
+            "certificate_hash": "635c8ed0dd35abac80dd9ba4d3b98e64811aa740"
+          }
+        },
+        {
+          "client_id": "1012942978199-m7svhit8qoisjdhpaudg83of0s3boag8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9fDEglMSRpBD9i6rZgfNi5ehAmVymLcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1012942978199-m7svhit8qoisjdhpaudg83of0s3boag8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1012942978199-27557m8tl5oh993t0rtf5g73n3tj1or3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.soopkomong"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
