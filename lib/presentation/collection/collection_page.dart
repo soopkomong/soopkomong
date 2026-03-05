@@ -6,7 +6,13 @@ import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dar
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
-import 'package:soopkomong/presentation/collection/widgets/undiscovered_character_dialog.dart';
+
+// TODO: 차후 실제 API 연동 시 전역 모델 디렉토리로 이동해야 할 열거형(Enum)입니다.
+enum CharacterStatus {
+  discovered,     // 완전히 발견된 상태
+  visitedEgg,     // 방문은 했지만 미부화 상태
+  undiscovered,   // 아예 미발견 상태
+}
 
 class CollectionPage extends StatefulWidget {
   final int initialTab;
@@ -155,7 +161,15 @@ class _CollectionPageState extends State<CollectionPage> {
         final id = (index + 1).toString().padLeft(3, '0');
         final name = '숲코몽';
         final parkName = '서울숲공원';
-        final isDiscovered = index % 5 == 0;
+        
+        // 목업 상태 배정 로직 (3가지 상태 테스트)
+        // 화면에서 세 가지 상태가 골고루 보이도록 index % 3을 활용하여 배정합니다.
+        final CharacterStatus status = CharacterStatus.values[index % 3];
+        
+        final isDiscovered = status == CharacterStatus.discovered; // 발견
+        final isRegionVisited = status == CharacterStatus.visitedEgg; // 지역 방문
+        // TODO: 임시 데이터로 실제 데이터로 리펙토링 필요
+        final currentSteps = status == CharacterStatus.visitedEgg ? 1578 : 0; // 걸음 수
 
         return SoopkomongCard(
           id: id,
@@ -163,25 +177,22 @@ class _CollectionPageState extends State<CollectionPage> {
           parkName: parkName,
           isDiscovered: isDiscovered,
           onTap: () {
-            if (isDiscovered) {
-              showModalBottomSheet(
-                context: context,
-                useRootNavigator: true,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => SoopkomongDetailSheet(
-                  id: id,
-                  name: name,
-                  parkName: parkName,
-                  isDiscovered: isDiscovered,
-                ),
-              );
-            } else {
-              UndiscoveredCharacterDialog.show(
-                context,
-                availableParks: ['공원이름'], // TODO: 실제 데이터로 교체
-              );
-            }
+            // 모든 경우(발견, 알 상태, 미발견)에 동일한 바텀 시트를 띄우기
+            // 상세 시트 내부에서 isDiscovered, isRegionVisited, currentSteps 상태에 따라 UI가 분기 처리
+            showModalBottomSheet(
+              context: context,
+              useRootNavigator: true,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => SoopkomongDetailSheet(
+                id: id,
+                name: name,
+                parkName: parkName,
+                isDiscovered: isDiscovered,
+                isRegionVisited: isRegionVisited,
+                currentSteps: currentSteps,
+              ),
+            );
           },
         );
       },

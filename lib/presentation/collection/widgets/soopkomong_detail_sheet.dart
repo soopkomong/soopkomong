@@ -5,7 +5,9 @@ class SoopkomongDetailSheet extends StatelessWidget {
   final String id;
   final String name;
   final String parkName;
-  final bool isDiscovered;
+  final bool isDiscovered; // 기존 발견 여부
+  final bool isRegionVisited; // 지역 방문 (알 발견) 여부
+  final int currentSteps; // 알 부화(캐릭터 발견)를 위한 현재 걸음 수
 
   const SoopkomongDetailSheet({
     super.key,
@@ -13,12 +15,19 @@ class SoopkomongDetailSheet extends StatelessWidget {
     required this.name,
     required this.parkName,
     required this.isDiscovered,
+    this.isRegionVisited = false,
+    this.currentSteps = 0,
   });
 
   @override
   Widget build(BuildContext context) {
+    // 3000보를 걸으면 캐릭터를 발견 처리 (또는 기존에 이미 발견된 경우)
+    final bool finalIsDiscovered = isDiscovered || (isRegionVisited && currentSteps >= 3000);
+    // 지역은 방문하여 알을 찾았지만 아직 3000보를 다 걷지 못한 상태
+    final bool hasEgg = isRegionVisited && !finalIsDiscovered;
+
     return DraggableScrollableSheet(
-      initialChildSize: 0.85,
+      initialChildSize: 0.8,
       minChildSize: 0.4,
       maxChildSize: 0.9,
       expand: false,
@@ -60,15 +69,20 @@ class SoopkomongDetailSheet extends StatelessWidget {
                         SizedBox(
                           width: 160,
                           height: 137,
-                          child: isDiscovered
+                          child: finalIsDiscovered
                               ? Image.asset(
                                   'assets/images/character.png',
                                   fit: BoxFit.contain,
                                 )
-                              : Image.asset(
-                                  'assets/images/character_silhouette.png',
-                                  fit: BoxFit.contain,
-                                ),
+                              : hasEgg
+                                  ? Image.asset(
+                                      'assets/images/vector.png',
+                                      fit: BoxFit.contain,
+                                    )
+                                  : Image.asset(
+                                      'assets/images/character_silhouette.png',
+                                      fit: BoxFit.contain,
+                                    ),
                         ),
 
                         const SizedBox(height: 28),
@@ -78,50 +92,113 @@ class SoopkomongDetailSheet extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isDiscovered ? name : '???',
+                              (finalIsDiscovered || hasEgg) ? name : '???',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            isDiscovered
+                            finalIsDiscovered
                                 ? const Icon(Icons.edit_outlined, size: 20)
                                 : const SizedBox.shrink(),
                           ],
                         ),
 
-                        const SizedBox(height: 16),
 
-                        /// 진행도 바
-                        if (isDiscovered)
-                          Column(
-                            children: [
-                              SizedBox(
-                                width: 200,
-                                child: LinearProgressIndicator(
-                                  value: 0.75,
-                                  minHeight: 6,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-
-                              const SizedBox(height: 6),
-                              const Text(
-                                '3000/5000',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
                       ],
                     ),
 
                     const SizedBox(height: 32),
 
-                    if (isDiscovered)
+                    /// 🔹 캐릭터 속성 및 걸음 수 컨테이너
+                    if (finalIsDiscovered) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    '캐릭터 속성',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 14,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[300],
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        '불',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Column(
+                                children: const [
+                                  Text(
+                                    '함께 걸은 걸음 수',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    '5,678 걸음',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    if (finalIsDiscovered || hasEgg)
                       InfoCard(
-                        leading: Icon(Icons.location_on_outlined),
-                        title: '공원 이름',
+                        leading: const Icon(Icons.location_on_outlined),
+                        title: parkName, // 기존 '공원 이름' 텍스트 대신 변수 사용
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
@@ -138,10 +215,10 @@ class SoopkomongDetailSheet extends StatelessWidget {
                       ),
 
                     const SizedBox(height: 20),
-                    if (isDiscovered)
+                    if (finalIsDiscovered)
                       /// 🔹 카드 2 - 캐릭터 설명
                       InfoCard(
-                        leading: Icon(Icons.description_outlined),
+                        leading: const Icon(Icons.description_outlined),
                         title: '캐릭터 설명',
                         child: const Padding(
                           padding: EdgeInsets.only(top: 12),
