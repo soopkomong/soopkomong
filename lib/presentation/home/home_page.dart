@@ -140,8 +140,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     for (var loc in locations) {
       final center = Position(loc.lng, loc.lat);
-      // turf_helper를 사용하여 500미터 반경의 원 형태 폴리곤 생성
-      final circleCoordinates = createCircleCoordinates(center, 500.0);
+      // turf_helper를 사용하여 radius 반경의 원 형태 폴리곤 생성
+      final circleCoordinates = createCircleCoordinates(center, loc.radius);
 
       polygonOptions.add(
         PolygonAnnotationOptions(

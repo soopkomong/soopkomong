@@ -10,6 +10,7 @@ class PetLocation {
   final double lng;
   final String petName;
   final String petType;
+  final double radius;
 
   const PetLocation({
     required this.id,
@@ -19,5 +20,6 @@ class PetLocation {
     required this.lng,
     required this.petName,
     required this.petType,
+    required this.radius,
   });
 }

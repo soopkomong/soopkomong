@@ -12,6 +12,7 @@ class PetLocationModel extends PetLocation {
     required super.lng,
     required super.petName,
     required super.petType,
+    required super.radius,
   });
 
   factory PetLocationModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +26,7 @@ class PetLocationModel extends PetLocation {
       lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
       petName: pet['name'] as String? ?? '알 수 없음',
       petType: pet['type'] as String? ?? '알 수 없음',
+      radius: (json['radius'] as num?)?.toDouble() ?? 500.0,
     );
   }
 }
