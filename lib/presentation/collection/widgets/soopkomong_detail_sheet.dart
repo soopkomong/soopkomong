@@ -22,7 +22,8 @@ class SoopkomongDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 3000보를 걸으면 캐릭터를 발견 처리 (또는 기존에 이미 발견된 경우)
-    final bool finalIsDiscovered = isDiscovered || (isRegionVisited && currentSteps >= 3000);
+    final bool finalIsDiscovered =
+        isDiscovered || (isRegionVisited && currentSteps >= 3000);
     // 지역은 방문하여 알을 찾았지만 아직 3000보를 다 걷지 못한 상태
     final bool hasEgg = isRegionVisited && !finalIsDiscovered;
 
@@ -75,14 +76,14 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                   fit: BoxFit.contain,
                                 )
                               : hasEgg
-                                  ? Image.asset(
-                                      'assets/images/vector.png',
-                                      fit: BoxFit.contain,
-                                    )
-                                  : Image.asset(
-                                      'assets/images/character_silhouette.png',
-                                      fit: BoxFit.contain,
-                                    ),
+                              ? Image.asset(
+                                  'assets/images/vector.png',
+                                  fit: BoxFit.contain,
+                                )
+                              : Image.asset(
+                                  'assets/images/character_silhouette.png',
+                                  fit: BoxFit.contain,
+                                ),
                         ),
 
                         const SizedBox(height: 28),
@@ -104,8 +105,6 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                 : const SizedBox.shrink(),
                           ],
                         ),
-
-
                       ],
                     ),
 

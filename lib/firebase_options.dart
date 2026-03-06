@@ -63,9 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1012942978199',
     projectId: 'soopkomong',
     storageBucket: 'soopkomong.firebasestorage.app',
-    androidClientId: '1012942978199-p9bq1nu7qj8qcaho0m3ak051sa6f5031.apps.googleusercontent.com',
-    iosClientId: '1012942978199-ka1rann4nt2bp9tjm948qh4o4rcem1so.apps.googleusercontent.com',
+    androidClientId:
+        '1012942978199-p9bq1nu7qj8qcaho0m3ak051sa6f5031.apps.googleusercontent.com',
+    iosClientId:
+        '1012942978199-ka1rann4nt2bp9tjm948qh4o4rcem1so.apps.googleusercontent.com',
     iosBundleId: 'soopkomong.com',
   );
-
 }

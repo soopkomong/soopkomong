@@ -7,11 +7,11 @@ import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart'
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 
-// TODO: 차후 실제 API 연동 시 전역 모델 디렉토리로 이동해야 할 열거형(Enum)입니다.
+// TODO: 차후 실제 API 연동 시 전역 모델 디렉토리로 이동해야 할 열거형(Enum)
 enum CharacterStatus {
-  discovered,     // 완전히 발견된 상태
-  visitedEgg,     // 방문은 했지만 미부화 상태
-  undiscovered,   // 아예 미발견 상태
+  discovered, // 완전히 발견된 상태
+  visitedEgg, // 방문은 했지만 미부화 상태
+  undiscovered, // 아예 미발견 상태
 }
 
 class CollectionPage extends StatefulWidget {
@@ -161,15 +161,17 @@ class _CollectionPageState extends State<CollectionPage> {
         final id = (index + 1).toString().padLeft(3, '0');
         final name = '숲코몽';
         final parkName = '서울숲공원';
-        
+
         // 목업 상태 배정 로직 (3가지 상태 테스트)
         // 화면에서 세 가지 상태가 골고루 보이도록 index % 3을 활용하여 배정합니다.
         final CharacterStatus status = CharacterStatus.values[index % 3];
-        
+
         final isDiscovered = status == CharacterStatus.discovered; // 발견
         final isRegionVisited = status == CharacterStatus.visitedEgg; // 지역 방문
         // TODO: 임시 데이터로 실제 데이터로 리펙토링 필요
-        final currentSteps = status == CharacterStatus.visitedEgg ? 1578 : 0; // 걸음 수
+        final currentSteps = status == CharacterStatus.visitedEgg
+            ? 1578
+            : 0; // 걸음 수
 
         return SoopkomongCard(
           id: id,

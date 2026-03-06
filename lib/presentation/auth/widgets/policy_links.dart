@@ -27,10 +27,7 @@ class PolicyLinks extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 8.0),
           child: Text(
             '|',
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFFCCCCCC),
-            ),
+            style: TextStyle(fontSize: 13, color: Color(0xFFCCCCCC)),
           ),
         ),
         GestureDetector(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/mypage/character_page/widgets/character_create_popup.dart';
 
 class CharacterCustomizePage extends StatefulWidget {
   const CharacterCustomizePage({super.key});
@@ -17,6 +18,13 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        builder: (context) => const CharacterCreatePopup(),
+      );
+    });
   }
 
   @override
@@ -96,11 +104,7 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
           ),
           const SizedBox(height: 12),
           // 캐릭터 이미지
-          Image.asset(
-            'assets/images/my.png',
-            height: 200,
-            fit: BoxFit.contain,
-          ),
+          Image.asset('assets/images/my.png', height: 200, fit: BoxFit.contain),
         ],
       ),
     );
@@ -111,9 +115,7 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
       ),
       child: TabBar(
         controller: _tabController,
@@ -121,10 +123,7 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
         unselectedLabelColor: Colors.grey,
         indicatorColor: Colors.black,
         indicatorWeight: 2,
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
@@ -200,11 +199,7 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
                 color: const Color(0xFFBDBDBD),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.undo,
-                color: Colors.white,
-                size: 22,
-              ),
+              child: const Icon(Icons.undo, color: Colors.white, size: 22),
             ),
           ),
           const SizedBox(width: 12),
