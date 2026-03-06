@@ -1,4 +1,4 @@
-import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/repositories/location_repository.dart';
 import 'package:soopkomong/data/datasources/local_location_datasource.dart';
 
@@ -11,7 +11,7 @@ class LocationRepositoryImpl implements LocationRepository {
   LocationRepositoryImpl(this.dataSource);
 
   @override
-  Future<List<PetLocation>> getLocations() async {
+  Future<List<Location>> getLocations() async {
     return await dataSource.getLocalLocations();
   }
 }

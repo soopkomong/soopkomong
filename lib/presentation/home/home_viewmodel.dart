@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/repositories/location_repository.dart';
 import 'package:soopkomong/domain/usecases/get_locations_usecase.dart';
 import 'package:soopkomong/data/repositories/location_repository_impl.dart';
@@ -21,7 +21,7 @@ final getLocationsUseCaseProvider = Provider<GetLocationsUseCase>((ref) {
 /// Home State
 class HomeState {
   final bool isLoading;
-  final List<PetLocation> locations;
+  final List<Location> locations;
   final String? errorMessage;
 
   HomeState({
@@ -32,7 +32,7 @@ class HomeState {
 
   HomeState copyWith({
     bool? isLoading,
-    List<PetLocation>? locations,
+    List<Location>? locations,
     String? errorMessage,
   }) {
     return HomeState(
