@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 
-class AppBottomNavigationBar extends StatefulWidget {
+class AppBottomNavigationBar extends ConsumerStatefulWidget {
   const AppBottomNavigationBar({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  State<AppBottomNavigationBar> createState() => _AppBottomNavigationBarState();
+  ConsumerState<AppBottomNavigationBar> createState() =>
+      _AppBottomNavigationBarState();
 }
 
-class _AppBottomNavigationBarState extends State<AppBottomNavigationBar> {
+class _AppBottomNavigationBarState
+    extends ConsumerState<AppBottomNavigationBar> {
   void _onTap(int index) {
+    if (index == 0 && widget.navigationShell.currentIndex != 0) {
+      // 다른 탭에서 홈 탭으로 이동할 때 줌 초기화 트리거
+      ref.read(mapZoomResetProvider.notifier).triggerReset();
+    }
+
     widget.navigationShell.goBranch(
       index,
       initialLocation: index == widget.navigationShell.currentIndex,

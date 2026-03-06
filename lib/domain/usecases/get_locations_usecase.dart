@@ -1,4 +1,4 @@
-import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/repositories/location_repository.dart';
 
 /// [Domain Layer] - UseCase
@@ -9,7 +9,7 @@ class GetLocationsUseCase {
 
   GetLocationsUseCase(this.repository);
 
-  Future<List<PetLocation>> call() async {
+  Future<List<Location>> call() async {
     return await repository.getLocations();
   }
 }

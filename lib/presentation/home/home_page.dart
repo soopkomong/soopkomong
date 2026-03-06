@@ -9,7 +9,7 @@ import 'package:soopkomong/core/utils/turf_helper.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:soopkomong/domain/entities/pet_location.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/core/router/app_route.dart';
 
@@ -25,6 +25,8 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  final double _defaultZoomLevel = 16.5;
+
   MapboxMap? mapboxMap;
   PointAnnotationManager? pointAnnotationManager;
   PolygonAnnotationManager? polygonAnnotationManager;
@@ -59,7 +61,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  Future<void> _addMarkers(List<PetLocation> locations) async {
+  Future<void> _addMarkers(List<Location> locations) async {
     if (mapboxMap == null || locations.isEmpty || _markersAdded) return;
     _markersAdded = true;
 
@@ -170,8 +172,18 @@ class _HomePageState extends ConsumerState<HomePage> {
       LocationComponentSettings(enabled: true, puckBearingEnabled: true),
     );
 
-    // 카메라 줌인 한계(minZoom) 설정 - 가장 멀리보는 최대 반경 14.5
-    // await mapboxMap.setBounds(CameraBoundsOptions(minZoom: 14.5));
+    // 카메라 줌아웃 한계(minZoom) 설정 - 가장 멀리보는 최대 반경 14.5
+    await mapboxMap.setBounds(
+      CameraBoundsOptions(
+        bounds: CoordinateBounds(
+          southwest: Point(coordinates: Position(-180, -90)),
+          northeast: Point(coordinates: Position(180, 90)),
+          infiniteBounds: true,
+        ),
+        minZoom: 14.5,
+        maxZoom: 22.0,
+      ),
+    );
 
     if (!mounted) return;
     final size = MediaQuery.of(context).size;
@@ -196,7 +208,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     await _applyDayNightTheme(mapboxMap);
 
     // 맵 생성 후에도 다시 한번 내 위치로 카메라 이동을 보장
-    await _moveToCurrentLocation();
+    await _moveToCurrentLocation(forceDefaultZoom: true);
   }
 
   Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
@@ -219,7 +231,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  Future<void> _moveToCurrentLocation() async {
+  Future<void> _moveToCurrentLocation({bool forceDefaultZoom = false}) async {
     bool serviceEnabled;
     geo.LocationPermission permission;
 
@@ -238,12 +250,16 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 맵이 아직 렌더링되지 않았을 수도 있으므로 mapboxMap 객체가 있는지 확인
     if (mapboxMap != null) {
+      final currentCamera = await mapboxMap!.getCameraState();
+      final targetZoom = forceDefaultZoom
+          ? _defaultZoomLevel
+          : currentCamera.zoom;
       mapboxMap?.setCamera(
         CameraOptions(
           center: Point(
             coordinates: Position(position.longitude, position.latitude),
           ),
-          zoom: 16.5,
+          zoom: targetZoom,
         ),
       );
       // 한번 셋팅 후, 실시간으로 위치가 바뀔 때마다 카메라를 내 위치로 이동시키는 리스너 등록
@@ -275,7 +291,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  void _showLocationDetails(int index, List<PetLocation> locations) {
+  void _showLocationDetails(int index, List<Location> locations) {
     if (index < 0 || index >= locations.length) return;
 
     final loc = locations[index];
@@ -395,9 +411,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
 
-    // 다른 탭이나 페이지에서 복귀 시 줌 초기화 이벤트를 수신합니다.
+    // 다른 탭이나 페이지(도감 등)에서 복귀 시 줌 16.5 초기화 이벤트를 수신합니다.
     ref.listen(mapZoomResetProvider, (_, _) {
-      _moveToCurrentLocation();
+      _moveToCurrentLocation(forceDefaultZoom: true);
     });
 
     // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
@@ -431,10 +447,13 @@ class _HomePageState extends ConsumerState<HomePage> {
             styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
             onMapCreated: _onMapCreated,
             // 줌/내비게이션 시에도 완벽하게 내 위치가 가운데 고정되도록 Viewport 사용
-            viewport: FollowPuckViewportState(zoom: 16.5, pitch: 0.0),
+            viewport: FollowPuckViewportState(
+              zoom: _defaultZoomLevel,
+              pitch: 0.0,
+            ),
             cameraOptions: CameraOptions(
               center: Point(coordinates: Position(127.7669, 35.9078)),
-              zoom: 16.5,
+              zoom: _defaultZoomLevel,
               pitch: 0.0, // 3D 건물이 눕지 않게 완벽한 2D 평면
               bearing: 0.0, // 북쪽 고정
             ),
