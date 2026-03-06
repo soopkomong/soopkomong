@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 class UndiscoveredCharacterDialog extends StatelessWidget {
   final List<String> availableParks;
 
-  const UndiscoveredCharacterDialog({
-    super.key,
-    required this.availableParks,
-  });
+  const UndiscoveredCharacterDialog({super.key, required this.availableParks});
 
   /// 팝업을 간편하게 호출하기 위한 정적 메서드
   static Future<void> show(
@@ -17,9 +14,8 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
     return showDialog(
       context: context,
       barrierColor: Colors.black54,
-      builder: (context) => UndiscoveredCharacterDialog(
-        availableParks: availableParks,
-      ),
+      builder: (context) =>
+          UndiscoveredCharacterDialog(availableParks: availableParks),
     );
   }
 
@@ -27,9 +23,7 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 40),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
@@ -41,11 +35,7 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
               alignment: Alignment.topRight,
               child: GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
-                child: const Icon(
-                  Icons.close,
-                  size: 24,
-                  color: Colors.black54,
-                ),
+                child: const Icon(Icons.close, size: 24, color: Colors.black54),
               ),
             ),
 
@@ -87,10 +77,7 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
                 children: [
                   const Text(
                     '발견 가능한 공원',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black45,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.black45),
                   ),
                   const SizedBox(height: 6),
                   Text(
