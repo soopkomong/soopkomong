@@ -41,6 +41,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 첫 프레임 렌더링 후 비동기로 데이터 로드 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeViewModelProvider.notifier).loadData();
+      ref.read(homeViewModelProvider.notifier).startPedometer();
     });
 
     // initState에서도 권한을 먼저 요청하고, 초기 카메라 위치를 잡기 위해 실행
@@ -445,9 +446,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   height: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  "123", // 만보기 값
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  state.stepCount.toString(), // 실시간 만보기 값
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
