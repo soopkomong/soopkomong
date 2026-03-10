@@ -424,21 +424,59 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        titleSpacing: 12,
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("오늘 걸음 수", style: TextStyle(fontSize: 12)),
+                const SizedBox(width: 8),
+                Image.asset(
+                  "assets/images/footprints.png",
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  "123", // 만보기 값
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person),
+            icon: const Icon(Icons.notifications),
             onPressed: () async {
               await context.pushNamed(AppRoute.mypage.name);
-              // MyPage에서 뒤로가기로 돌아왔을 때 줌 레벨 복구를 위해 이벤트 트리거
               ref.read(mapZoomResetProvider.notifier).triggerReset();
             },
             style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () async {
+              await context.pushNamed(AppRoute.mypage.name);
+              ref.read(mapZoomResetProvider.notifier).triggerReset();
+            },
+            style: IconButton.styleFrom(backgroundColor: Colors.white),
+          ),
+          SizedBox(width: 12),
         ],
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.black,
       ),
+
       body: Stack(
         children: [
           MapWidget(
