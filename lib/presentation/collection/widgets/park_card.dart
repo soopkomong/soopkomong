@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class ParkCard extends StatelessWidget {
   const ParkCard({
@@ -27,7 +29,7 @@ class ParkCard extends StatelessWidget {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFFD9D9D9),
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -35,7 +37,7 @@ class ParkCard extends StatelessWidget {
             Expanded(
               child: Container(
                 width: double.infinity,
-                color: const Color(0xFFEBEBEB),
+                color: AppColors.gray50,
                 child: Stack(
                   children: [
                     Center(
@@ -45,12 +47,15 @@ class ParkCard extends StatelessWidget {
                         color: isVisited ? null : Colors.grey,
                         colorBlendMode: isVisited ? null : BlendMode.saturation,
                         errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.image, color: Colors.grey);
+                          return const Icon(
+                            Icons.image,
+                            color: AppColors.gray300,
+                          );
                         },
                       ),
                     ),
                     if (!isVisited)
-                      Container(color: Colors.black.withValues(alpha: 0.35)),
+                      Container(color: AppColors.black.withValues(alpha: 0.35)),
                     if (!isVisited)
                       const Center(
                         child: Icon(Icons.lock, color: Colors.white, size: 40),
@@ -61,23 +66,26 @@ class ParkCard extends StatelessWidget {
             ),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              decoration: BoxDecoration(color: AppColors.primary50),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     region,
-                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.gray600,
+                    ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                      overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.subTitleM.copyWith(
+                      color: AppColors.black,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

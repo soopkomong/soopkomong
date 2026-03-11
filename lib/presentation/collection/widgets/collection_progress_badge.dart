@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class CollectionProgressBadge extends StatelessWidget {
   const CollectionProgressBadge({
@@ -17,7 +19,7 @@ class CollectionProgressBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFE6E6E6),
+        color: AppColors.primary50,
         borderRadius: BorderRadius.circular(40),
       ),
       child: Row(
@@ -27,11 +29,15 @@ class CollectionProgressBadge extends StatelessWidget {
             iconPath,
             width: 20,
             height: 20,
+            color: AppColors.primary800,
             errorBuilder: (context, error, stackTrace) =>
                 const Icon(Icons.error, size: 20),
           ),
           const SizedBox(width: 8),
-          Text('$currentCount/$totalCount'),
+          Text(
+            '$currentCount/$totalCount',
+            style: AppTextStyles.label.copyWith(color: AppColors.primary900),
+          ),
         ],
       ),
     );

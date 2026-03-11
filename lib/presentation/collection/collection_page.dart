@@ -166,9 +166,7 @@ class _CollectionPageState extends State<CollectionPage> {
                 : 'assets/images/character_silhouette.png',
           ),
           const SizedBox(height: 24),
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : grid,
+          _isLoading ? const Center(child: CircularProgressIndicator()) : grid,
           const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
         ],
       ),
