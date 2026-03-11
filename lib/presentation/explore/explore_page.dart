@@ -17,6 +17,7 @@ class _ExplorePageState extends State<ExplorePage> {
   List<dynamic> _allLocations = [];
   List<dynamic> _locations = [];
   Region _selectedRegion = Region.capital;
+  String _searchQuery = '';
   bool _isLoading = true;
 
   @override
@@ -47,7 +48,11 @@ class _ExplorePageState extends State<ExplorePage> {
   void _filterLocations() {
     setState(() {
       _locations = _allLocations.where((location) {
-        return location['region'] == _selectedRegion.label;
+        final matchesRegion = location['region'] == _selectedRegion.label;
+        final title = (location['title'] ?? '').toString().toLowerCase();
+        final matchesSearch =
+            _searchQuery.isEmpty || title.contains(_searchQuery.toLowerCase());
+        return matchesRegion && matchesSearch;
       }).toList();
     });
   }
@@ -82,7 +87,48 @@ class _ExplorePageState extends State<ExplorePage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              // 검색바
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEEEE),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: TextField(
+                    textAlignVertical: TextAlignVertical.center,
+                    onChanged: (value) {
+                      _searchQuery = value;
+                      _filterLocations();
+                    },
+                    decoration: const InputDecoration(
+                      hintText: '검색어를 입력해주세요',
+                      hintStyle: TextStyle(
+                        color: Color(0xFFAAAAAA),
+                        fontSize: 14,
+                        height: 1.2,
+                      ),
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.only(left: 20, right: 8),
+                        child: Icon(
+                          Icons.search,
+                          color: Color(0xFFAAAAAA),
+                          size: 22,
+                        ),
+                      ),
+                      prefixIconConstraints: BoxConstraints(
+                        minWidth: 52,
+                        minHeight: 48,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.only(right: 16),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               RegionFilterBar(
                 onChanged: (region) {
                   setState(() {
