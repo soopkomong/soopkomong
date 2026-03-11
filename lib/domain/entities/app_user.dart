@@ -1,4 +1,4 @@
-import 'package:soopkomong/domain/entities/acquired_character.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
 
 class AppUser {
   final String id;
@@ -11,7 +11,7 @@ class AppUser {
   final DateTime? lastStepUpdateAt; // 마지막으로 업데이트 된 시각
 
   // 획득한 캐릭터 리스트
-  final List<AcquiredCharacter> acquiredCharacters;
+  final List<Soopkomon> acquiredCharacters;
 
   AppUser({
     required this.id,

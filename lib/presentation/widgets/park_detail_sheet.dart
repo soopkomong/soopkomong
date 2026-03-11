@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:soopkomong/core/utils/kakao_navi_service.dart';
 import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 class ParkDetailSheet extends StatefulWidget {
   final String id;
@@ -115,12 +114,12 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
               }
             },
             onWebResourceError: (WebResourceError error) {
-              print('WebView Error: \${error.description}');
+              debugPrint('WebView Error: ${error.description}');
             },
           ),
         )
         ..setOnConsoleMessage((message) {
-          print('WebView Console: \${message.message}');
+          debugPrint('WebView Console: ${message.message}');
         })
         ..loadHtmlString(htmlString, baseUrl: "http://localhost/");
     }
