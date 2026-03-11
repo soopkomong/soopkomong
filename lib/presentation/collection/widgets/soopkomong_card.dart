@@ -1,25 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 
 class SoopkomongCard extends StatelessWidget {
   const SoopkomongCard({
     super.key,
-    required this.id,
-    required this.name,
-    required this.parkName,
-    required this.isDiscovered,
+    required this.template,
+    this.userCharacter,
     this.onTap,
   });
 
-  final String id;
-  final String name;
-  final String parkName;
-  final bool isDiscovered;
+  final SoopkomonTemplate template;
+  final Soopkomon? userCharacter;
   final VoidCallback? onTap;
+
+  bool get isDiscovered => userCharacter != null;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap:
+          onTap ??
+          () {
+            showModalBottomSheet(
+              context: context,
+              useRootNavigator: true,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => SoopkomongDetailSheet(
+                template: template,
+                soopkomon: userCharacter,
+                isRegionVisited: true, // TODO: 실제 데이터 연동
+                currentSteps: userCharacter?.currentTotalSteps ?? 0,
+              ),
+            );
+          },
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
@@ -35,15 +51,20 @@ class SoopkomongCard extends StatelessWidget {
                 child: Stack(
                   children: [
                     Center(
-                      child: isDiscovered
-                          ? Image.asset(
-                              'assets/images/character.png',
-                              fit: BoxFit.contain,
-                            )
-                          : Image.asset(
-                              'assets/images/character_silhouette.png',
-                              fit: BoxFit.contain,
-                            ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Image.asset(
+                          template.actualImagePath,
+                          fit: BoxFit.contain,
+                          color: isDiscovered ? null : Colors.black.withValues(alpha: 0.7),
+                          colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
+                          errorBuilder:
+                              (context, error, stackTrace) => Icon(
+                            isDiscovered ? Icons.pets : Icons.help_outline,
+                            size: 40,
+                          ),
+                        ),
+                      ),
                     ),
                     if (isDiscovered)
                       Positioned(
@@ -65,46 +86,30 @@ class SoopkomongCard extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: SizedBox(
-                height: 50, // 👈 높이 고정 (조절 가능)
-                child: isDiscovered
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            id,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            parkName,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Center(
-                        child: Text(
-                          id,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black87,
-                          ),
-                        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    template.templateId,
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                  if (isDiscovered) ...[
+                    Text(
+                      template.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.1,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ] else ...[
+                    // 미발견 시 빈 공간을 채워 높이 유지
+                    const SizedBox(height: 16), // name 영역 placeholder
+                  ],
+                ],
               ),
             ),
           ],

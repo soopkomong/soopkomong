@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
+import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
+import 'package:intl/intl.dart'; // 날짜 포맷팅용
 
 class SoopkomongDetailSheet extends StatelessWidget {
-  final String id;
-  final String name;
-  final String parkName;
-  final bool isDiscovered; // 기존 발견 여부
-  final bool isRegionVisited; // 지역 방문 (알 발견) 여부
+  final SoopkomonTemplate template;
+  final Soopkomon? soopkomon; // 유저가 획득한 경우 해당 인스턴스 데이터
+  final bool isRegionVisited; // 지역 방문 (알 발견) 여부 (인스턴스가 없어도 알 상태일 수 있음)
   final int currentSteps; // 알 부화(캐릭터 발견)를 위한 현재 걸음 수
 
   const SoopkomongDetailSheet({
     super.key,
-    required this.id,
-    required this.name,
-    required this.parkName,
-    required this.isDiscovered,
+    required this.template,
+    this.soopkomon,
     this.isRegionVisited = false,
     this.currentSteps = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 3000보를 걸으면 캐릭터를 발견 처리 (또는 기존에 이미 발견된 경우)
-    final bool finalIsDiscovered =
-        isDiscovered || (isRegionVisited && currentSteps >= 3000);
-    // 지역은 방문하여 알을 찾았지만 아직 3000보를 다 걷지 못한 상태
+    // 이미 발견되었거나(soopkomon 존재), 알 상태에서 3000보를 다 채운 경우 발견으로 간주
+    // (실제 서비스에서는 서버/로컬 DB 업데이트가 동반되어야 함)
+    final bool finalIsDiscovered = soopkomon != null || (isRegionVisited && currentSteps >= 3000);
     final bool hasEgg = isRegionVisited && !finalIsDiscovered;
+
+    // 표시할 이름
+    final String displayName = (finalIsDiscovered || hasEgg) ? template.name : '???';
+    
+    // 발견 장소 이름
+    final String displayParkName = soopkomon?.discoveredSpotName ?? '미발견 지역';
 
     return DraggableScrollableSheet(
       initialChildSize: 0.8,
@@ -69,21 +74,34 @@ class SoopkomongDetailSheet extends StatelessWidget {
                         // 캐릭터 이미지
                         SizedBox(
                           width: 160,
-                          height: 137,
-                          child: finalIsDiscovered
-                              ? Image.asset(
-                                  'assets/images/character.png',
-                                  fit: BoxFit.contain,
-                                )
-                              : hasEgg
-                              ? Image.asset(
-                                  'assets/images/vector.png',
-                                  fit: BoxFit.contain,
-                                )
-                              : Image.asset(
-                                  'assets/images/character_silhouette.png',
-                                  fit: BoxFit.contain,
-                                ),
+                          height: 160,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: hasEgg
+                                ? Image.asset(
+                                    template.eggImagePath,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.egg, size: 80),
+                                  )
+                                : Image.asset(
+                                    template.actualImagePath,
+                                    fit: BoxFit.contain,
+                                    color: finalIsDiscovered
+                                        ? null
+                                        : Colors.black.withValues(alpha: 0.7),
+                                    colorBlendMode: finalIsDiscovered
+                                        ? null
+                                        : BlendMode.srcIn,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Icon(
+                                      finalIsDiscovered
+                                          ? Icons.pets
+                                          : Icons.help_outline,
+                                      size: 80,
+                                    ),
+                                  ),
+                          ),
                         ),
 
                         const SizedBox(height: 28),
@@ -93,7 +111,7 @@ class SoopkomongDetailSheet extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              (finalIsDiscovered || hasEgg) ? name : '???',
+                              displayName,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
@@ -140,14 +158,14 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                         width: 14,
                                         height: 14,
                                         decoration: BoxDecoration(
-                                          color: Colors.grey[300],
+                                          color: _getEggTypeColor(template.eggType),
                                           shape: BoxShape.circle,
                                         ),
                                       ),
                                       const SizedBox(width: 6),
-                                      const Text(
-                                        '불',
-                                        style: TextStyle(
+                                      Text(
+                                        template.eggType.label,
+                                        style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -168,8 +186,8 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                 border: Border.all(color: Colors.grey.shade200),
                               ),
                               child: Column(
-                                children: const [
-                                  Text(
+                                children: [
+                                  const Text(
                                     '함께 걸은 걸음 수',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -177,10 +195,10 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                       color: Colors.black54,
                                     ),
                                   ),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   Text(
-                                    '5,678 걸음',
-                                    style: TextStyle(
+                                    '${NumberFormat('#,###').format(soopkomon?.traveledSteps ?? 0)} 걸음',
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -197,16 +215,19 @@ class SoopkomongDetailSheet extends StatelessWidget {
                     if (finalIsDiscovered || hasEgg)
                       InfoCard(
                         leading: const Icon(Icons.location_on_outlined),
-                        title: parkName, // 기존 '공원 이름' 텍스트 대신 변수 사용
+                        title: displayParkName,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            SizedBox(height: 12),
+                          children: [
+                            const SizedBox(height: 12),
                             Row(
                               children: [
-                                Icon(Icons.calendar_today, size: 16),
-                                SizedBox(width: 4),
-                                Text('발견한 날짜 : 2025년 3월 3일 월요일'),
+                                const Icon(Icons.calendar_today, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '발견한 날짜 : ${soopkomon != null ? DateFormat('yyyy년 M월 d일 EEEE', 'ko_KR').format(soopkomon!.discoveredAt) : '알 상태'}',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
                               ],
                             ),
                           ],
@@ -219,11 +240,11 @@ class SoopkomongDetailSheet extends StatelessWidget {
                       InfoCard(
                         leading: const Icon(Icons.description_outlined),
                         title: '캐릭터 설명',
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 12),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            'Lorem ipsum dolor sit amet consectetur. Elit ornare rhoncus morbi quis egestas sed leo. Congue amet semper nec tempus ac sagittis posuere urna libero. Aliquam lectus neque massa urna.',
-                            style: TextStyle(fontSize: 13, height: 1.5),
+                            template.description,
+                            style: const TextStyle(fontSize: 13, height: 1.5),
                           ),
                         ),
                       ),
@@ -235,5 +256,15 @@ class SoopkomongDetailSheet extends StatelessWidget {
         );
       },
     );
+  }
+
+  Color _getEggTypeColor(SoopkomonEggType eggType) {
+    switch (eggType) {
+      case SoopkomonEggType.water: return Colors.blue;
+      case SoopkomonEggType.flying: return Colors.lightBlueAccent;
+      case SoopkomonEggType.mystic: return Colors.purpleAccent;
+      case SoopkomonEggType.grass: return Colors.green;
+      case SoopkomonEggType.ground: return Colors.brown;
+    }
   }
 }

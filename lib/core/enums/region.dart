@@ -8,4 +8,11 @@ enum Region {
 
   final String label;
   const Region(this.label);
+
+  factory Region.fromValue(String value) {
+    return Region.values.firstWhere(
+      (e) => e.name == value || e.label == value,
+      orElse: () => Region.capital,
+    );
+  }
 }

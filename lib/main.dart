@@ -14,9 +14,6 @@ void main() async {
   KakaoSdk.init(nativeAppKey: 'cc5aad14a59b4d716bd3ea7ba3b7fb06');
 
   runApp(const ProviderScope(child: MyApp()));
-
-  // 키 해시 출력 (디버그 콘솔에서 확인)
-  print("현재 앱의 키 해시: ${await KakaoSdk.origin}");
 }
 
 class MyApp extends ConsumerWidget {
