@@ -7,6 +7,7 @@ import 'package:soopkomong/data/datasources/local_location_datasource.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
+import 'dart:io';
 
 /// Providers for DI
 final locationDataSourceProvider = Provider<LocalLocationDataSource>((ref) {
@@ -77,7 +78,11 @@ class HomeNotifier extends Notifier<HomeState> {
 
   Future<void> startPedometer() async {
     // 권한 요청
-    if (await Permission.activityRecognition.request().isGranted) {
+    final status = Platform.isIOS
+        ? await Permission.sensors.request()
+        : await Permission.activityRecognition.request();
+
+    if (status.isGranted) {
       _subscription = Pedometer.stepCountStream.listen(
         (StepCount event) {
           state = state.copyWith(stepCount: event.steps);
@@ -87,7 +92,11 @@ class HomeNotifier extends Notifier<HomeState> {
         },
       );
     } else {
-      state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.');
+      if (Platform.isIOS) {
+        state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.\n(시뮬레이터는 만보기 기능을 지원하지 않습니다.)');
+      } else {
+        state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.');
+      }
     }
   }
 
