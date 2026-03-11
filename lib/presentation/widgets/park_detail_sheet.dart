@@ -105,11 +105,22 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
                       });
                       customOverlay.setMap(map);
                       
-                      // iOS 웹뷰에서 지도가 한쪽으로 쏠리거나 회색으로 잘리는 현상 방지
-                      setTimeout(function() {
+                      // iOS 웹뷰 및 바텀시트 애니메이션(대략 300~400ms) 도중 크기 0x0 상태에서 마커 증발 방지
+                      // 총 1.5초 동안 주기적으로 갱신하여 언제 렌더링되든 완벽히 중앙에 꽂히도록 강제 보정
+                      var retryCount = 0;
+                      var layoutInterval = setInterval(function() {
                           map.relayout();
                           map.setCenter(position);
-                      }, 300);
+                          
+                          // 혹시 레이아웃 변경 전에 그려져서 좌표 바깥으로 날아간 오버레이 재부착
+                          customOverlay.setMap(null);
+                          customOverlay.setMap(map);
+                          
+                          retryCount++;
+                          if (retryCount >= 10) { // 150ms * 10 = 1.5초 후 종료
+                              clearInterval(layoutInterval);
+                          }
+                      }, 150);
                       
                     } catch (e) {
                         document.getElementById('errorLog').innerHTML += "Map Init Error: " + e.message + "<br/>";
