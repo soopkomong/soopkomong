@@ -155,16 +155,35 @@ class ParkDetailSheet extends StatelessWidget {
                   leading: const Icon(Icons.description_outlined),
                   title: '공원 소개',
                   child: ExpandableText(
-                    text:
-                        '[제목] $name\n'
-                        '[주소] $address\n'
-                        '[개요] $description\n\n'
-                        '${tel.isNotEmpty ? '* 문의 : $tel \n\n' : ''}'
-                        '$information',
+                    text: description,
                     style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 20),
+
+              /// 🔹 이용안내 카드
+              if (information.isNotEmpty || tel.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: InfoCard(
+                    leading: Image.asset(
+                      'assets/images/character_silhouette.png',
+                      width: 24,
+                    ),
+                    title: '이용안내',
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        '${tel.isNotEmpty ? '$tel\n\n' : ''}$information'
+                            .trim(),
+                        style: const TextStyle(fontSize: 13, height: 1.5),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 20),
 
