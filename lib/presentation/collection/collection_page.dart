@@ -81,6 +81,7 @@ class _CollectionPageState extends State<CollectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -88,7 +89,9 @@ class _CollectionPageState extends State<CollectionPage> {
             children: [
               const SizedBox(height: 24),
 
-              const Icon(Icons.book, size: 55),
+              const SizedBox(height: 12),
+              const Icon(Icons.book, size: 40),
+              const SizedBox(height: 4),
               const Text(
                 '도감',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -96,16 +99,13 @@ class _CollectionPageState extends State<CollectionPage> {
 
               const SizedBox(height: 24),
 
-              SizedBox(
-                width: 230,
-                child: CollectionSlidingTab(
-                  initialIndex: _selectedTabIndex,
-                  onChanged: (index) {
-                    setState(() {
-                      _selectedTabIndex = index;
-                    });
-                  },
-                ),
+              CollectionSlidingTab(
+                initialIndex: _selectedTabIndex,
+                onChanged: (index) {
+                  setState(() {
+                    _selectedTabIndex = index;
+                  });
+                },
               ),
 
               const SizedBox(height: 24),

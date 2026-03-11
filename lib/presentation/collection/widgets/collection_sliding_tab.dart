@@ -39,38 +39,46 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 48,
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE6E6E6),
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final tabWidth = constraints.maxWidth / 2;
-
-            return Stack(
-              children: [
-                AnimatedAlign(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  alignment: selectedIndex == 0
-                      ? Alignment.centerLeft
-                      : Alignment.centerRight,
-                  child: Container(
-                    width: tabWidth,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(40),
-                    ),
+      child: Stack(
+        children: [
+          // 전체 바닥 회색 라인
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 1,
+              color: const Color(0xFFE5E5E5),
+            ),
+          ),
+          // 선택된 탭의 녹색 표시기 라인
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tabWidth = constraints.maxWidth / 2;
+              return AnimatedAlign(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                alignment: selectedIndex == 0
+                    ? Alignment.bottomLeft
+                    : Alignment.bottomRight,
+                child: Container(
+                  width: tabWidth,
+                  height: 3,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF4CAF50), // 이미지와 유사한 녹색
                   ),
                 ),
-
-                Row(children: [_buildTab(0, '생태공원'), _buildTab(1, '캐릭터')]),
-              ],
-            );
-          },
-        ),
+              );
+            },
+          ),
+          // 탭 버튼들
+          Row(
+            children: [
+              _buildTab(0, '생태공원'),
+              _buildTab(1, '숲코몽'),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -85,22 +93,21 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
             setState(() {
               selectedIndex = index;
             });
-
             widget.onChanged(index);
           }
         },
         child: Container(
           color: Colors.transparent,
-          child: Center(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: isSelected
-                    ? const Color(0xFF191919)
-                    : const Color(0xFFA3A3A3),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFF191919) // 선택 시 검정
+                  : const Color(0xFFA3A3A3), // 비선택 시 회색
+              fontSize: 18, // 이미지에 맞춰 폰트 크기 조정
+              fontWeight: FontWeight.bold, // 이미지 스타일 반영
+              letterSpacing: -0.5,
             ),
           ),
         ),
