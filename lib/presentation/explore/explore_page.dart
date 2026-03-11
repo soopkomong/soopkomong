@@ -157,6 +157,15 @@ class _ExplorePageState extends State<ExplorePage> {
                         final String information =
                             location['Information'] ?? '';
                         final String tel = location['tel'] ?? '';
+                        final Map<String, dynamic> navi =
+                            location['navi'] ?? {};
+                        final String naviLoc = navi['loc'] ?? '';
+                        final double? naviLat = navi['lat'] != null
+                            ? (navi['lat'] as num).toDouble()
+                            : null;
+                        final double? naviLng = navi['lng'] != null
+                            ? (navi['lng'] as num).toDouble()
+                            : null;
 
                         return ExploreParkCard(
                           region: region,
@@ -178,6 +187,9 @@ class _ExplorePageState extends State<ExplorePage> {
                                 information: information,
                                 tel: tel,
                                 isVisited: true,
+                                naviLoc: naviLoc,
+                                naviLat: naviLat,
+                                naviLng: naviLng,
                               ),
                             );
                           },
