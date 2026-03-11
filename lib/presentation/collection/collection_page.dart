@@ -1,102 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
+import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_progress_badge.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_sliding_tab.dart';
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
-import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
-import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 
-// TODO: 차후 실제 API 연동 시 전역 모델 디렉토리로 이동해야 할 열거형(Enum)
-enum CharacterStatus {
-  discovered, // 완전히 발견된 상태
-  visitedEgg, // 방문은 했지만 미부화 상태
-  undiscovered, // 아예 미발견 상태
-}
-
-class CollectionPage extends StatefulWidget {
+class CollectionPage extends ConsumerStatefulWidget {
   final int initialTab;
   const CollectionPage({super.key, this.initialTab = 0});
 
   @override
-  State<CollectionPage> createState() => _CollectionPageState();
+  ConsumerState<CollectionPage> createState() => _CollectionPageState();
 }
 
-class _CollectionPageState extends State<CollectionPage> {
+class _CollectionPageState extends ConsumerState<CollectionPage> {
   late int _selectedTabIndex; // 0: 생태공원, 1: 숲코몽
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     _selectedTabIndex = widget.initialTab;
+    _pageController = PageController(initialPage: _selectedTabIndex);
   }
 
-  // 부모로부터 initialIndex가 변경되었을 때, 내부 selectedIndex를 업데이트하기 위한 메서드
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   void didUpdateWidget(covariant CollectionPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialTab != widget.initialTab) {
       setState(() {
         _selectedTabIndex = widget.initialTab;
+        _pageController.jumpToPage(widget.initialTab);
       });
     }
   }
 
+  void _onTabChanged(int index) {
+    setState(() {
+      _selectedTabIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _showParkDetailBottomSheet(BuildContext context, dynamic park) {
+    final Map<String, dynamic> navi = park['navi'] ?? {};
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return ParkDetailSheet(
+          id: (park['id'] ?? '').toString(),
+          name: park['title'] ?? '',
+          description: park['summary'] ?? '',
+          imageUrl: park['imageUrl'] ?? '',
+          address: park['address'] ?? '',
+          information: park['Information'] ?? '',
+          tel: park['tel'] ?? '',
+          isVisited: park['isVisited'] ?? false,
+          naviLoc: navi['loc'] ?? '',
+          naviLat: navi['lat'] != null ? (navi['lat'] as num).toDouble() : null,
+          naviLng: navi['lng'] != null ? (navi['lng'] as num).toDouble() : null,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Provider 데이터 구독
+    final locationsAsync = ref.watch(filteredLocationsProvider);
+    final templatesAsync = ref.watch(filteredTemplatesProvider);
+    final userCharacters = ref.watch(userSoopkomonProvider);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    const Icon(Icons.book, size: 40),
+                    const SizedBox(height: 4),
+                    const Text('도감', style: AppTextStyles.subTitleL),
+                    const SizedBox(height: 24),
+                    CollectionSlidingTab(
+                      initialIndex: _selectedTabIndex,
+                      onChanged: _onTabChanged,
+                    ),
+                    const SizedBox(height: 24),
+                    RegionFilterBar(
+                      onChanged: (region) {
+                        ref
+                            .read(selectedRegionProvider.notifier)
+                            .update(region);
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ];
+          },
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              if (_selectedTabIndex != index) {
+                setState(() {
+                  _selectedTabIndex = index;
+                });
+              }
+            },
             children: [
-              const SizedBox(height: 24),
-
-              const Icon(Icons.book, size: 55),
-              const Text(
-                '도감',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: 230,
-                child: CollectionSlidingTab(
-                  initialIndex: _selectedTabIndex,
-                  onChanged: (index) {
-                    setState(() {
-                      _selectedTabIndex = index;
-                    });
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              RegionFilterBar(onChanged: (region) {}),
-
-              const SizedBox(height: 24),
-
-              CollectionProgressBadge(
-                currentCount: _selectedTabIndex == 0 ? 3 : 6, // 임시 데이터
-                totalCount: _selectedTabIndex == 0 ? 20 : 50, // 임시 데이터
-                iconPath: _selectedTabIndex == 0
-                    ? 'assets/images/park.png'
-                    : 'assets/images/character_silhouette.png',
-              ),
-
-              const SizedBox(height: 24),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: IndexedStack(
-                  index: _selectedTabIndex,
-                  children: [_buildParkGrid(), _buildCharacterGrid()],
-                ),
-              ),
-              const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
+              _buildTabPage(locationsAsync, userCharacters, templatesAsync, 0),
+              _buildTabPage(locationsAsync, userCharacters, templatesAsync, 1),
             ],
           ),
         ),
@@ -104,99 +142,112 @@ class _CollectionPageState extends State<CollectionPage> {
     );
   }
 
-  // 공원
-  Widget _buildParkGrid() {
+  Widget _buildTabPage(
+    AsyncValue<List<dynamic>> locationsAsync,
+    List<Soopkomon> userCharacters,
+    AsyncValue<List<SoopkomonTemplate>> templatesAsync,
+    int tabIndex,
+  ) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        children: [
+          locationsAsync.when(
+            loading: () => const CollectionProgressBadge(
+              currentCount: 0,
+              totalCount: 0,
+              iconPath: '',
+            ),
+            error: (err, stack) => const CollectionProgressBadge(
+              currentCount: 0,
+              totalCount: 0,
+              iconPath: '',
+            ),
+            data: (locations) => templatesAsync.when(
+              loading: () => const CollectionProgressBadge(
+                currentCount: 0,
+                totalCount: 0,
+                iconPath: '',
+              ),
+              error: (err, stack) => const CollectionProgressBadge(
+                currentCount: 0,
+                totalCount: 0,
+                iconPath: '',
+              ),
+              data: (templates) => CollectionProgressBadge(
+                currentCount: tabIndex == 0
+                    ? locations.where((l) => l['isVisited'] == true).length
+                    : userCharacters.length,
+                totalCount: tabIndex == 0 ? locations.length : templates.length,
+                iconPath: tabIndex == 0
+                    ? 'assets/images/park.png'
+                    : 'assets/images/character_silhouette.png',
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          tabIndex == 0
+              ? locationsAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('에러 발생: $err')),
+                  data: (locations) => _buildParkGrid(locations),
+                )
+              : templatesAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('에러 발생: $err')),
+                  data: (templates) =>
+                      _buildCharacterGrid(templates, userCharacters),
+                ),
+          const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParkGrid(List<dynamic> locations) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
         crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.7, // 카드가 세로로 더 긴 비율을 갖도록 설정
       ),
-      itemCount: 30,
+      itemCount: locations.length,
       itemBuilder: (context, index) {
-        final isVisited = index % 5 == 0;
-        final name = '서울숲공원';
-        final id = (index + 1).toString().padLeft(3, '0');
-
+        final park = locations[index];
         return ParkCard(
-          id: id,
-          name: name,
-          isVisited: isVisited,
-          index: index,
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              useRootNavigator: true,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => ParkDetailSheet(
-                id: id,
-                name: name,
-                index: index,
-                isVisited: isVisited,
-              ),
-            );
-          },
+          park: park,
+          onTap: () => _showParkDetailBottomSheet(context, park),
         );
       },
     );
   }
 
-  // 숲코몽
-  Widget _buildCharacterGrid() {
+  Widget _buildCharacterGrid(
+    List<SoopkomonTemplate> templates,
+    List<Soopkomon> userCharacters,
+  ) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.7, // 카드가 세로로 더 긴 비율을 갖도록 설정
+        crossAxisSpacing: 8,
+        childAspectRatio: 0.7, // 캐릭터 카드가 잘리지 않도록 높이 비율 확보
       ),
-      itemCount: 30,
+      itemCount: templates.length,
       itemBuilder: (context, index) {
-        final id = (index + 1).toString().padLeft(3, '0');
-        final name = '숲코몽';
-        final parkName = '서울숲공원';
+        final template = templates[index];
+        final userCharacter = userCharacters
+            .where((c) => c.templateId == template.templateId)
+            .firstOrNull;
 
-        // 목업 상태 배정 로직 (3가지 상태 테스트)
-        // 화면에서 세 가지 상태가 골고루 보이도록 index % 3을 활용하여 배정합니다.
-        final CharacterStatus status = CharacterStatus.values[index % 3];
-
-        final isDiscovered = status == CharacterStatus.discovered; // 발견
-        final isRegionVisited = status == CharacterStatus.visitedEgg; // 지역 방문
-        // TODO: 임시 데이터로 실제 데이터로 리펙토링 필요
-        final currentSteps = status == CharacterStatus.visitedEgg
-            ? 1578
-            : 0; // 걸음 수
-
-        return SoopkomongCard(
-          id: id,
-          name: name,
-          parkName: parkName,
-          isDiscovered: isDiscovered,
-          onTap: () {
-            // 모든 경우(발견, 알 상태, 미발견)에 동일한 바텀 시트를 띄우기
-            // 상세 시트 내부에서 isDiscovered, isRegionVisited, currentSteps 상태에 따라 UI가 분기 처리
-            showModalBottomSheet(
-              context: context,
-              useRootNavigator: true,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => SoopkomongDetailSheet(
-                id: id,
-                name: name,
-                parkName: parkName,
-                isDiscovered: isDiscovered,
-                isRegionVisited: isRegionVisited,
-                currentSteps: currentSteps,
-              ),
-            );
-          },
-        );
+        return SoopkomongCard(template: template, userCharacter: userCharacter);
       },
     );
   }

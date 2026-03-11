@@ -1,11 +1,18 @@
 enum Region {
   capital('수도권'),
-  gangwon('강원'),
-  chungcheong('충청'),
-  gyeongsang('경상'),
-  jeolla('전라'),
-  jeju('제주');
+  gangwon('강원권'),
+  chungcheong('충청권'),
+  gyeongsang('경상권'),
+  jeolla('전라권'),
+  jeju('제주권');
 
   final String label;
   const Region(this.label);
+
+  factory Region.fromValue(String value) {
+    return Region.values.firstWhere(
+      (e) => e.name == value || e.label == value,
+      orElse: () => Region.capital,
+    );
+  }
 }

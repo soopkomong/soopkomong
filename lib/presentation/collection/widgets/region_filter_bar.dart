@@ -18,13 +18,18 @@ class _RegionFilterBarState extends State<RegionFilterBar> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: Row(
-        children: Region.values.map((region) {
-          final isSelected = selected == region;
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          // Spacing is supported in Flutter 3.27+
+          spacing: 8,
+          children: Region.values.map((region) {
+            final isSelected = selected == region;
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: RegionChip(
+            return RegionChip(
               label: region.label,
               selected: isSelected,
               onTap: () {
@@ -33,9 +38,9 @@ class _RegionFilterBarState extends State<RegionFilterBar> {
                 });
                 widget.onChanged(region);
               },
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
