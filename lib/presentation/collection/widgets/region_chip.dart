@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class RegionChip extends StatelessWidget {
   const RegionChip({
@@ -16,27 +18,33 @@ class RegionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: ShapeDecoration(
-          color: selected
-              ? const Color.fromARGB(255, 78, 74, 74)
-              : const Color(0xFFE6E6E6),
+          color: selected ? AppColors.primary700 : AppColors.white,
           shape: RoundedRectangleBorder(
+            side: selected
+                ? BorderSide.none
+                : const BorderSide(width: 1, color: AppColors.gray100),
             borderRadius: BorderRadius.circular(50),
           ),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: selected ? const Color(0xFFFFFFFF) : const Color(0xFF191919),
-            fontSize: 12,
-            fontFamily: 'Pretendard',
-            fontWeight: FontWeight.w400,
-            height: 1.2,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          // Spacing is supported in Flutter 3.27+, keeping it for consistency with user request
+          // if it causes errors, we can fallback to traditional way.
+          children: [
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: selected ? Colors.white : AppColors.gray500,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
         ),
       ),
     );
