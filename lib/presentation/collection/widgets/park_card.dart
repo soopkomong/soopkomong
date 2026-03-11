@@ -5,6 +5,8 @@ class ParkCard extends StatelessWidget {
     super.key,
     required this.id,
     required this.name,
+    required this.region,
+    required this.imageUrl,
     required this.isVisited,
     required this.index,
     this.onTap,
@@ -12,6 +14,8 @@ class ParkCard extends StatelessWidget {
 
   final String id;
   final String name;
+  final String region;
+  final String imageUrl;
   final bool isVisited;
   final int index;
   final VoidCallback? onTap;
@@ -36,10 +40,13 @@ class ParkCard extends StatelessWidget {
                   children: [
                     Center(
                       child: Image.network(
-                        'https://picsum.photos/500/500?random=$index',
+                        imageUrl,
                         fit: BoxFit.cover,
                         color: isVisited ? null : Colors.grey,
                         colorBlendMode: isVisited ? null : BlendMode.saturation,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.image, color: Colors.grey);
+                        },
                       ),
                     ),
                     if (!isVisited)
@@ -60,7 +67,7 @@ class ParkCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '수도권',
+                    region,
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                   ),
                   Text(

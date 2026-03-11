@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/explore/widgets/explore_park_card.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
@@ -11,6 +14,44 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
+  List<dynamic> _allLocations = [];
+  List<dynamic> _locations = [];
+  Region _selectedRegion = Region.capital;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final String response = await rootBundle.loadString(
+        'assets/locations.json',
+      );
+      final data = json.decode(response);
+      setState(() {
+        _allLocations = data['locations'] ?? [];
+        _filterLocations();
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading locations: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterLocations() {
+    setState(() {
+      _locations = _allLocations.where((location) {
+        return location['region'] == _selectedRegion.label;
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,38 +83,61 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
               ),
               const SizedBox(height: 24),
-              RegionFilterBar(onChanged: (region) {}),
-              const SizedBox(height: 16),
-              // 공원 리스트
-              ListView.builder(
-                itemCount: 10,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 100),
-                itemBuilder: (context, index) {
-                  return ExploreParkCard(
-                    region: '강원도',
-                    name: '설악산 국립공원',
-                    description:
-                        '웅장한 산세와 아름다운 자연 경관을 자랑하는 대한민국의 대표적인 국립공원입니다. 다양한 등산 코스와 희귀 동식물이 서식하고 있습니다.',
-                    imageUrl: 'https://picsum.photos/200/200?random=$index',
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        useRootNavigator: true,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => ParkDetailSheet(
-                          id: '1',
-                          name: '설악산 국립공원',
-                          index: index,
-                          isVisited: true,
-                        ),
-                      );
-                    },
-                  );
+              RegionFilterBar(
+                onChanged: (region) {
+                  setState(() {
+                    _selectedRegion = region;
+                    _filterLocations();
+                  });
                 },
               ),
+              const SizedBox(height: 16),
+              // 공원 리스트
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _locations.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 100),
+                      itemBuilder: (context, index) {
+                        final location = _locations[index];
+                        final String id = location['id']?.toString() ?? '';
+                        final String region = location['region'] ?? '';
+                        final String name = location['title'] ?? '';
+                        final String description = location['summary'] ?? '';
+                        final String imageUrl = location['imageUrl'] ?? '';
+                        final String address = location['address'] ?? '';
+                        final String information =
+                            location['Information'] ?? '';
+                        final String tel = location['tel'] ?? '';
+
+                        return ExploreParkCard(
+                          region: region,
+                          name: name,
+                          description: description,
+                          imageUrl: imageUrl,
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              useRootNavigator: true,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => ParkDetailSheet(
+                                id: id,
+                                name: name,
+                                description: description,
+                                imageUrl: imageUrl,
+                                address: address,
+                                information: information,
+                                tel: tel,
+                                isVisited: true,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ],
           ),
         ),
