@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/utils/kakao_navi_service.dart';
 import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'dart:convert';
 
-class ParkDetailSheet extends StatelessWidget {
+class ParkDetailSheet extends StatefulWidget {
   final String id;
   final String name;
   final String description;
@@ -11,6 +15,9 @@ class ParkDetailSheet extends StatelessWidget {
   final String information;
   final String tel;
   final bool isVisited;
+  final String naviLoc;
+  final double? naviLat;
+  final double? naviLng;
 
   const ParkDetailSheet({
     super.key,
@@ -22,7 +29,125 @@ class ParkDetailSheet extends StatelessWidget {
     required this.information,
     required this.tel,
     required this.isVisited,
+    required this.naviLoc,
+    this.naviLat,
+    this.naviLng,
   });
+
+  @override
+  State<ParkDetailSheet> createState() => _ParkDetailSheetState();
+}
+
+class _ParkDetailSheetState extends State<ParkDetailSheet> {
+  bool _isLoading = false;
+  late final WebViewController _webViewController;
+  bool _isWebViewLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // 웹뷰 컨트롤러 초기화
+    if (widget.naviLat != null && widget.naviLng != null) {
+      final String htmlString =
+          '''
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          <style>
+              body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #EEEEEE; }
+              #staticMap { width: 100%; height: 100%; }
+              #errorLog { position: absolute; top:0; left:0; padding: 8px; color: red; font-size: 12px; z-index: 9999; word-wrap: break-word; max-width: 100%; }
+          </style>
+      </head>
+      <body>
+          <div id="errorLog"></div>
+          <div id="staticMap"></div>
+          
+          <script>
+            // 전역 라우팅 에러 캐치
+            window.onerror = function(msg, url, lineNo, columnNo, error) {
+                document.getElementById('errorLog').innerHTML += "JS Error: " + msg + "<br/>";
+                return false;
+            };
+            
+            function onKakaoError() {
+                document.getElementById('errorLog').innerHTML += "JS Error: 카카오 지도 스크립트 로드 차단 (도메인 또는 키 문제)<br/>";
+            }
+            
+            function onKakaoLoaded() {
+                kakao.maps.load(function() {
+                    try {
+                      var marker = {
+                          position: new kakao.maps.LatLng(${widget.naviLat}, ${widget.naviLng}),
+                          text: '${widget.naviLoc}'
+                      };
+                      var staticMapContainer = document.getElementById('staticMap'),
+                          staticMapOption = { 
+                              center: new kakao.maps.LatLng(${widget.naviLat}, ${widget.naviLng}), 
+                              level: 4, 
+                              marker: marker 
+                          };    
+                      var staticMap = new kakao.maps.StaticMap(staticMapContainer, staticMapOption);
+                    } catch (e) {
+                        document.getElementById('errorLog').innerHTML += "Map Init Error: " + e.message + "<br/>";
+                    }
+                });
+            }
+          </script>
+          
+          <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3e61a81d744bd233772c3df44cd848d6&autoload=false" onload="onKakaoLoaded()" onerror="onKakaoError()"></script>
+      </body>
+      </html>
+      ''';
+
+      _webViewController = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(const Color(0xFFEEEEEE))
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onPageFinished: (String url) {
+              if (mounted) {
+                setState(() {
+                  _isWebViewLoading = false;
+                });
+              }
+            },
+            onWebResourceError: (WebResourceError error) {
+              print('WebView Error: \${error.description}');
+            },
+          ),
+        )
+        ..setOnConsoleMessage((message) {
+          print('WebView Console: \${message.message}');
+        })
+        ..loadHtmlString(htmlString, baseUrl: "http://localhost/");
+    }
+  }
+
+  void _startNavi() async {
+    if (widget.naviLat == null || widget.naviLng == null) return;
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await KakaoNaviService.startNavi(
+        naviLoc: widget.naviLoc,
+        naviLat: widget.naviLat!,
+        naviLng: widget.naviLng!,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +191,8 @@ class ParkDetailSheet extends StatelessWidget {
                   children: [
                     Positioned.fill(
                       child: Image.network(
-                        imageUrl.isNotEmpty
-                            ? imageUrl
+                        widget.imageUrl.isNotEmpty
+                            ? widget.imageUrl
                             : 'https://picsum.photos/800/600',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
@@ -97,9 +222,9 @@ class ParkDetailSheet extends StatelessWidget {
                           color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
+                        child: const Text(
                           '1/1',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -138,7 +263,7 @@ class ParkDetailSheet extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  name,
+                  widget.name,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -155,7 +280,7 @@ class ParkDetailSheet extends StatelessWidget {
                   leading: const Icon(Icons.description_outlined),
                   title: '공원 소개',
                   child: ExpandableText(
-                    text: description,
+                    text: widget.description,
                     style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                 ),
@@ -164,7 +289,7 @@ class ParkDetailSheet extends StatelessWidget {
               const SizedBox(height: 20),
 
               /// 🔹 이용안내 카드
-              if (information.isNotEmpty || tel.isNotEmpty) ...[
+              if (widget.information.isNotEmpty || widget.tel.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: InfoCard(
@@ -176,16 +301,15 @@ class ParkDetailSheet extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: Text(
-                        '${tel.isNotEmpty ? '$tel\n\n' : ''}$information'
+                        '${widget.tel.isNotEmpty ? '${widget.tel}\n\n' : ''}${widget.information}'
                             .trim(),
                         style: const TextStyle(fontSize: 13, height: 1.5),
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
-
-              const SizedBox(height: 20),
 
               /// 🔹 얻을 수 있는 캐릭터 카드
               Padding(
@@ -250,50 +374,100 @@ class ParkDetailSheet extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // 🔹 이미지
-                      Container(
-                        width: double.infinity,
-                        height: 199.33,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          image: DecorationImage(
-                            image: NetworkImage(
-                              imageUrl.isNotEmpty
-                                  ? imageUrl
-                                  : "https://picsum.photos/800/600",
-                            ),
-                            fit: BoxFit.fill,
+                      // 🔹 카카오 Static Map 썸네일 또는 일반 이미지
+                      if (widget.naviLat != null && widget.naviLng != null)
+                        Container(
+                          width: double.infinity,
+                          height: 199.33,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.grey[200],
                           ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-                      // 🔹 텍스트 영역
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.location_on_outlined),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                address,
-                                style: const TextStyle(
-                                  color: Color(0xFF191919),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.5,
-                                  overflow: TextOverflow.ellipsis,
+                          clipBehavior: Clip.hardEdge,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Positioned.fill(
+                                child: WebViewWidget(
+                                  controller: _webViewController,
                                 ),
                               ),
+                              if (_isWebViewLoading)
+                                const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                            ],
+                          ),
+                        )
+                      else
+                        Container(
+                          width: double.infinity,
+                          height: 199.33,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: NetworkImage(
+                                widget.imageUrl.isNotEmpty
+                                    ? widget.imageUrl
+                                    : "https://picsum.photos/800/600",
+                              ),
+                              fit: BoxFit.fill,
                             ),
-                          ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 12),
+
+                      // 🔹 주소 텍스트 영역 (길찾기)
+                      GestureDetector(
+                        onTap:
+                            (widget.naviLat != null && widget.naviLng != null)
+                            ? _startNavi
+                            : null,
+                        child: Opacity(
+                          opacity:
+                              (widget.naviLat != null && widget.naviLng != null)
+                              ? 1.0
+                              : 0.3,
+                          child: Container(
+                            width: double.infinity,
+                            color: Colors.transparent, // 터치 영역 확장
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: 16,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.location_on_outlined),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    widget.address,
+                                    style: const TextStyle(
+                                      color: Color(0xFF191919),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.5,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                if (_isLoading)
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 8.0),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
