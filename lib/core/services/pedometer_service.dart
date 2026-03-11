@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -26,8 +27,10 @@ class PedometerService extends AsyncNotifier<int> {
     state = const AsyncLoading();
 
     try {
-      // 1. 신체 활동 권한 요청 (Activity Recognition)
-      final status = await Permission.activityRecognition.request();
+      // 1. 신체 활동 권한 요청
+      final status = Platform.isIOS 
+          ? await Permission.sensors.request()
+          : await Permission.activityRecognition.request();
 
       if (status.isGranted) {
         // 2. 권한 승인 시 스트림 구독 시작
@@ -39,7 +42,12 @@ class PedometerService extends AsyncNotifier<int> {
           StackTrace.current,
         );
       } else {
-        state = AsyncError('신체 활동 권한이 필요합니다.', StackTrace.current);
+        // iOS 시뮬레이터 등에서 센서가 없어 자동 거부되는 경우 처리
+        if (Platform.isIOS) {
+          state = AsyncError('신체 활동 권한이 거부되었습니다. (시뮬레이터는 만보기 기능을 지원하지 않습니다)', StackTrace.current);
+        } else {
+          state = AsyncError('신체 활동 권한이 필요합니다.', StackTrace.current);
+        }
       }
     } catch (e, stack) {
       state = AsyncError('권한 요청 중 오류 발생: $e', stack);
