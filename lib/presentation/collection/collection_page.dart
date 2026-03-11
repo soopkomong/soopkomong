@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soopkomong/core/enums/region.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_progress_badge.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_sliding_tab.dart';
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
@@ -27,6 +28,7 @@ class CollectionPage extends StatefulWidget {
 
 class _CollectionPageState extends State<CollectionPage> {
   late int _selectedTabIndex; // 0: 생태공원, 1: 숲코몽
+  late PageController _pageController;
   List<dynamic> _allLocations = [];
   List<dynamic> _locations = [];
   Region _selectedRegion = Region.capital;
@@ -36,7 +38,14 @@ class _CollectionPageState extends State<CollectionPage> {
   void initState() {
     super.initState();
     _selectedTabIndex = widget.initialTab;
+    _pageController = PageController(initialPage: _selectedTabIndex);
     _loadLocations();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLocations() async {
@@ -73,8 +82,20 @@ class _CollectionPageState extends State<CollectionPage> {
     if (oldWidget.initialTab != widget.initialTab) {
       setState(() {
         _selectedTabIndex = widget.initialTab;
+        _pageController.jumpToPage(widget.initialTab);
       });
     }
+  }
+
+  void _onTabChanged(int index) {
+    setState(() {
+      _selectedTabIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -84,66 +105,72 @@ class _CollectionPageState extends State<CollectionPage> {
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          child: Column(
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    const Icon(Icons.book, size: 40),
+                    const SizedBox(height: 4),
+                    const Text('도감', style: AppTextStyles.subTitleL),
+                    const SizedBox(height: 24),
+                    CollectionSlidingTab(
+                      initialIndex: _selectedTabIndex,
+                      onChanged: _onTabChanged,
+                    ),
+                    const SizedBox(height: 24),
+                    RegionFilterBar(
+                      onChanged: (region) {
+                        setState(() {
+                          _selectedRegion = region;
+                          _filterLocations();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ];
+          },
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _selectedTabIndex = index;
+              });
+            },
             children: [
-              const SizedBox(height: 24),
-
-              const SizedBox(height: 12),
-              const Icon(Icons.book, size: 40),
-              const SizedBox(height: 4),
-              const Text(
-                '도감',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 24),
-
-              CollectionSlidingTab(
-                initialIndex: _selectedTabIndex,
-                onChanged: (index) {
-                  setState(() {
-                    _selectedTabIndex = index;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              RegionFilterBar(
-                onChanged: (region) {
-                  setState(() {
-                    _selectedRegion = region;
-                    _filterLocations();
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              CollectionProgressBadge(
-                currentCount: _selectedTabIndex == 0 ? 3 : 6, // 임시 데이터
-                totalCount: _selectedTabIndex == 0 ? 20 : 50, // 임시 데이터
-                iconPath: _selectedTabIndex == 0
-                    ? 'assets/images/park.png'
-                    : 'assets/images/character_silhouette.png',
-              ),
-
-              const SizedBox(height: 24),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : IndexedStack(
-                        index: _selectedTabIndex,
-                        children: [_buildParkGrid(), _buildCharacterGrid()],
-                      ),
-              ),
-              const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
+              _buildTabPage(_buildParkGrid(), 0),
+              _buildTabPage(_buildCharacterGrid(), 1),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTabPage(Widget grid, int tabIndex) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        children: [
+          CollectionProgressBadge(
+            currentCount: tabIndex == 0 ? 3 : 6, // 임시 데이터
+            totalCount: tabIndex == 0 ? 20 : 50, // 임시 데이터
+            iconPath: tabIndex == 0
+                ? 'assets/images/park.png'
+                : 'assets/images/character_silhouette.png',
+          ),
+          const SizedBox(height: 24),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : grid,
+          const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
+        ],
       ),
     );
   }
@@ -154,10 +181,9 @@ class _CollectionPageState extends State<CollectionPage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+        crossAxisCount: 2,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.7, // 카드가 세로로 더 긴 비율을 갖도록 설정
       ),
       itemCount: _locations.length,
       itemBuilder: (context, index) {

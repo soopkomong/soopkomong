@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class CollectionSlidingTab extends StatefulWidget {
-  // 부모에게 인덱스를 전달할 함수를 추가합니다.
   final ValueChanged<int> onChanged;
   final int initialIndex;
 
@@ -24,7 +25,6 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
     selectedIndex = widget.initialIndex;
   }
 
-  // 부모로부터 initialIndex가 변경되었을 때, 내부 selectedIndex를 업데이트하기 위한 메서드
   @override
   void didUpdateWidget(covariant CollectionSlidingTab oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -46,10 +46,7 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              height: 1,
-              color: const Color(0xFFE5E5E5),
-            ),
+            child: Container(height: 1, color: AppColors.gray200),
           ),
           // 선택된 탭의 녹색 표시기 라인
           LayoutBuilder(
@@ -64,20 +61,13 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
                 child: Container(
                   width: tabWidth,
                   height: 3,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF4CAF50), // 이미지와 유사한 녹색
-                  ),
+                  decoration: const BoxDecoration(color: AppColors.primary700),
                 ),
               );
             },
           ),
           // 탭 버튼들
-          Row(
-            children: [
-              _buildTab(0, '생태공원'),
-              _buildTab(1, '숲코몽'),
-            ],
-          ),
+          Row(children: [_buildTab(0, '생태공원'), _buildTab(1, '숲코몽')]),
         ],
       ),
     );
@@ -101,13 +91,11 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
           alignment: Alignment.center,
           child: Text(
             title,
-            style: TextStyle(
+            style: AppTextStyles.subTitleL.copyWith(
               color: isSelected
-                  ? const Color(0xFF191919) // 선택 시 검정
-                  : const Color(0xFFA3A3A3), // 비선택 시 회색
-              fontSize: 18, // 이미지에 맞춰 폰트 크기 조정
-              fontWeight: FontWeight.bold, // 이미지 스타일 반영
-              letterSpacing: -0.5,
+                  ? AppColors
+                        .black // 선택 시 검정
+                  : AppColors.gray200, // 비선택 시 회색
             ),
           ),
         ),
