@@ -5,14 +5,22 @@ import 'package:soopkomong/presentation/widgets/info_card.dart';
 class ParkDetailSheet extends StatelessWidget {
   final String id;
   final String name;
-  final int index;
+  final String description;
+  final String imageUrl;
+  final String address;
+  final String information;
+  final String tel;
   final bool isVisited;
 
   const ParkDetailSheet({
     super.key,
     required this.id,
     required this.name,
-    required this.index,
+    required this.description,
+    required this.imageUrl,
+    required this.address,
+    required this.information,
+    required this.tel,
     required this.isVisited,
   });
 
@@ -58,8 +66,21 @@ class ParkDetailSheet extends StatelessWidget {
                   children: [
                     Positioned.fill(
                       child: Image.network(
-                        'https://picsum.photos/800/600?random=$index',
+                        imageUrl.isNotEmpty
+                            ? imageUrl
+                            : 'https://picsum.photos/800/600',
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
 
@@ -77,7 +98,7 @@ class ParkDetailSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '1/3',
+                          '1/1',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -94,20 +115,17 @@ class ParkDetailSheet extends StatelessWidget {
                       right: 0,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          3,
-                          (dotIndex) => Container(
+                        children: [
+                          Container(
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(
-                              color: dotIndex == 0
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.5),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
                               shape: BoxShape.circle,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],
@@ -136,19 +154,14 @@ class ParkDetailSheet extends StatelessWidget {
                 child: InfoCard(
                   leading: const Icon(Icons.description_outlined),
                   title: '공원 소개',
-                  child: const ExpandableText(
+                  child: ExpandableText(
                     text:
-                        '[제목] 제천솔방죽 생태공원\n'
-                        '[주소] 충청북도 제천시 청전동 240-1 일원\n'
-                        '[개요] 2005년 11월부터 2006년 11월까지 1년간 청전제천 21 실천협의회 연구분과위원회에서 연구, 조사를 위탁하고 모니터링하여 사업비 14억 6천7백만 원 을 들여 시내권 내에 조성한 생태공원이다. 솔방죽의 저수 유입은 비룡담(제2 의림지)으로부터 농업용수를 사용 후 잠시 이곳에 저장된다. 원래의 연못은 1872년에 제작된 군, 현 지도에 ‘유등지’로 표기되었으나 ‘작은 연못’으로 불렸는데 청정제천 21 실천협의회에서 공원화 조성에 따라 ‘솔방죽’으로 이름을 붙였으며 제천시에서 처음으로 생태공원이라는 이름을 붙여 조성한 곳이다. 생태공원의 규모는 연면적 28,096㎡ 로 동서 220m, 남북 80~100m의 크기 저수지에 3개의 지역으로 나누어 조성되었다.\n\n'
-                        '* 문의 : 043-641-6731~3 \n'
-                        '* 휴무일 : 연중무휴 \n\n'
-                        '◎이용안내\n'
-                        '- 이용요금 : 무료\n'
-                        '- 화장실 : 있음(남녀구분) \n'
-                        '- 장애인 편의시설 : 장애인화장실 있음(남녀공용) \n'
-                        '- 주차시설 : 불가능',
-                    style: TextStyle(fontSize: 13, height: 1.5),
+                        '[제목] $name\n'
+                        '[주소] $address\n'
+                        '[개요] $description\n\n'
+                        '${tel.isNotEmpty ? '* 문의 : $tel \n\n' : ''}'
+                        '$information',
+                    style: const TextStyle(fontSize: 13, height: 1.5),
                   ),
                 ),
               ),
@@ -224,9 +237,11 @@ class ParkDetailSheet extends StatelessWidget {
                         height: 199.33,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          image: const DecorationImage(
+                          image: DecorationImage(
                             image: NetworkImage(
-                              "https://picsum.photos/seed/1/358/199",
+                              imageUrl.isNotEmpty
+                                  ? imageUrl
+                                  : "https://picsum.photos/800/600",
                             ),
                             fit: BoxFit.fill,
                           ),
@@ -245,12 +260,12 @@ class ParkDetailSheet extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(Icons.location_on_outlined),
+                            const Icon(Icons.location_on_outlined),
                             const SizedBox(width: 4),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                '충청북도 제천시 청전동 240-1 일원',
-                                style: TextStyle(
+                                address,
+                                style: const TextStyle(
                                   color: Color(0xFF191919),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,

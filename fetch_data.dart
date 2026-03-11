@@ -12,7 +12,6 @@ void main() async {
   final String? baseUrl = env['ECOLOGY_BASE_URL'];
 
   if (serviceKey == null || baseUrl == null) {
-    print('오류: .env 파일에서 ECOLOGY_SERVICE_KEY 또는 ECOLOGY_BASE_URL을 찾을 수 없습니다.');
     return;
   }
 
@@ -24,8 +23,6 @@ void main() async {
   int totalCount = 0;
   List<dynamic> allData = [];
   bool hasMoreData = true;
-
-  print('생태 관광 데이터 수집을 시작합니다...');
 
   while (hasMoreData) {
     // 3. 환경 변수가 적용된 API 요청 URL 구성
@@ -49,7 +46,6 @@ void main() async {
             jsonResponse['response']['body'];
 
         if (responseBody == null) {
-          print('데이터 형식이 올바르지 않습니다. API 키 오류 또는 서버 문제일 수 있습니다.');
           break;
         }
 
@@ -62,19 +58,15 @@ void main() async {
           allData.addAll(itemList);
         }
 
-        print('진행 상황: ${allData.length} / $totalCount 건 수집 완료 (페이지 $pageNo)');
-
         if (allData.length >= totalCount || (items == null || items == '')) {
           hasMoreData = false;
         } else {
           pageNo++;
         }
       } else {
-        print('API 호출 실패: 상태 코드 ${response.statusCode}');
         hasMoreData = false;
       }
     } catch (e) {
-      print('오류 발생: $e');
       hasMoreData = false;
     }
   }
@@ -89,9 +81,5 @@ void main() async {
     final File file = File('assets/green_tour_data.json');
     final String jsonString = JsonEncoder.withIndent('  ').convert(allData);
     await file.writeAsString(jsonString);
-
-    print('저장 완료: ${file.path} 파일에 총 ${allData.length}건의 데이터가 저장되었습니다.');
-  } else {
-    print('수집된 데이터가 없어 파일을 생성하지 않았습니다.');
-  }
+  } else {}
 }

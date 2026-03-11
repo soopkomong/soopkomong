@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_progress_badge.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_sliding_tab.dart';
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
@@ -24,11 +27,43 @@ class CollectionPage extends StatefulWidget {
 
 class _CollectionPageState extends State<CollectionPage> {
   late int _selectedTabIndex; // 0: 생태공원, 1: 숲코몽
+  List<dynamic> _allLocations = [];
+  List<dynamic> _locations = [];
+  Region _selectedRegion = Region.capital;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _selectedTabIndex = widget.initialTab;
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final String response = await rootBundle.loadString(
+        'assets/locations.json',
+      );
+      final data = json.decode(response);
+      setState(() {
+        _allLocations = data['locations'] ?? [];
+        _filterLocations();
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading locations: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterLocations() {
+    setState(() {
+      _locations = _allLocations.where((location) {
+        return location['region'] == _selectedRegion.label;
+      }).toList();
+    });
   }
 
   // 부모로부터 initialIndex가 변경되었을 때, 내부 selectedIndex를 업데이트하기 위한 메서드
@@ -75,7 +110,14 @@ class _CollectionPageState extends State<CollectionPage> {
 
               const SizedBox(height: 24),
 
-              RegionFilterBar(onChanged: (region) {}),
+              RegionFilterBar(
+                onChanged: (region) {
+                  setState(() {
+                    _selectedRegion = region;
+                    _filterLocations();
+                  });
+                },
+              ),
 
               const SizedBox(height: 24),
 
@@ -91,10 +133,12 @@ class _CollectionPageState extends State<CollectionPage> {
 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: IndexedStack(
-                  index: _selectedTabIndex,
-                  children: [_buildParkGrid(), _buildCharacterGrid()],
-                ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : IndexedStack(
+                        index: _selectedTabIndex,
+                        children: [_buildParkGrid(), _buildCharacterGrid()],
+                      ),
               ),
               const SizedBox(height: 100), // 바텀 네비게이션 바 고려한 여백 추가
             ],
@@ -115,15 +159,23 @@ class _CollectionPageState extends State<CollectionPage> {
         mainAxisSpacing: 8,
         childAspectRatio: 0.7, // 카드가 세로로 더 긴 비율을 갖도록 설정
       ),
-      itemCount: 30,
+      itemCount: _locations.length,
       itemBuilder: (context, index) {
+        final location = _locations[index];
         final isVisited = index % 5 == 0;
-        final name = '서울숲공원';
-        final id = (index + 1).toString().padLeft(3, '0');
+        final name = location['title'] ?? '';
+        final id = location['id']?.toString() ?? '';
+        final description = location['summary'] ?? '';
+        final imageUrl = location['imageUrl'] ?? '';
+        final address = location['address'] ?? '';
+        final information = location['Information'] ?? '';
+        final tel = location['tel'] ?? '';
 
         return ParkCard(
           id: id,
           name: name,
+          region: location['region'] ?? '',
+          imageUrl: imageUrl,
           isVisited: isVisited,
           index: index,
           onTap: () {
@@ -135,7 +187,11 @@ class _CollectionPageState extends State<CollectionPage> {
               builder: (context) => ParkDetailSheet(
                 id: id,
                 name: name,
-                index: index,
+                description: description,
+                imageUrl: imageUrl,
+                address: address,
+                information: information,
+                tel: tel,
                 isVisited: isVisited,
               ),
             );
@@ -156,11 +212,12 @@ class _CollectionPageState extends State<CollectionPage> {
         mainAxisSpacing: 8,
         childAspectRatio: 0.7, // 카드가 세로로 더 긴 비율을 갖도록 설정
       ),
-      itemCount: 30,
+      itemCount: _locations.length,
       itemBuilder: (context, index) {
-        final id = (index + 1).toString().padLeft(3, '0');
+        final location = _locations[index];
+        final id = location['id']?.toString() ?? '';
         final name = '숲코몽';
-        final parkName = '서울숲공원';
+        final parkName = location['title'] ?? '';
 
         // 목업 상태 배정 로직 (3가지 상태 테스트)
         // 화면에서 세 가지 상태가 골고루 보이도록 index % 3을 활용하여 배정합니다.

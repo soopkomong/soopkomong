@@ -34,7 +34,10 @@ class PedometerService extends AsyncNotifier<int> {
         _startListening();
       } else if (status.isPermanentlyDenied) {
         // 사용자가 영구적으로 거부한 경우 설정창으로 유도하거나 에러 상태 전달
-        state = AsyncError('권한이 영구적으로 거부되었습니다. 설정에서 허용해주세요.', StackTrace.current);
+        state = AsyncError(
+          '권한이 영구적으로 거부되었습니다. 설정에서 허용해주세요.',
+          StackTrace.current,
+        );
       } else {
         state = AsyncError('신체 활동 권한이 필요합니다.', StackTrace.current);
       }
@@ -45,7 +48,7 @@ class PedometerService extends AsyncNotifier<int> {
 
   void _startListening() {
     _subscription?.cancel();
-    
+
     // Pedometer 패키지의 스트림 구독
     _subscription = Pedometer.stepCountStream.listen(
       (StepCount event) {
@@ -54,7 +57,10 @@ class PedometerService extends AsyncNotifier<int> {
       },
       onError: (error) {
         // 하드웨어 센서 문제(ex. 에뮬레이터에서 센서 없음) 시 에러 처리
-        state = AsyncError('만보기 센서를 찾을 수 없거나 오류가 발생했습니다: $error', StackTrace.current);
+        state = AsyncError(
+          '만보기 센서를 찾을 수 없거나 오류가 발생했습니다: $error',
+          StackTrace.current,
+        );
       },
       cancelOnError: false,
     );
