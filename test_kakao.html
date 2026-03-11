@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Kakao Map</title>
+</head>
+<body>
+<div id="map" style="width:500px;height:400px;"></div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3e61a81d744bd233772c3df44cd848d6"></script>
+<script>
+    var markerPosition  = new kakao.maps.LatLng(33.450701, 126.570667); 
+    var marker = {
+        position: markerPosition
+    };
+    var staticMapContainer  = document.getElementById('map'), // 이미지 지도를 표시할 div  
+        staticMapOption = { 
+            center: new kakao.maps.LatLng(33.450701, 126.570667), // 이미지 지도의 중심좌표
+            level: 3, // 이미지 지도의 확대 레벨
+            marker: marker // 이미지 지도에 표시할 마커 
+        };    
+    var staticMap = new kakao.maps.StaticMap(staticMapContainer, staticMapOption);
+    setTimeout(function() {
+        console.log(staticMapContainer.innerHTML);
+    }, 2000);
+</script>
+</body>
+</html>

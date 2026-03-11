@@ -59,6 +59,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
   }
 
   void _showParkDetailBottomSheet(BuildContext context, dynamic park) {
+    final Map<String, dynamic> navi = park['navi'] ?? {};
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -73,6 +74,9 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           information: park['Information'] ?? '',
           tel: park['tel'] ?? '',
           isVisited: park['isVisited'] ?? false,
+          naviLoc: navi['loc'] ?? '',
+          naviLat: navi['lat'] != null ? (navi['lat'] as num).toDouble() : null,
+          naviLng: navi['lng'] != null ? (navi['lng'] as num).toDouble() : null,
         );
       },
     );

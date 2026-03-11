@@ -50,6 +50,11 @@ dependencies:
   geolocator: ^14.0.2
   sign_in_with_apple: ^7.0.1
   intl: ^0.20.2
+  path_provider: ^2.1.5
+  url_launcher: ^6.3.2
+  url_launcher_ios: ^6.4.1
+  url_launcher_android: ^6.3.28
+  webview_flutter: ^4.13.1
 
 dev_dependencies:
   flutter_test:
