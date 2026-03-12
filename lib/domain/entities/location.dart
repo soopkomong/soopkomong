@@ -8,8 +8,7 @@ class Location {
   final String name;
   final double lat;
   final double lng;
-  final String petName;
-  final String petType;
+  final List<String> petIds;
   final double radius;
 
   const Location({
@@ -18,8 +17,7 @@ class Location {
     required this.name,
     required this.lat,
     required this.lng,
-    required this.petName,
-    required this.petType,
+    required this.petIds,
     required this.radius,
   });
 }

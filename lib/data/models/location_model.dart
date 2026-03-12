@@ -10,22 +10,18 @@ class LocationModel extends Location {
     required super.name,
     required super.lat,
     required super.lng,
-    required super.petName,
-    required super.petType,
+    required super.petIds,
     required super.radius,
   });
 
   factory LocationModel.fromJson(Map<String, dynamic> json) {
-    final pet = json['pet'] as Map<String, dynamic>? ?? {};
-
     return LocationModel(
       id: int.tryParse(json['contentId']?.toString() ?? '') ?? 0,
       region: json['region'] as String? ?? '알 수 없음',
       name: json['title'] as String? ?? '이름 없음',
       lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
       lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
-      petName: pet['name'] as String? ?? '알 수 없음',
-      petType: pet['type'] as String? ?? '알 수 없음',
+      petIds: (json['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       radius: (json['radius'] as num?)?.toDouble() ?? 500.0,
     );
   }

@@ -60,10 +60,13 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
 
   void _showParkDetailBottomSheet(BuildContext context, dynamic park) {
     final Map<String, dynamic> navi = park['navi'] ?? {};
+    final List<String> petIds = (park['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useRootNavigator: true,
       builder: (context) {
         return ParkDetailSheet(
           id: (park['id'] ?? '').toString(),
@@ -77,6 +80,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           naviLoc: navi['loc'] ?? '',
           naviLat: navi['lat'] != null ? (navi['lat'] as num).toDouble() : null,
           naviLng: navi['lng'] != null ? (navi['lng'] as num).toDouble() : null,
+          petIds: petIds,
         );
       },
     );

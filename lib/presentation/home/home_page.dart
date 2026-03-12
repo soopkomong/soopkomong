@@ -10,6 +10,8 @@ import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/location.dart';
+import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/core/router/app_route.dart';
 
@@ -62,7 +64,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  Future<void> _addMarkers(List<Location> locations) async {
+  Future<void> _addMarkers(List<Location> locations, List<SoopkomonTemplate> templates) async {
     if (mapboxMap == null || locations.isEmpty || _markersAdded) return;
     _markersAdded = true;
 
@@ -72,8 +74,19 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     List<PointAnnotationOptions> options = [];
 
+    // 템플릿의 eggType 라벨을 가져오는 헬퍼 로직
+    String getEggTypeLabel(Location loc) {
+      if (loc.petIds.isEmpty) return '기본';
+      try {
+        final template = templates.firstWhere((t) => t.templateId == loc.petIds.first);
+        return template.eggType.label;
+      } catch (_) {
+        return '기본';
+      }
+    }
+
     // 커스텀 마커 생성 및 등록 (타입별로 다른 색상의 마커 이미지 등록)
-    final Set<String> uniqueTypes = locations.map((loc) => loc.petType).toSet();
+    final Set<String> uniqueTypes = locations.map((loc) => getEggTypeLabel(loc)).toSet();
     final Map<String, String> typeToImageId = {};
 
     for (var type in uniqueTypes) {
@@ -104,11 +117,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     for (var loc in locations) {
       // Point 구조: Point(coordinates: Position(lng, lat))
       final point = Point(coordinates: Position(loc.lng, loc.lat));
+      final eggTypeLabel = getEggTypeLabel(loc);
 
       options.add(
         PointAnnotationOptions(
           geometry: point,
-          iconImage: typeToImageId[loc.petType],
+          iconImage: typeToImageId[eggTypeLabel],
           iconSize: 1.0,
         ),
       );
@@ -131,7 +145,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       onTap: (PointAnnotation annotation) {
         final index = _markerIndexMap[annotation.id];
         if (index != null) {
-          _showLocationDetails(index, locations);
+          _showLocationDetails(index, locations, templates);
         }
       },
     );
@@ -201,8 +215,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // ViewModel의 현재 상태를 가져와 마커 추가 시도
     final state = ref.read(homeViewModelProvider);
-    if (!state.isLoading && state.locations.isNotEmpty) {
-      _addMarkers(state.locations);
+    final templatesAsync = ref.read(soopkomonTemplatesProvider);
+    if (!state.isLoading && state.locations.isNotEmpty && templatesAsync.hasValue) {
+      _addMarkers(state.locations, templatesAsync.value!);
     }
 
     // 초기 테마(낮/밤) 적용
@@ -292,10 +307,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  void _showLocationDetails(int index, List<Location> locations) {
+  void _showLocationDetails(int index, List<Location> locations, List<SoopkomonTemplate> templates) {
     if (index < 0 || index >= locations.length) return;
 
     final loc = locations[index];
+
+    SoopkomonTemplate? primaryTemplate;
+    if (loc.petIds.isNotEmpty) {
+      try {
+        primaryTemplate = templates.firstWhere((t) => t.templateId == loc.petIds.first);
+      } catch (_) {}
+    }
+    final petName = primaryTemplate?.name ?? '알 수 없음';
+    final petType = primaryTemplate?.eggType.label ?? '기본';
 
     showModalBottomSheet(
       context: context,
@@ -334,12 +358,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: _getPetTypeColor(loc.petType).withAlpha(51),
+                      color: _getPetTypeColor(petType).withAlpha(51),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.pets,
-                      color: _getPetTypeColor(loc.petType),
+                      color: _getPetTypeColor(petType),
                       size: 30,
                     ),
                   ),
@@ -349,7 +373,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          loc.petName,
+                          petName,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -364,11 +388,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: _getPetTypeColor(loc.petType),
+                                color: _getPetTypeColor(petType),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                loc.petType,
+                                petType,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -411,6 +435,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
+    final templatesAsync = ref.watch(soopkomonTemplatesProvider);
 
     // 다른 탭이나 페이지(도감 등)에서 복귀 시 줌 16.5 초기화 이벤트를 수신합니다.
     ref.listen(mapZoomResetProvider, (_, _) {
@@ -418,8 +443,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
-    if (!state.isLoading && state.locations.isNotEmpty && mapboxMap != null) {
-      _addMarkers(state.locations);
+    if (!state.isLoading && state.locations.isNotEmpty && mapboxMap != null && templatesAsync.hasValue) {
+      _addMarkers(state.locations, templatesAsync.value!);
     }
 
     return Scaffold(

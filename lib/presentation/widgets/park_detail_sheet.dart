@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/utils/kakao_navi_service.dart';
 import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter/foundation.dart';
 
-class ParkDetailSheet extends StatefulWidget {
+class ParkDetailSheet extends ConsumerStatefulWidget {
   final String id;
   final String name;
   final String description;
@@ -17,6 +18,7 @@ class ParkDetailSheet extends StatefulWidget {
   final String naviLoc;
   final double? naviLat;
   final double? naviLng;
+  final List<String> petIds;
 
   const ParkDetailSheet({
     super.key,
@@ -29,15 +31,16 @@ class ParkDetailSheet extends StatefulWidget {
     required this.tel,
     required this.isVisited,
     required this.naviLoc,
+    required this.petIds,
     this.naviLat,
     this.naviLng,
   });
 
   @override
-  State<ParkDetailSheet> createState() => _ParkDetailSheetState();
+  ConsumerState<ParkDetailSheet> createState() => _ParkDetailSheetState();
 }
 
-class _ParkDetailSheetState extends State<ParkDetailSheet> {
+class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
   bool _isLoading = false;
   late final WebViewController _webViewController;
   bool _isWebViewLoading = true;
@@ -322,27 +325,59 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
                   child: Column(
                     children: [
                       const SizedBox(height: 12),
-                      Row(
-                        children: List.generate(
-                          4,
-                          (i) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEDEDED),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Image.asset(
-                                  'assets/images/character_silhouette.png',
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final templatesAsync = ref.watch(soopkomonTemplatesProvider);
+                          final userCharacters = ref.watch(userSoopkomonProvider);
+                          
+                          return Row(
+                            children: widget.petIds.isEmpty
+                                ? [
+                                    const Text(
+                                      '얻을 수 있는 숲코몽이 없습니다.',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ]
+                                : widget.petIds.map((petId) {
+                                    final template = templatesAsync.asData?.value.where((t) => t.templateId == petId).firstOrNull;
+                                    final isAcquired = userCharacters.any((c) => c.templateId == petId);
+                                    
+                                    Widget imageWidget = Image.asset(
+                                      'assets/images/character_silhouette.png',
+                                    );
+                                    
+                                    if (template != null && template.actualImagePath.isNotEmpty) {
+                                      imageWidget = Image.asset(
+                                        template.actualImagePath,
+                                        color: isAcquired ? null : Colors.black.withValues(alpha: 0.7),
+                                        colorBlendMode: isAcquired ? null : BlendMode.srcIn,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Image.asset('assets/images/character_silhouette.png');
+                                        },
+                                      );
+                                    }
+                                    
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEDEDED),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: imageWidget,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                          );
+                        }
                       ),
                     ],
                   ),
