@@ -3,7 +3,7 @@ import 'package:soopkomong/core/utils/kakao_navi_service.dart';
 import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ParkDetailSheet extends StatefulWidget {
   final String id;
@@ -129,7 +129,7 @@ class _ParkDetailSheetState extends State<ParkDetailSheet> {
             }
           </script>
           
-          <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3e61a61d744bd233772c3df44cd848d6&autoload=false" onload="onKakaoLoaded()" onerror="onKakaoError()"></script>
+          <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${dotenv.env['KAKAO_JS_APP_KEY']}&autoload=false" onload="onKakaoLoaded()" onerror="onKakaoError()"></script>
       </body>
       </html>
       ''';
