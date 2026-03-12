@@ -327,6 +327,17 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final loc = locations[index];
 
+    SoopkomonTemplate? primaryTemplate;
+    if (loc.petIds.isNotEmpty) {
+      try {
+        primaryTemplate = templates.firstWhere(
+          (t) => t.templateId == loc.petIds.first,
+        );
+      } catch (_) {}
+    }
+    final petName = primaryTemplate?.name ?? '알 수 없음';
+    final petType = primaryTemplate?.eggType.label ?? '기본';
+
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,

@@ -56,10 +56,11 @@ class SoopkomongCard extends StatelessWidget {
                         child: Image.asset(
                           template.actualImagePath,
                           fit: BoxFit.contain,
-                          color: isDiscovered ? null : Colors.black.withValues(alpha: 0.7),
+                          color: isDiscovered
+                              ? null
+                              : Colors.black.withValues(alpha: 0.7),
                           colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
-                          errorBuilder:
-                              (context, error, stackTrace) => Icon(
+                          errorBuilder: (context, error, stackTrace) => Icon(
                             isDiscovered ? Icons.pets : Icons.help_outline,
                             size: 40,
                           ),

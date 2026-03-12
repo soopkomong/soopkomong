@@ -23,12 +23,15 @@ class SoopkomongDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     // 이미 발견되었거나(soopkomon 존재), 알 상태에서 3000보를 다 채운 경우 발견으로 간주
     // (실제 서비스에서는 서버/로컬 DB 업데이트가 동반되어야 함)
-    final bool finalIsDiscovered = soopkomon != null || (isRegionVisited && currentSteps >= 3000);
+    final bool finalIsDiscovered =
+        soopkomon != null || (isRegionVisited && currentSteps >= 3000);
     final bool hasEgg = isRegionVisited && !finalIsDiscovered;
 
     // 표시할 이름
-    final String displayName = (finalIsDiscovered || hasEgg) ? template.name : '???';
-    
+    final String displayName = (finalIsDiscovered || hasEgg)
+        ? template.name
+        : '???';
+
     // 발견 장소 이름
     final String displayParkName = soopkomon?.discoveredSpotName ?? '미발견 지역';
 
@@ -81,8 +84,9 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                 ? Image.asset(
                                     template.eggImagePath,
                                     fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        const Icon(Icons.egg, size: 80),
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.egg, size: 80),
                                   )
                                 : Image.asset(
                                     template.actualImagePath,
@@ -93,13 +97,13 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                     colorBlendMode: finalIsDiscovered
                                         ? null
                                         : BlendMode.srcIn,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        Icon(
-                                      finalIsDiscovered
-                                          ? Icons.pets
-                                          : Icons.help_outline,
-                                      size: 80,
-                                    ),
+                                    errorBuilder:
+                                        (context, error, stackTrace) => Icon(
+                                          finalIsDiscovered
+                                              ? Icons.pets
+                                              : Icons.help_outline,
+                                          size: 80,
+                                        ),
                                   ),
                           ),
                         ),
@@ -158,7 +162,9 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                         width: 14,
                                         height: 14,
                                         decoration: BoxDecoration(
-                                          color: _getEggTypeColor(template.eggType),
+                                          color: _getEggTypeColor(
+                                            template.eggType,
+                                          ),
                                           shape: BoxShape.circle,
                                         ),
                                       ),
@@ -260,11 +266,16 @@ class SoopkomongDetailSheet extends StatelessWidget {
 
   Color _getEggTypeColor(SoopkomonEggType eggType) {
     switch (eggType) {
-      case SoopkomonEggType.water: return Colors.blue;
-      case SoopkomonEggType.flying: return Colors.lightBlueAccent;
-      case SoopkomonEggType.mystic: return Colors.purpleAccent;
-      case SoopkomonEggType.grass: return Colors.green;
-      case SoopkomonEggType.ground: return Colors.brown;
+      case SoopkomonEggType.water:
+        return Colors.blue;
+      case SoopkomonEggType.flying:
+        return Colors.lightBlueAccent;
+      case SoopkomonEggType.mystic:
+        return Colors.purpleAccent;
+      case SoopkomonEggType.grass:
+        return Colors.green;
+      case SoopkomonEggType.ground:
+        return Colors.brown;
     }
   }
 }

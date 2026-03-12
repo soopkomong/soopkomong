@@ -166,7 +166,11 @@ class _ExplorePageState extends State<ExplorePage> {
                         final double? naviLng = navi['lng'] != null
                             ? (navi['lng'] as num).toDouble()
                             : null;
-                        final List<String> petIds = (location['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+                        final List<String> petIds =
+                            (location['petIds'] as List<dynamic>?)
+                                ?.map((e) => e.toString())
+                                .toList() ??
+                            [];
 
                         return ExploreParkCard(
                           region: region,

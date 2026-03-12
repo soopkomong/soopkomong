@@ -60,8 +60,10 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
 
   void _showParkDetailBottomSheet(BuildContext context, dynamic park) {
     final Map<String, dynamic> navi = park['navi'] ?? {};
-    final List<String> petIds = (park['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
-    
+    final List<String> petIds =
+        (park['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+        [];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
