@@ -361,9 +361,13 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                       const SizedBox(height: 12),
                       Consumer(
                         builder: (context, ref, child) {
-                          final templatesAsync = ref.watch(soopkomonTemplatesProvider);
-                          final userCharacters = ref.watch(userSoopkomonProvider);
-                          
+                          final templatesAsync = ref.watch(
+                            soopkomonTemplatesProvider,
+                          );
+                          final userCharacters = ref.watch(
+                            userSoopkomonProvider,
+                          );
+
                           return Row(
                             children: widget.petIds.isEmpty
                                 ? [
@@ -376,24 +380,39 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                     ),
                                   ]
                                 : widget.petIds.map((petId) {
-                                    final template = templatesAsync.asData?.value.where((t) => t.templateId == petId).firstOrNull;
-                                    final isAcquired = userCharacters.any((c) => c.templateId == petId);
-                                    
+                                    final template = templatesAsync
+                                        .asData
+                                        ?.value
+                                        .where((t) => t.templateId == petId)
+                                        .firstOrNull;
+                                    final isAcquired = userCharacters.any(
+                                      (c) => c.templateId == petId,
+                                    );
+
                                     Widget imageWidget = Image.asset(
                                       'assets/images/character_silhouette.png',
                                     );
-                                    
-                                    if (template != null && template.actualImagePath.isNotEmpty) {
+
+                                    if (template != null &&
+                                        template.actualImagePath.isNotEmpty) {
                                       imageWidget = Image.asset(
                                         template.actualImagePath,
-                                        color: isAcquired ? null : Colors.black.withValues(alpha: 0.7),
-                                        colorBlendMode: isAcquired ? null : BlendMode.srcIn,
+                                        color: isAcquired
+                                            ? null
+                                            : Colors.black.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                        colorBlendMode: isAcquired
+                                            ? null
+                                            : BlendMode.srcIn,
                                         errorBuilder: (context, error, stackTrace) {
-                                          return Image.asset('assets/images/character_silhouette.png');
+                                          return Image.asset(
+                                            'assets/images/character_silhouette.png',
+                                          );
                                         },
                                       );
                                     }
-                                    
+
                                     return Padding(
                                       padding: const EdgeInsets.only(right: 8),
                                       child: Container(
@@ -401,7 +420,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         height: 56,
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFEDEDED),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
@@ -411,7 +432,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                     );
                                   }).toList(),
                           );
-                        }
+                        },
                       ),
                     ],
                   ),
