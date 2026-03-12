@@ -12,17 +12,38 @@ class LocationModel extends Location {
     required super.lng,
     required super.petIds,
     required super.radius,
+    super.imageUrl,
+    super.address,
+    super.summary,
+    super.information,
+    super.tel,
+    super.naviLoc,
+    super.naviLat,
+    super.naviLng,
   });
 
   factory LocationModel.fromJson(Map<String, dynamic> json) {
+    final navi = json['navi'] as Map<String, dynamic>?;
     return LocationModel(
       id: int.tryParse(json['contentId']?.toString() ?? '') ?? 0,
       region: json['region'] as String? ?? '알 수 없음',
       name: json['title'] as String? ?? '이름 없음',
       lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
       lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
-      petIds: (json['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      petIds:
+          (json['petIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       radius: (json['radius'] as num?)?.toDouble() ?? 500.0,
+      imageUrl: json['imageUrl'] as String? ?? '',
+      address: json['address'] as String? ?? '',
+      summary: json['summary'] as String? ?? '',
+      information: json['Information'] as String? ?? '',
+      tel: json['tel'] as String? ?? '',
+      naviLoc: navi?['loc'] as String? ?? '',
+      naviLat: (navi?['lat'] as num?)?.toDouble(),
+      naviLng: (navi?['lng'] as num?)?.toDouble(),
     );
   }
 }

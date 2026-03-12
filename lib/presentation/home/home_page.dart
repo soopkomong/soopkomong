@@ -12,6 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/core/router/app_route.dart';
 
@@ -64,7 +65,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  Future<void> _addMarkers(List<Location> locations, List<SoopkomonTemplate> templates) async {
+  Future<void> _addMarkers(
+    List<Location> locations,
+    List<SoopkomonTemplate> templates,
+  ) async {
     if (mapboxMap == null || locations.isEmpty || _markersAdded) return;
     _markersAdded = true;
 
@@ -78,7 +82,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     String getEggTypeLabel(Location loc) {
       if (loc.petIds.isEmpty) return '기본';
       try {
-        final template = templates.firstWhere((t) => t.templateId == loc.petIds.first);
+        final template = templates.firstWhere(
+          (t) => t.templateId == loc.petIds.first,
+        );
         return template.eggType.label;
       } catch (_) {
         return '기본';
@@ -86,7 +92,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     // 커스텀 마커 생성 및 등록 (타입별로 다른 색상의 마커 이미지 등록)
-    final Set<String> uniqueTypes = locations.map((loc) => getEggTypeLabel(loc)).toSet();
+    final Set<String> uniqueTypes = locations
+        .map((loc) => getEggTypeLabel(loc))
+        .toSet();
     final Map<String, String> typeToImageId = {};
 
     for (var type in uniqueTypes) {
@@ -216,7 +224,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     // ViewModel의 현재 상태를 가져와 마커 추가 시도
     final state = ref.read(homeViewModelProvider);
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
-    if (!state.isLoading && state.locations.isNotEmpty && templatesAsync.hasValue) {
+    if (!state.isLoading &&
+        state.locations.isNotEmpty &&
+        templatesAsync.hasValue) {
       _addMarkers(state.locations, templatesAsync.value!);
     }
 
@@ -307,109 +317,38 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  void _showLocationDetails(int index, List<Location> locations, List<SoopkomonTemplate> templates) {
+  /// 마커 탭 시 ParkDetailSheet를 바텀시트로 표시합니다.
+  void _showLocationDetails(
+    int index,
+    List<Location> locations,
+    List<SoopkomonTemplate> templates,
+  ) {
     if (index < 0 || index >= locations.length) return;
 
     final loc = locations[index];
 
-    SoopkomonTemplate? primaryTemplate;
-    if (loc.petIds.isNotEmpty) {
-      try {
-        primaryTemplate = templates.firstWhere((t) => t.templateId == loc.petIds.first);
-      } catch (_) {}
-    }
-    final petName = primaryTemplate?.name ?? '알 수 없음';
-    final petType = primaryTemplate?.eggType.label ?? '기본';
-
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                loc.name,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                loc.region,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-              const Divider(height: 32),
-              Row(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: _getPetTypeColor(petType).withAlpha(51),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.pets,
-                      color: _getPetTypeColor(petType),
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          petName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getPetTypeColor(petType),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                petType,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+        return ParkDetailSheet(
+          id: loc.id.toString(),
+          name: loc.name,
+          description: loc.summary,
+          imageUrl: loc.imageUrl,
+          address: loc.address,
+          information: loc.information,
+          tel: loc.tel,
+          isVisited: false,
+          naviLoc: loc.naviLoc,
+          naviLat: loc.naviLat,
+          naviLng: loc.naviLng,
+          petIds: loc.petIds,
         );
       },
     );
@@ -443,7 +382,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
-    if (!state.isLoading && state.locations.isNotEmpty && mapboxMap != null && templatesAsync.hasValue) {
+    if (!state.isLoading &&
+        state.locations.isNotEmpty &&
+        mapboxMap != null &&
+        templatesAsync.hasValue) {
       _addMarkers(state.locations, templatesAsync.value!);
     }
 
@@ -473,7 +415,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(width: 8),
                 Text(
                   state.stepCount.toString(), // 실시간 만보기 값
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -522,18 +467,19 @@ class _HomePageState extends ConsumerState<HomePage> {
               bearing: 0.0, // 북쪽 고정
             ),
           ),
-          if (state.isLoading) const Center(child: CircularProgressIndicator()),
-          if (state.errorMessage != null)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                color: Colors.white.withValues(alpha: 0.8),
-                child: Text(
-                  state.errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-            ),
+          // 로딩 및 에러 UI 임시 주석
+          // if (state.isLoading) const Center(child: CircularProgressIndicator()),
+          // if (state.errorMessage != null)
+          //   Center(
+          //     child: Container(
+          //       padding: const EdgeInsets.all(16),
+          //       color: Colors.white.withValues(alpha: 0.8),
+          //       child: Text(
+          //         state.errorMessage!,
+          //         style: const TextStyle(color: Colors.red),
+          //       ),
+          //     ),
+          //   ),
         ],
       ),
     );
