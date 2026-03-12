@@ -10,6 +10,14 @@ class Location {
   final double lng;
   final List<String> petIds;
   final double radius;
+  final String imageUrl;
+  final String address;
+  final String summary;
+  final String information;
+  final String tel;
+  final String naviLoc;
+  final double? naviLat;
+  final double? naviLng;
 
   const Location({
     required this.id,
@@ -19,5 +27,13 @@ class Location {
     required this.lng,
     required this.petIds,
     required this.radius,
+    this.imageUrl = '',
+    this.address = '',
+    this.summary = '',
+    this.information = '',
+    this.tel = '',
+    this.naviLoc = '',
+    this.naviLat,
+    this.naviLng,
   });
 }
