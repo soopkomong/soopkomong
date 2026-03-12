@@ -5,6 +5,7 @@ import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ParkDetailSheet extends ConsumerStatefulWidget {
   final String id;
@@ -81,17 +82,50 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
             function onKakaoLoaded() {
                 kakao.maps.load(function() {
                     try {
-                      var marker = {
-                          position: new kakao.maps.LatLng(${widget.naviLat}, ${widget.naviLng}),
-                          text: '${widget.naviLoc}'
-                      };
-                      var staticMapContainer = document.getElementById('staticMap'),
-                          staticMapOption = { 
-                              center: new kakao.maps.LatLng(${widget.naviLat}, ${widget.naviLng}), 
-                              level: 4, 
-                              marker: marker 
-                          };    
-                      var staticMap = new kakao.maps.StaticMap(staticMapContainer, staticMapOption);
+                      var position = new kakao.maps.LatLng(${widget.naviLat}, ${widget.naviLng});
+                      var mapContainer = document.getElementById('staticMap');
+                      var mapOption = { 
+                          center: position, 
+                          level: 3,
+                          draggable: false, /* 드래그 금지 */
+                          scrollwheel: false, /* 확대축소 금지 */
+                          disableDoubleClickZoom: true
+                      };    
+                      
+                      // 지도 생성
+                      var map = new kakao.maps.Map(mapContainer, mapOption);
+                      
+                      // 순수 HTML/SVG를 활용한 커스텀 마커 + 텍스트 오버레이 (이미지 로드 차단 방지)
+                      var svgMarker = '<svg width="24" height="35" viewBox="0 0 24 35" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 23 12 23s12-14 12-23C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" fill="#FF4B4B"/></svg>';
+                      var overlayContent = '<div style="display:flex; flex-direction:column; align-items:center;">' +
+                                           '  <div style="background:white; padding:4px 10px; border-radius:20px; border:1px solid #ddd; box-shadow:0px 2px 4px rgba(0,0,0,0.1); font-size:13px; font-weight:bold; color:#333; margin-bottom:4px; white-space:nowrap;">${widget.naviLoc}</div>' +
+                                           '  <div>' + svgMarker + '</div>' +
+                                           '</div>';
+                                           
+                      var customOverlay = new kakao.maps.CustomOverlay({
+                          position: position,
+                          content: overlayContent,
+                          yAnchor: 1 // 1: 오버레이의 하단이 좌표에 일치하도록 설정
+                      });
+                      customOverlay.setMap(map);
+                      
+                      // iOS 웹뷰 및 바텀시트 애니메이션(대략 300~400ms) 도중 크기 0x0 상태에서 마커 증발 방지
+                      // 총 1.5초 동안 주기적으로 갱신하여 언제 렌더링되든 완벽히 중앙에 꽂히도록 강제 보정
+                      var retryCount = 0;
+                      var layoutInterval = setInterval(function() {
+                          map.relayout();
+                          map.setCenter(position);
+                          
+                          // 혹시 레이아웃 변경 전에 그려져서 좌표 바깥으로 날아간 오버레이 재부착
+                          customOverlay.setMap(null);
+                          customOverlay.setMap(map);
+                          
+                          retryCount++;
+                          if (retryCount >= 10) { // 150ms * 10 = 1.5초 후 종료
+                              clearInterval(layoutInterval);
+                          }
+                      }, 150);
+                      
                     } catch (e) {
                         document.getElementById('errorLog').innerHTML += "Map Init Error: " + e.message + "<br/>";
                     }
@@ -99,7 +133,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
             }
           </script>
           
-          <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3e61a81d744bd233772c3df44cd848d6&autoload=false" onload="onKakaoLoaded()" onerror="onKakaoError()"></script>
+          <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${dotenv.env['KAKAO_JS_APP_KEY']}&autoload=false" onload="onKakaoLoaded()" onerror="onKakaoError()"></script>
       </body>
       </html>
       ''';
