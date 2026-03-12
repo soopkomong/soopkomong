@@ -95,6 +95,7 @@ flutter:
     - assets/
     - assets/images/
     - assets/images/characters/
+    - assets/images/parts/
     - .env
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
