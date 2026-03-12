@@ -21,7 +21,11 @@ class LocationModel extends Location {
       name: json['title'] as String? ?? '이름 없음',
       lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
       lng: (json['lng'] as num?)?.toDouble() ?? 0.0,
-      petIds: (json['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      petIds:
+          (json['petIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       radius: (json['radius'] as num?)?.toDouble() ?? 500.0,
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -28,7 +29,7 @@ class PedometerService extends AsyncNotifier<int> {
 
     try {
       // 1. 신체 활동 권한 요청
-      final status = Platform.isIOS 
+      final status = Platform.isIOS
           ? await Permission.sensors.request()
           : await Permission.activityRecognition.request();
 
@@ -42,9 +43,10 @@ class PedometerService extends AsyncNotifier<int> {
           StackTrace.current,
         );
       } else {
-        // iOS 시뮬레이터 등에서 센서가 없어 자동 거부되는 경우 처리
+        // iOS 시뮬레이터 등에서 센서가 없어 거부되는 경우 에러를 띄우지 않고 0으로 유지
         if (Platform.isIOS) {
-          state = AsyncError('신체 활동 권한이 거부되었습니다. (시뮬레이터는 만보기 기능을 지원하지 않습니다)', StackTrace.current);
+          debugPrint('신체 활동 권한 거부됨 (iOS 시뮬레이터 가능성)');
+          state = const AsyncData(0);
         } else {
           state = AsyncError('신체 활동 권한이 필요합니다.', StackTrace.current);
         }
@@ -64,11 +66,16 @@ class PedometerService extends AsyncNotifier<int> {
         state = AsyncData(event.steps);
       },
       onError: (error) {
-        // 하드웨어 센서 문제(ex. 에뮬레이터에서 센서 없음) 시 에러 처리
-        state = AsyncError(
-          '만보기 센서를 찾을 수 없거나 오류가 발생했습니다: $error',
-          StackTrace.current,
-        );
+        // 하드웨어 센서 문제 시 iOS에서는 무시(0으로 유지), 그 외 플랫폼은 에러 처리
+        if (Platform.isIOS) {
+          debugPrint('만보기 센서 에러(iOS 무시): $error');
+          state = const AsyncData(0);
+        } else {
+          state = AsyncError(
+            '만보기 센서를 찾을 수 없거나 오류가 발생했습니다: $error',
+            StackTrace.current,
+          );
+        }
       },
       cancelOnError: false,
     );

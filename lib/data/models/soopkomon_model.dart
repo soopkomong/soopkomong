@@ -21,7 +21,9 @@ class SoopkomonModel extends Soopkomon {
       discoveredSpotId: json['discoveredSpotId'] as String? ?? '',
       discoveredSpotName: json['discoveredSpotName'] as String? ?? '',
       discoveredAddr: json['discoveredAddr'] as String? ?? '',
-      discoveredAt: DateTime.parse(json['discoveredAt'] as String? ?? DateTime.now().toIso8601String()),
+      discoveredAt: DateTime.parse(
+        json['discoveredAt'] as String? ?? DateTime.now().toIso8601String(),
+      ),
       stepsAtDiscovery: json['stepsAtDiscovery'] as int? ?? 0,
       currentTotalSteps: json['currentTotalSteps'] as int? ?? 0,
     );

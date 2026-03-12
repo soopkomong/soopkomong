@@ -16,7 +16,9 @@ class SoopkomonTemplateModel extends SoopkomonTemplate {
       templateId: json['templateId'] as String? ?? '',
       name: json['name'] as String? ?? '알 수 없음',
       description: json['description'] as String? ?? '',
-      eggType: SoopkomonEggType.fromValue(json['eggType'] as String? ?? 'mystery'),
+      eggType: SoopkomonEggType.fromValue(
+        json['eggType'] as String? ?? 'mystery',
+      ),
       region: Region.fromValue(json['region'] as String? ?? 'capital'),
     );
   }

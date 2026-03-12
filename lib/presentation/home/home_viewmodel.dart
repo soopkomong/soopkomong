@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/repositories/location_repository.dart';
@@ -88,13 +89,17 @@ class HomeNotifier extends Notifier<HomeState> {
           state = state.copyWith(stepCount: event.steps);
         },
         onError: (error) {
-          state = state.copyWith(errorMessage: '만보기 에러: $error');
+          // iOS 시뮬레이터 등 센서가 없는 환경에서의 에러는 사용자에게 노출하지 않음
+          if (Platform.isIOS) {
+            debugPrint('만보기 스트림 에러(iOS): $error');
+          } else {
+            state = state.copyWith(errorMessage: '만보기 에러: $error');
+          }
         },
       );
     } else {
-      if (Platform.isIOS) {
-        state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.\n(시뮬레이터는 만보기 기능을 지원하지 않습니다.)');
-      } else {
+      // 권한 거부 시에도 iOS에서는 별도의 에러 메시지를 홈 화면에 띄우지 않음 (시뮬레이터 대응)
+      if (!Platform.isIOS) {
         state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.');
       }
     }

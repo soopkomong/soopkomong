@@ -8,9 +8,11 @@ import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
 class SoopkomonRepositoryImpl implements SoopkomonRepository {
   @override
   Future<List<SoopkomonTemplate>> getSoopkomonTemplates() async {
-    final String response = await rootBundle.loadString('assets/templates.json');
+    final String response = await rootBundle.loadString(
+      'assets/templates.json',
+    );
     final List<dynamic> templatesJson = json.decode(response) as List<dynamic>;
-    
+
     return templatesJson
         .map((json) => SoopkomonTemplateModel.fromJson(json).toEntity())
         .toList();
@@ -18,7 +20,9 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<dynamic>> getLocations() async {
-    final String response = await rootBundle.loadString('assets/locations.json');
+    final String response = await rootBundle.loadString(
+      'assets/locations.json',
+    );
     final data = json.decode(response);
     return data['locations'] ?? [];
   }

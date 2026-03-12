@@ -13,6 +13,9 @@ class AppUser {
   // 획득한 캐릭터 리스트
   final List<Soopkomon> acquiredCharacters;
 
+  // 친구 목록 (ID 리스트)
+  final List<String> friends;
+
   AppUser({
     required this.id,
     this.email,
@@ -21,5 +24,6 @@ class AppUser {
     this.totalSteps = 0,
     this.lastStepUpdateAt,
     this.acquiredCharacters = const [],
+    this.friends = const [],
   });
 }

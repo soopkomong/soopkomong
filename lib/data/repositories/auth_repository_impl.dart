@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
@@ -8,10 +9,16 @@ import 'package:soopkomong/domain/repositories/auth_repository.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Stream<AppUser?> get authStateChanges =>
-      _firebaseAuth.authStateChanges().map(_mapFirebaseUser);
+      _firebaseAuth.authStateChanges().asyncMap((user) async {
+        if (user != null) {
+          await _syncUserToFirestore(user);
+        }
+        return _mapFirebaseUser(user);
+      });
 
   @override
   AppUser? get currentUser => _mapFirebaseUser(_firebaseAuth.currentUser);
@@ -24,6 +31,19 @@ class AuthRepositoryImpl implements AuthRepository {
       displayName: user.displayName,
       photoUrl: user.photoURL,
     );
+  }
+
+  Future<void> _syncUserToFirestore(User? user) async {
+    if (user == null) return;
+
+    final userRef = _firestore.collection('users').doc(user.uid);
+    await userRef.set({
+      'id': user.uid,
+      'email': user.email,
+      'displayName': user.displayName,
+      'photoUrl': user.photoURL,
+      'lastLoginAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   @override
@@ -45,6 +65,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
+
+      await _syncUserToFirestore(userCredential.user);
 
       return _mapFirebaseUser(userCredential.user);
     } catch (e) {
@@ -82,6 +104,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
+      await _syncUserToFirestore(userCredential.user);
+
       return _mapFirebaseUser(userCredential.user);
     } catch (e) {
       rethrow;
@@ -105,6 +129,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(oauthCredential);
+
+      await _syncUserToFirestore(userCredential.user);
 
       return _mapFirebaseUser(userCredential.user);
     } catch (e) {
