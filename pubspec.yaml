@@ -55,6 +55,7 @@ dependencies:
   url_launcher_ios: ^6.4.1
   url_launcher_android: ^6.3.28
   webview_flutter: ^4.13.1
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:

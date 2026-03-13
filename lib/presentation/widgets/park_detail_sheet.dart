@@ -12,6 +12,7 @@ class ParkDetailSheet extends ConsumerStatefulWidget {
   final String name;
   final String description;
   final String imageUrl;
+  final List<String> imageUrls; // 추가 이미지 URL 리스트 (imageUrl2, imageUrl3, ...)
   final String address;
   final String information;
   final String tel;
@@ -27,6 +28,7 @@ class ParkDetailSheet extends ConsumerStatefulWidget {
     required this.name,
     required this.description,
     required this.imageUrl,
+    this.imageUrls = const [],
     required this.address,
     required this.information,
     required this.tel,
@@ -45,10 +47,18 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
   bool _isLoading = false;
   late final WebViewController _webViewController;
   bool _isWebViewLoading = true;
+  int _currentImageIndex = 0;
+  late final PageController _imagePageController;
+
+  /// 전체 이미지 리스트 (imageUrls 배열이 이미 모든 이미지를 포함)
+  List<String> get _allImages {
+    return widget.imageUrls.where((url) => url.isNotEmpty).toList();
+  }
 
   @override
   void initState() {
     super.initState();
+    _imagePageController = PageController();
     // 웹뷰 컨트롤러 초기화
     if (widget.naviLat != null && widget.naviLng != null) {
       final String htmlString =
@@ -162,6 +172,132 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
     }
   }
 
+  @override
+  void dispose() {
+    _imagePageController.dispose();
+    super.dispose();
+  }
+
+  /// 🔹 이미지 갤러리 위젯 빌더
+  Widget _buildImageGallery() {
+    final images = _allImages;
+
+    // 이미지가 없는 경우 플레이스홀더 표시
+    if (images.isEmpty) {
+      return SizedBox(
+        height: 300,
+        child: Container(
+          color: Colors.grey[200],
+          child: const Center(
+            child: Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+              size: 48,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 300,
+      child: Stack(
+        children: [
+          // 페이지뷰 (좌우 스와이프)
+          PageView.builder(
+            controller: _imagePageController,
+            itemCount: images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentImageIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () => _showFullScreenImage(images, index),
+                child: Image.network(
+                  images[index],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+
+          // 이미지 카운터 (우측 상단)
+          if (images.length > 1)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_currentImageIndex + 1}/${images.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+          // 인디케이터 도트 (하단 중앙)
+          if (images.length > 1)
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  images.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _currentImageIndex == index ? 10 : 8,
+                    height: _currentImageIndex == index ? 10 : 8,
+                    decoration: BoxDecoration(
+                      color: _currentImageIndex == index
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   void _startNavi() async {
     if (widget.naviLat == null || widget.naviLng == null) return;
     if (_isLoading) return;
@@ -220,78 +356,8 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
 
               const SizedBox(height: 16),
 
-              /// 🔹 상단 이미지
-              SizedBox(
-                height: 300,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.network(
-                        widget.imageUrl.isNotEmpty
-                            ? widget.imageUrl
-                            : 'https://picsum.photos/800/600',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    /// 이미지 수
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          '1/1',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    /// 이미지 인디케이터
-                    Positioned(
-                      bottom: 12,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              /// 🔹 상단 이미지 갤러리
+              _buildImageGallery(),
 
               const SizedBox(height: 20),
 
@@ -567,6 +633,160 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
           ),
         );
       },
+    );
+  }
+
+  /// 🔹 전체화면 이미지 확대 뷰어
+  void _showFullScreenImage(List<String> images, int initialIndex) {
+    Navigator.of(context, rootNavigator: true).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black87,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return _FullScreenImageViewer(
+            images: images,
+            initialIndex: initialIndex,
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+}
+
+/// 전체화면 이미지 뷰어 (핀치 줌 + 스와이프)
+class _FullScreenImageViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+
+  const _FullScreenImageViewer({
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_FullScreenImageViewer> createState() => _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // 배경 탭하면 닫기
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(color: Colors.transparent),
+          ),
+
+          // 이미지 페이지뷰 (핀치 줌 지원)
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                behavior: HitTestBehavior.opaque,
+                child: Center(
+                  child: InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: Image.network(
+                      widget.images[index],
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: Colors.white54,
+                            size: 64,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // 닫기 버튼 (좌측 상단)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            left: 16,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 24),
+              ),
+            ),
+          ),
+
+          // 이미지 카운터 (우측 상단)
+          if (widget.images.length > 1)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_currentIndex + 1}/${widget.images.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

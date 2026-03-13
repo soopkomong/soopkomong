@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 
 class ParkCard extends StatelessWidget {
   const ParkCard({super.key, required this.park, this.onTap});
 
-  final dynamic park;
+  final Location park;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final String imageUrl = park['imageUrl'] ?? '';
-    final bool isVisited = park['isVisited'] ?? false;
+    final String imageUrl = park.imageUrl;
+    final bool isVisited = park.isVisited;
 
     return GestureDetector(
       onTap: onTap,
@@ -75,7 +76,7 @@ class ParkCard extends StatelessWidget {
               spacing: 2,
               children: [
                 Text(
-                  park['title'] ?? '',
+                  park.name,
                   style: const TextStyle(
                     color: Color(0xFF123800),
                     fontSize: 16,
@@ -87,7 +88,7 @@ class ParkCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  park['region'] ?? '',
+                  park.region,
                   style: const TextStyle(
                     color: Color(0xFF123800),
                     fontSize: 12,

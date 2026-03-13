@@ -152,7 +152,13 @@ class _ExplorePageState extends State<ExplorePage> {
                         final String region = location['region'] ?? '';
                         final String name = location['title'] ?? '';
                         final String description = location['summary'] ?? '';
-                        final String imageUrl = location['imageUrl'] ?? '';
+                        final String imageUrl =
+                            (location['imageUrls'] as List<dynamic>?)
+                                    ?.isNotEmpty ==
+                                true
+                            ? (location['imageUrls'] as List<dynamic>).first
+                                  .toString()
+                            : '';
                         final String address = location['address'] ?? '';
                         final String information =
                             location['Information'] ?? '';
@@ -178,6 +184,14 @@ class _ExplorePageState extends State<ExplorePage> {
                           description: description,
                           imageUrl: imageUrl,
                           onTap: () {
+                            // JSON의 imageUrls 배열 직접 사용
+                            final List<String> imgUrls =
+                                (location['imageUrls'] as List<dynamic>?)
+                                    ?.map((e) => e.toString())
+                                    .where((url) => url.isNotEmpty)
+                                    .toList() ??
+                                [];
+
                             showModalBottomSheet(
                               context: context,
                               useRootNavigator: true,
@@ -188,6 +202,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                 name: name,
                                 description: description,
                                 imageUrl: imageUrl,
+                                imageUrls: imgUrls,
                                 address: address,
                                 information: information,
                                 tel: tel,

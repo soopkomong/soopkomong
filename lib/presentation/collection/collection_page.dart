@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
-import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_progress_badge.dart';
 import 'package:soopkomong/presentation/collection/widgets/collection_sliding_tab.dart';
 import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
@@ -58,11 +59,10 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     );
   }
 
-  void _showParkDetailBottomSheet(BuildContext context, dynamic park) {
-    final Map<String, dynamic> navi = park['navi'] ?? {};
-    final List<String> petIds =
-        (park['petIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
-        [];
+  void _showParkDetailBottomSheet(BuildContext context, Location park) {
+    // Location 엔티티의 필드 사용
+    final List<String> petIds = park.petIds;
+    final List<String> imageUrls = park.imageUrls;
 
     showModalBottomSheet(
       context: context,
@@ -71,17 +71,18 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
       useRootNavigator: true,
       builder: (context) {
         return ParkDetailSheet(
-          id: (park['id'] ?? '').toString(),
-          name: park['title'] ?? '',
-          description: park['summary'] ?? '',
-          imageUrl: park['imageUrl'] ?? '',
-          address: park['address'] ?? '',
-          information: park['Information'] ?? '',
-          tel: park['tel'] ?? '',
-          isVisited: park['isVisited'] ?? false,
-          naviLoc: navi['loc'] ?? '',
-          naviLat: navi['lat'] != null ? (navi['lat'] as num).toDouble() : null,
-          naviLng: navi['lng'] != null ? (navi['lng'] as num).toDouble() : null,
+          id: park.id.toString(),
+          name: park.name,
+          description: park.summary,
+          imageUrl: park.imageUrl,
+          imageUrls: imageUrls,
+          address: park.address,
+          information: park.information,
+          tel: park.tel,
+          isVisited: park.isVisited,
+          naviLoc: park.naviLoc,
+          naviLat: park.naviLat,
+          naviLng: park.naviLng,
           petIds: petIds,
         );
       },
@@ -149,7 +150,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
   }
 
   Widget _buildTabPage(
-    AsyncValue<List<dynamic>> locationsAsync,
+    AsyncValue<List<Location>> locationsAsync,
     List<Soopkomon> userCharacters,
     AsyncValue<List<SoopkomonTemplate>> templatesAsync,
     int tabIndex,
@@ -183,7 +184,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
               ),
               data: (templates) => CollectionProgressBadge(
                 currentCount: tabIndex == 0
-                    ? locations.where((l) => l['isVisited'] == true).length
+                    ? locations.where((l) => l.isVisited == true).length
                     : userCharacters.length,
                 totalCount: tabIndex == 0 ? locations.length : templates.length,
                 iconPath: tabIndex == 0
@@ -213,7 +214,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     );
   }
 
-  Widget _buildParkGrid(List<dynamic> locations) {
+  Widget _buildParkGrid(List<Location> locations) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

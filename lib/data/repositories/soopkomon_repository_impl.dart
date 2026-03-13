@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:soopkomong/data/models/location_model.dart';
 import 'package:soopkomong/data/models/soopkomon_template_model.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
 
@@ -19,11 +21,12 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
   }
 
   @override
-  Future<List<dynamic>> getLocations() async {
+  Future<List<Location>> getLocations() async {
     final String response = await rootBundle.loadString(
       'assets/locations.json',
     );
     final data = json.decode(response);
-    return data['locations'] ?? [];
+    final List<dynamic> locationsJson = data['locations'] ?? [];
+    return locationsJson.map((json) => LocationModel.fromJson(json)).toList();
   }
 }

@@ -88,8 +88,8 @@ class MainPage extends ConsumerWidget {
               alignment: Alignment.bottomCenter,
               child: AppBottomNavigationBar(navigationShell: navigationShell),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
