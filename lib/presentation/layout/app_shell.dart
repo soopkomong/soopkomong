@@ -79,14 +79,19 @@ class MainPage extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          navigationShell,
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: AppBottomNavigationBar(navigationShell: navigationShell),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            navigationShell,
+            SafeArea(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: AppBottomNavigationBar(navigationShell: navigationShell),
+              ),
             ),
           ],
         ),
