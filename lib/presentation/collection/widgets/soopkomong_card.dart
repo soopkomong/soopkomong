@@ -60,10 +60,13 @@ class SoopkomongCard extends StatelessWidget {
                               ? null
                               : Colors.black.withValues(alpha: 0.7),
                           colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            isDiscovered ? Icons.pets : Icons.help_outline,
-                            size: 40,
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Image.asset(
+                                'assets/images/character_silhouette.png',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.contain,
+                              ),
                         ),
                       ),
                     ),
