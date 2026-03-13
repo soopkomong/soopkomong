@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
@@ -19,7 +20,7 @@ final soopkomonTemplatesProvider = FutureProvider<List<SoopkomonTemplate>>((
 });
 
 /// 3. 모든 공원 위치 데이터 프로바이더 (Async)
-final locationsProvider = FutureProvider<List<dynamic>>((ref) async {
+final locationsProvider = FutureProvider<List<Location>>((ref) async {
   final repository = ref.watch(soopkomonRepositoryProvider);
   return repository.getLocations();
 });
@@ -75,13 +76,13 @@ final userSoopkomonProvider = NotifierProvider<UserSoopkomon, List<Soopkomon>>(
 );
 
 /// 6. 필터링된 공원 리스트 (조합 프로바이더)
-final filteredLocationsProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
+final filteredLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
   final locationsAsync = ref.watch(locationsProvider);
   final selectedRegion = ref.watch(selectedRegionProvider);
 
   return locationsAsync.whenData((locations) {
     return locations
-        .where((loc) => loc['region'] == selectedRegion.label)
+        .where((loc) => loc.region == selectedRegion.label)
         .toList();
   });
 });

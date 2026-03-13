@@ -352,6 +352,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           name: loc.name,
           description: loc.summary,
           imageUrl: loc.imageUrl,
+          imageUrls: loc.imageUrls,
           address: loc.address,
           information: loc.information,
           tel: loc.tel,
