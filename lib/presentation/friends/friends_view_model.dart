@@ -72,15 +72,29 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
   }
 
   // 친구 요청 보내기 기능
-  Future<void> sendFriendRequest(String targetId) async {
+  Future<void> sendFriendRequest(String targetInput) async {
     final currentUser = ref.read(authRepositoryProvider).currentUser;
     if (currentUser == null) return;
 
-    if (currentUser.id == targetId) {
-      throw Exception('자기 자신에게는 친구 요청을 보낼 수 없습니다.');
-    }
+    String targetId = targetInput.trim();
 
     try {
+      // 1. 입력값이 user_code인지 확인하기 위해 Firestore 쿼리
+      final userCodeQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('user_code', isEqualTo: targetId.toUpperCase())
+          .limit(1)
+          .get();
+
+      if (userCodeQuery.docs.isNotEmpty) {
+        // 코드를 가진 유저를 찾았다면 해당 유저의 id(UID)를 타겟으로 설정
+        targetId = userCodeQuery.docs.first.id;
+      }
+
+      if (currentUser.id == targetId) {
+        throw Exception('자기 자신에게는 친구 요청을 보낼 수 없습니다.');
+      }
+
       // 이미 친구인지 확인
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
@@ -103,13 +117,13 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
         throw Exception('이미 친구 요청을 보냈습니다.');
       }
 
-      // 상대방 존재 여부 확인
+      // 상대방 존재 여부 확인 (UID로 검색)
       final targetDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(targetId)
           .get();
       if (!targetDoc.exists) {
-        throw Exception('해당 ID의 유저를 찾을 수 없습니다.');
+        throw Exception('해당 코드 또는 ID의 유저를 찾을 수 없습니다.');
       }
 
       // 친구 요청 문서 생성

@@ -30,6 +30,10 @@ class AuthRepositoryImpl implements AuthRepository {
       email: user.email,
       displayName: user.displayName,
       photoUrl: user.photoURL,
+      // Firebase User에는 userCode가 없으므로 Firestore에서 가져와야 하지만, 
+      // 현재 리포지토리 패턴상 authStateChanges에서 합치거나 별도 조회가 필요함.
+      // 일단 AppUser 생성자 수정에 맞춰 null로 둠.
+      userCode: null, 
     );
   }
 
@@ -37,13 +41,50 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null) return;
 
     final userRef = _firestore.collection('users').doc(user.uid);
-    await userRef.set({
+    final userDoc = await userRef.get();
+
+    Map<String, dynamic> data = {
       'id': user.uid,
       'email': user.email,
       'displayName': user.displayName,
       'photoUrl': user.photoURL,
       'lastLoginAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    };
+
+    // user_code가 없는 기존 유저나 신규 유저를 위해 코드 생성 로직 추가
+    if (!userDoc.exists || !userDoc.data()!.containsKey('user_code')) {
+      final String newCode = await _generateUniqueUserCode();
+      data['user_code'] = newCode;
+    }
+
+    await userRef.set(data, SetOptions(merge: true));
+  }
+
+  /// 중복되지 않는 6~8자리 사용자 코드 생성
+  Future<String> _generateUniqueUserCode() async {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 헷갈리기 쉬운 I, O, 0, 1 제외
+    final random = DateTime.now().microsecondsSinceEpoch;
+    
+    while (true) {
+      // 6~8자리 랜덤 코드 생성 (단순화를 위해 일단 8자리로 고정하거나 가변적 구현)
+      final String code = List.generate(8, (index) {
+        final randIdx = (random + index * 31) % chars.length;
+        return chars[randIdx];
+      }).join();
+
+      // 중복 확인
+      final duplicate = await _firestore
+          .collection('users')
+          .where('user_code', isEqualTo: code)
+          .limit(1)
+          .get();
+
+      if (duplicate.docs.isEmpty) {
+        return code;
+      }
+      // 중복 시 루프를 돌며 재생성 (실제로는 정교한 난수가 필요할 수 있음)
+      await Future.delayed(const Duration(milliseconds: 10));
+    }
   }
 
   @override
