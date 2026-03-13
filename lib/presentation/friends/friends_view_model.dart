@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
+import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
 class FriendModel {
@@ -74,26 +75,115 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
     return friends;
   }
 
-  // 친구 추가 기능
-  Future<void> addFriend(String code) async {
-    final authRepository = ref.read(authRepositoryProvider);
-    final user = authRepository.currentUser;
+  // 친구 요청 보내기 기능
+  Future<void> sendFriendRequest(String targetId) async {
+    final currentUser = ref.read(authRepositoryProvider).currentUser;
+    if (currentUser == null) return;
 
-    if (user == null) return;
+    if (currentUser.id == targetId) {
+      throw Exception('자기 자신에게는 친구 요청을 보낼 수 없습니다.');
+    }
 
-    state = const AsyncValue.loading();
     try {
-      // 실제 Firestore 업데이트: 내 문서의 friends 배열에 친구 UID 추가
-      await FirebaseFirestore.instance.collection('users').doc(user.id).update({
-        'friends': FieldValue.arrayUnion([code]),
+      // 이미 친구인지 확인
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.id)
+          .get();
+      final List<String> friends = List<String>.from(userDoc.data()?['friends'] ?? []);
+      if (friends.contains(targetId)) {
+        throw Exception('이미 친구입니다.');
+      }
+
+      // 이미 보내진 요청이 있는지 확인
+      final existingRequest = await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .where('senderId', isEqualTo: currentUser.id)
+          .where('receiverId', isEqualTo: targetId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+
+      if (existingRequest.docs.isNotEmpty) {
+        throw Exception('이미 친구 요청을 보냈습니다.');
+      }
+
+      // 상대방 존재 여부 확인
+      final targetDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(targetId)
+          .get();
+      if (!targetDoc.exists) {
+        throw Exception('해당 ID의 유저를 찾을 수 없습니다.');
+      }
+
+      // 친구 요청 문서 생성
+      final request = FriendRequest(
+        id: '',
+        senderId: currentUser.id,
+        senderName: currentUser.displayName ?? '익명',
+        receiverId: targetId,
+        status: FriendRequestStatus.pending,
+        timestamp: DateTime.now(),
+      );
+
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .add(request.toFirestore());
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // 친구 요청 수락
+  Future<void> acceptFriendRequest(FriendRequest request) async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      // 1. 요청 상태 변경
+      final requestRef = FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(request.id);
+      batch.update(requestRef, {'status': 'accepted'});
+
+      // 2. 내 친구 목록에 추가
+      final myRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(request.receiverId);
+      batch.update(myRef, {
+        'friends': FieldValue.arrayUnion([request.senderId])
       });
 
-      // 기존 리스트와 새 친구 합쳐서 상태 업데이트
-      // 실시간 업데이트를 위해 invalidateSelf 호출
+      // 3. 상대방 친구 목록에 추가
+      final senderRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(request.senderId);
+      batch.update(senderRef, {
+        'friends': FieldValue.arrayUnion([request.receiverId])
+      });
+
+      await batch.commit();
       ref.invalidateSelf();
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      rethrow;
     }
+  }
+
+  // 친구 요청 거절
+  Future<void> declineFriendRequest(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(requestId)
+          .update({'status': 'declined'});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // (기존 addFriend 메서드는 유지하되 내부 로직은 sendFriendRequest 호출로 가이드하거나 삭제 가능)
+  // 여기서는 호환성을 위해 유지하거나 sendFriendRequest로 대체 안내
+  Future<void> addFriend(String code) async {
+    await sendFriendRequest(code);
   }
 }
 
