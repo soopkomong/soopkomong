@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 
 class AppBottomNavigationBar extends ConsumerStatefulWidget {
@@ -32,7 +34,12 @@ class _AppBottomNavigationBarState
     final currentIndex = widget.navigationShell.currentIndex;
 
     final labels = ['홈', '도감', '생태공원', '친구'];
-    final icons = [Icons.home, Icons.book, Icons.explore, Icons.people];
+    final baseIconPaths = [
+      'assets/images/Home',
+      'assets/images/Notebook',
+      'assets/images/Globe',
+      'assets/images/Users',
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -54,6 +61,9 @@ class _AppBottomNavigationBarState
             children: List.generate(labels.length, (index) {
               final isSelected = currentIndex == index;
 
+              final iconPath =
+                  '${baseIconPaths[index]}_${isSelected ? 'Fill' : 'Line'}.svg';
+
               return Expanded(
                 child: GestureDetector(
                   onTap: () => _onTap(index),
@@ -66,21 +76,28 @@ class _AppBottomNavigationBarState
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            icons[index],
-                            size: 24,
-                            color: isSelected
-                                ? const Color(0xFF191919)
-                                : const Color(0x66191919),
+                          SvgPicture.asset(
+                            iconPath,
+                            width: 24,
+                            height: 24,
+                            colorFilter: ColorFilter.mode(
+                              isSelected
+                                  ? AppColors.primary700
+                                  : AppColors.gray400,
+                              BlendMode.srcIn,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             labels[index],
                             style: TextStyle(
                               fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
                               color: isSelected
-                                  ? const Color(0xFF191919)
-                                  : const Color(0x66191919),
+                                  ? AppColors.primary700
+                                  : AppColors.gray400,
                             ),
                           ),
                         ],

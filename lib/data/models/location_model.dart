@@ -13,6 +13,7 @@ class LocationModel extends Location {
     required super.petIds,
     required super.radius,
     super.imageUrl,
+    super.imageUrls,
     super.address,
     super.summary,
     super.information,
@@ -20,10 +21,20 @@ class LocationModel extends Location {
     super.naviLoc,
     super.naviLat,
     super.naviLng,
+    super.isVisited,
   });
 
   factory LocationModel.fromJson(Map<String, dynamic> json) {
     final navi = json['navi'] as Map<String, dynamic>?;
+
+    // JSON의 imageUrls 배열 직접 파싱
+    final List<String> imageUrls =
+        (json['imageUrls'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .where((url) => url.isNotEmpty)
+            .toList() ??
+        [];
+
     return LocationModel(
       id: int.tryParse(json['contentId']?.toString() ?? '') ?? 0,
       region: json['region'] as String? ?? '알 수 없음',
@@ -36,7 +47,8 @@ class LocationModel extends Location {
               .toList() ??
           [],
       radius: (json['radius'] as num?)?.toDouble() ?? 500.0,
-      imageUrl: json['imageUrl'] as String? ?? '',
+      imageUrl: imageUrls.isNotEmpty ? imageUrls.first : '',
+      imageUrls: imageUrls,
       address: json['address'] as String? ?? '',
       summary: json['summary'] as String? ?? '',
       information: json['Information'] as String? ?? '',
@@ -44,6 +56,7 @@ class LocationModel extends Location {
       naviLoc: navi?['loc'] as String? ?? '',
       naviLat: (navi?['lat'] as num?)?.toDouble(),
       naviLng: (navi?['lng'] as num?)?.toDouble(),
+      isVisited: json['isVisited'] as bool? ?? false,
     );
   }
 }
