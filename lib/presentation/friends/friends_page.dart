@@ -187,12 +187,69 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                             onPressed: () async {
                               final value = _idController.text;
                               if (value.isNotEmpty) {
-                                await ref
-                                    .read(friendsViewModelProvider.notifier)
-                                    .addFriend(value);
-                                _idController.clear();
-                                if (mounted) {
-                                  FocusScope.of(context).unfocus();
+                                try {
+                                  await ref
+                                      .read(friendsViewModelProvider.notifier)
+                                      .sendFriendRequest(value);
+                                  _idController.clear();
+                                  if (mounted) {
+                                    FocusScope.of(context).unfocus();
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(15),
+                                        ),
+                                        content: const Text(
+                                          '친구 요청을 보냈습니다.',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(fontWeight: FontWeight.w500),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text(
+                                              '확인',
+                                              style: TextStyle(
+                                                color: AppColors.primary700,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        actionsAlignment: MainAxisAlignment.center,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(15),
+                                        ),
+                                        content: Text(
+                                          e.toString().replaceAll('Exception: ', ''),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text(
+                                              '확인',
+                                              style: TextStyle(
+                                                color: AppColors.primary700,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        actionsAlignment: MainAxisAlignment.center,
+                                      ),
+                                    );
+                                  }
                                 }
                               }
                             },
