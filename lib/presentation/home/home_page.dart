@@ -168,11 +168,15 @@ class _HomePageState extends ConsumerState<HomePage> {
       // turf_helper를 사용하여 radius 반경의 원 형태 폴리곤 생성
       final circleCoordinates = createCircleCoordinates(center, loc.radius);
 
+      final bool isNight = _isNight();
+      final Color polygonColor = isNight ? Colors.pinkAccent : Colors.blue;
+      final double fillOpacity = isNight ? 0.3 : 0.2;
+
       polygonOptions.add(
         PolygonAnnotationOptions(
           geometry: Polygon(coordinates: [circleCoordinates]),
-          fillColor: Colors.blue.withValues(alpha: 0.2).toARGB32(),
-          fillOutlineColor: Colors.blue.toARGB32(),
+          fillColor: polygonColor.withValues(alpha: fillOpacity).toARGB32(),
+          fillOutlineColor: polygonColor.toARGB32(),
         ),
       );
     }
@@ -238,12 +242,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
-    final int currentHour = DateTime.now().hour;
-
-    // 6시부터 17시 59분까지는 day, 그 외는 night
-    final String timePreset = (currentHour >= 6 && currentHour < 18)
-        ? "day"
-        : "night";
+    final String timePreset = _isNight() ? "night" : "day";
 
     // Mapbox Standard 스타일에 timePreset 적용
     try {
@@ -255,6 +254,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     } catch (e) {
       debugPrint("테마 갱신 에러: $e");
     }
+  }
+
+  bool _isNight() {
+    final int currentHour = DateTime.now().hour;
+    return currentHour < 6 || currentHour >= 18;
   }
 
   Future<void> _moveToCurrentLocation({bool forceDefaultZoom = false}) async {
