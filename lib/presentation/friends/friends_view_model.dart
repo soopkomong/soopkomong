@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
+import 'package:soopkomong/presentation/providers/user_provider.dart';
 
 class FriendModel {
   final String id; // 친구의 고유 id
@@ -40,39 +41,34 @@ class FriendModel {
 class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
   @override
   Future<List<FriendModel>> build() async {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final user = authRepository.currentUser;
+    final userDocAsync = ref.watch(userDocumentProvider);
+    
+    return userDocAsync.when(
+      data: (userDoc) async {
+        if (userDoc == null || !userDoc.exists) return [];
 
-    if (user == null) return [];
+        final data = userDoc.data() as Map<String, dynamic>?;
+        final List<String> friendIds = List<String>.from(data?['friends'] ?? [])
+            .where((id) => id.trim().isNotEmpty)
+            .toList();
 
-    // 1. 내 문서에서 친구 ID 리스트 가져오기
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.id)
-        .get();
+        if (friendIds.isEmpty) return [];
 
-    if (!userDoc.exists) return [];
-
-    final data = userDoc.data();
-    final List<String> friendIds = List<String>.from(data?['friends'] ?? []);
-
-    if (friendIds.isEmpty) return [];
-
-    // 2. 친구 ID들을 바탕으로 각 친구의 상세 정보 가져오기
-    // Firestore 'whereIn' 쿼리는 최대 10개-30개 제한이 있으므로, 데이터가 많아지면 분할 처리가 필요할 수 있음
-    // 여기서는 간단하게 개별 Fetch 또는 chunk 처리를 고려
-    final List<FriendModel> friends = [];
-    for (var friendId in friendIds) {
-      final friendDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(friendId)
-          .get();
-      if (friendDoc.exists) {
-        friends.add(FriendModel.fromFirestore(friendDoc));
-      }
-    }
-
-    return friends;
+        final List<FriendModel> friends = [];
+        for (var friendId in friendIds) {
+          final friendDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(friendId)
+              .get();
+          if (friendDoc.exists) {
+            friends.add(FriendModel.fromFirestore(friendDoc));
+          }
+        }
+        return friends;
+      },
+      loading: () => state.value ?? [],
+      error: (e, st) => throw e,
+    );
   }
 
   // 친구 요청 보내기 기능
