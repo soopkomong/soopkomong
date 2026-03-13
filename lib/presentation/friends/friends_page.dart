@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/friends/friends_view_model.dart';
+import 'package:soopkomong/presentation/providers/user_provider.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({super.key});
@@ -23,7 +24,6 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsViewModelProvider);
-    final myInfo = ref.watch(myInfoProvider);
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -78,9 +78,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                         fontWeight: FontWeight.w500,
                       ),
                       children: [
-                        const TextSpan(text: '내 ID : '),
+                        const TextSpan(text: '내 코드 : '),
                         TextSpan(
-                          text: myInfo?.id ?? '-',
+                          text: (ref.watch(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'] ?? '-',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -89,9 +89,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                   const Spacer(),
                   GestureDetector(
                     onTap: () {
-                      if (myInfo == null) return;
+                      final userCode = (ref.read(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'];
+                      if (userCode == null) return;
+                      
                       // Clipboard: 텍스트 복사 기능
-                      Clipboard.setData(ClipboardData(text: myInfo.id));
+                      Clipboard.setData(ClipboardData(text: userCode));
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
@@ -100,7 +102,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                           ),
                           actionsAlignment: MainAxisAlignment.center,
                           content: const Text(
-                            'ID가 클립보드에 복사되었습니다.',
+                            '코드가 클립보드에 복사되었습니다.',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.w500),
                           ),
@@ -157,7 +159,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                           child: TextField(
                             controller: _idController,
                             decoration: InputDecoration(
-                              hintText: '친구 ID를 입력해주세요',
+                              hintText: '친구 코드를 입력해주세요',
                               hintStyle: const TextStyle(
                                 color: AppColors.gray400,
                                 fontSize: 13,

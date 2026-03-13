@@ -16,11 +16,14 @@ class AppUser {
   // 친구 목록 (ID 리스트)
   final List<String> friends;
 
+  final String? userCode;
+
   AppUser({
     required this.id,
     this.email,
     this.displayName,
     this.photoUrl,
+    this.userCode,
     this.totalSteps = 0,
     this.lastStepUpdateAt,
     this.acquiredCharacters = const [],
