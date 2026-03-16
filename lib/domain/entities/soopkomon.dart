@@ -16,6 +16,7 @@ class Soopkomon {
   // 2. 걸음수 기록 (성장 추적용)
   final int stepsAtDiscovery; // 발견 당시 유저의 누적 걸음수
   int currentTotalSteps; // 유저의 현재 최신 누적 걸음수 (업데이트용)
+  final bool isHatched; // 부화 여부
 
   Soopkomon({
     required this.instanceId,
@@ -27,6 +28,7 @@ class Soopkomon {
     required this.discoveredAt,
     required this.stepsAtDiscovery,
     this.currentTotalSteps = 0,
+    this.isHatched = false,
   });
 
   // 3. 실시간 계산 필드 (Getter)
@@ -34,7 +36,11 @@ class Soopkomon {
   int get traveledSteps => currentTotalSteps - stepsAtDiscovery;
 
   /// 상태 업데이트를 위한 copyWith
-  Soopkomon copyWith({String? name, int? currentTotalSteps}) {
+  Soopkomon copyWith({
+    String? name,
+    int? currentTotalSteps,
+    bool? isHatched,
+  }) {
     return Soopkomon(
       instanceId: instanceId,
       templateId: templateId,
@@ -45,6 +51,7 @@ class Soopkomon {
       discoveredAt: discoveredAt,
       stepsAtDiscovery: stepsAtDiscovery,
       currentTotalSteps: currentTotalSteps ?? this.currentTotalSteps,
+      isHatched: isHatched ?? this.isHatched,
     );
   }
 }

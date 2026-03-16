@@ -27,6 +27,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp.router(
       theme: ThemeData(
         useMaterial3: true,
+
         fontFamily: 'Pretendard',
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary500,

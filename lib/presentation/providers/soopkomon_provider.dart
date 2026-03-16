@@ -68,7 +68,24 @@ class UserSoopkomon extends Notifier<List<Soopkomon>> {
     ];
   }
 
-  void add(Soopkomon character) => state = [...state, character];
+  void add(Soopkomon character) {
+    state = [...state, character];
+  }
+
+  /// 모든 캐릭터의 실시간 누적 걸음수를 업데이트합니다.
+  void updateAllSteps(int totalSteps) {
+    state = [
+      for (final pet in state) pet.copyWith(currentTotalSteps: totalSteps),
+    ];
+  }
+
+  /// 특정 캐릭터를 부화 상태로 변경합니다.
+  void markAsHatched(String instanceId) {
+    state = [
+      for (final pet in state)
+        if (pet.instanceId == instanceId) pet.copyWith(isHatched: true) else pet,
+    ];
+  }
 }
 
 final userSoopkomonProvider = NotifierProvider<UserSoopkomon, List<Soopkomon>>(

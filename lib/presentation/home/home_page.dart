@@ -13,7 +13,6 @@ import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
-import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/core/router/app_route.dart';
 
 /// [Presentation Layer] - View
@@ -36,7 +35,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   bool _markersAdded = false;
   final Map<String, int> _markerIndexMap = {};
   Timer? _themeTimer;
-  StreamSubscription<geo.Position>? _positionStreamSubscription;
 
   @override
   void initState() {
@@ -44,11 +42,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 첫 프레임 렌더링 후 비동기로 데이터 로드 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeViewModelProvider.notifier).loadData();
-      ref.read(homeViewModelProvider.notifier).startPedometer();
+      ref.read(homeViewModelProvider.notifier).startTracking();
     });
-
-    // initState에서도 권한을 먼저 요청하고, 초기 카메라 위치를 잡기 위해 실행
-    _moveToCurrentLocation();
 
     // 1분(60초)마다 현재 시간 확인하여 테마 갱신
     _themeTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
@@ -61,7 +56,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void dispose() {
     _themeTimer?.cancel();
-    _positionStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -236,9 +230,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 초기 테마(낮/밤) 적용
     await _applyDayNightTheme(mapboxMap);
-
-    // 맵 생성 후에도 다시 한번 내 위치로 카메라 이동을 보장
-    await _moveToCurrentLocation(forceDefaultZoom: true);
   }
 
   Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
@@ -262,23 +253,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _moveToCurrentLocation({bool forceDefaultZoom = false}) async {
-    bool serviceEnabled;
-    geo.LocationPermission permission;
+    final state = ref.read(homeViewModelProvider);
+    final position = state.currentPosition;
+    if (position == null) return;
 
-    serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    permission = await geo.Geolocator.checkPermission();
-    if (permission == geo.LocationPermission.denied) {
-      permission = await geo.Geolocator.requestPermission();
-      if (permission == geo.LocationPermission.denied) return;
-    }
-
-    if (permission == geo.LocationPermission.deniedForever) return;
-
-    final position = await geo.Geolocator.getCurrentPosition();
-
-    // 맵이 아직 렌더링되지 않았을 수도 있으므로 mapboxMap 객체가 있는지 확인
     if (mapboxMap != null) {
       final currentCamera = await mapboxMap!.getCameraState();
       final targetZoom = forceDefaultZoom
@@ -292,33 +270,113 @@ class _HomePageState extends ConsumerState<HomePage> {
           zoom: targetZoom,
         ),
       );
-      // 한번 셋팅 후, 실시간으로 위치가 바뀔 때마다 카메라를 내 위치로 이동시키는 리스너 등록
-      _positionStreamSubscription ??=
-          geo.Geolocator.getPositionStream(
-            locationSettings: const geo.LocationSettings(
-              accuracy: geo.LocationAccuracy.high,
-              distanceFilter: 5, // 5미터 이동할 때마다 업데이트
-            ),
-          ).listen((geo.Position newPosition) {
-            if (mapboxMap != null) {
-              mapboxMap?.setCamera(
-                CameraOptions(
-                  center: Point(
-                    coordinates: Position(
-                      newPosition.longitude,
-                      newPosition.latitude,
+    }
+  }
+
+  void _showPetAcquiredDialog(String petName, String parkName, String eggPath) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(eggPath, width: 120, height: 120),
+              const SizedBox(height: 24),
+              Text(
+                '$parkName 숲코몽 알',
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '$parkName에 숲코몽 알이 나타났어요!\n숲코몽이 태어날 수 있도록 같이 걸어주세요!',
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ref.read(homeViewModelProvider.notifier).clearAcquiredPet();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF48B200),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  // 줌은 유지하거나 필요시 16.5 등 고정 가능. 일단 이동만 시킴
+                  child: const Text('획득하기',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-              );
-            }
-          });
-    } else {
-      // 만약 아직 mapboxMap이 생성되기 전이라면 build 메서드의 initialCameraOptions에 영향을 줄 수 있도록
-      // 상태로 저장해두는 방법도 있지만, onMapCreated에서 다시 호출하므로 여기서는 무시해도 됩니다.
-      debugPrint("mapboxMap이 아직 초기화되지 않았습니다. 맵 생성 후 이동합니다.");
-    }
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPetHatchedDialog(String petName, String parkName, String imagePath) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(imagePath, width: 120, height: 120),
+              const SizedBox(height: 24),
+              Text(
+                '$parkName $petName',
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '$parkName에 $petName 숲코몽이 태어났어요!\n도감에서 자세한 정보를 확인하세요!',
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ref.read(homeViewModelProvider.notifier).clearHatchedPet();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF48B200),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('획득하기',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// 마커 탭 시 ParkDetailSheet를 바텀시트로 표시합니다.
@@ -393,8 +451,54 @@ class _HomePageState extends ConsumerState<HomePage> {
     final templatesAsync = ref.watch(soopkomonTemplatesProvider);
 
     // 다른 탭이나 페이지(도감 등)에서 복귀 시 줌 16.5 초기화 이벤트를 수신합니다.
-    ref.listen(mapZoomResetProvider, (_, _) {
+    ref.listen(mapZoomResetProvider, (_, __) {
       _moveToCurrentLocation(forceDefaultZoom: true);
+    });
+
+    // 실시간 위치 변화에 따른 카메라 이동 처리
+    ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (
+      prev,
+      next,
+    ) {
+      if (next != null && mapboxMap != null) {
+        mapboxMap?.setCamera(
+          CameraOptions(
+            center: Point(coordinates: Position(next.longitude, next.latitude)),
+          ),
+        );
+      }
+    });
+
+    // 펫 획득 알림 처리
+    ref.listen(homeViewModelProvider.select((s) => s.lastAcquiredPetName), (
+      prev,
+      next,
+    ) {
+      if (next != null) {
+        final currentState = ref.read(homeViewModelProvider);
+        _showPetAcquiredDialog(
+          next,
+          currentState.lastAcquiredParkName ?? '',
+          currentState.lastAcquiredPetEggPath ??
+              'assets/images/characters/egg_mystery.png',
+        );
+      }
+    });
+
+    // 펫 부화 알림 처리
+    ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (
+      prev,
+      next,
+    ) {
+      if (next != null) {
+        final currentState = ref.read(homeViewModelProvider);
+        _showPetHatchedDialog(
+          next,
+          currentState.lastHatchedParkName ?? '',
+          currentState.lastHatchedPetImagePath ??
+              'assets/images/characters/007_big.png',
+        );
+      }
     });
 
     // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
@@ -497,6 +601,17 @@ class _HomePageState extends ConsumerState<HomePage> {
           //     ),
           //   ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        child: const Icon(Icons.add_location_alt, color: Colors.green),
+        onPressed: () {
+          // 현재 걸음 수에서 100걸음을 더하여 펫 획득 및 부화 조건을 쉽게 테스트함
+          final currentSteps = ref.read(homeViewModelProvider).stepCount;
+          ref
+              .read(homeViewModelProvider.notifier)
+              .updateStepCount(currentSteps + 100);
+        },
       ),
     );
   }
