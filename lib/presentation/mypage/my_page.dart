@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
+import 'package:soopkomong/presentation/widgets/character_avatar.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
 
@@ -33,7 +36,7 @@ class MyPage extends ConsumerWidget {
                   children: [
                     const _ProfileSection(),
                     const SizedBox(height: 28),
-                    const StatsSection(),
+                    const _StatsSection(),
                     const SizedBox(height: 28),
                     const SoundSection(),
                     const SizedBox(height: 16),
@@ -55,20 +58,80 @@ class MyPage extends ConsumerWidget {
   }
 }
 
-class _ProfileSection extends StatelessWidget {
+class _ProfileSection extends ConsumerWidget {
   const _ProfileSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider).value;
+    if (user == null) return const SizedBox.shrink();
+
     return Column(
       children: [
         Stack(
           clipBehavior: Clip.none,
           children: [
-            const CircleAvatar(
-              radius: 70,
-              backgroundImage: NetworkImage(
-                'https://picsum.photos/seed/1/358/199',
+            Container(
+              width: 140,
+              height: 140,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 8)],
+              ),
+              child: ClipOval(
+                child: Center(
+                  child: user.characterSettings != null
+                      ? Transform.translate(
+                          offset: const Offset(
+                            0,
+                            45,
+                          ), // 배율 하향에 맞춰 위치 조정 (60 -> 45)
+                          child: Transform.scale(
+                            scale: 1.5, // 너무 과하지 않게 확대 배율 소폭 하향 (1.8 -> 1.5)
+                            child: CharacterAvatar(
+                              baseImagePath:
+                                  'assets/images/parts/body_base.png',
+                              bodyShadowImagePath:
+                                  'assets/images/parts/body_shadow.png',
+                              baseColor: Color(
+                                user.characterSettings!['skinColor'] as int,
+                              ),
+                              hairImagePath:
+                                  'assets/images/parts/hair_${user.characterSettings!['hair']}.png',
+                              hairHighlightImagePath:
+                                  'assets/images/parts/hair_${user.characterSettings!['hair']}_highlight.png',
+                              hairShadowImagePath:
+                                  'assets/images/parts/hair_${user.characterSettings!['hair']}_shadow.png',
+                              hairSubShadowImagePath:
+                                  'assets/images/parts/hair_${user.characterSettings!['hair']}_sub_shadow.png',
+                              hairColor: Color(
+                                user.characterSettings!['hairColor'] as int,
+                              ),
+                              faceImagePath:
+                                  'assets/images/parts/face_${user.characterSettings!['face']}.png',
+                              clothesImagePath:
+                                  'assets/images/parts/clothes_${user.characterSettings!['clothes']}.png',
+                              clothesColor: Color(
+                                user.characterSettings!['clothesColor'] as int,
+                              ),
+                              shoesImagePath:
+                                  user.characterSettings!['shoes'] != null
+                                  ? 'assets/images/parts/shoes_${user.characterSettings!['shoes']}.png'
+                                  : null,
+                              shoesColor: Color(
+                                user.characterSettings!['shoesColor'] as int,
+                              ),
+                              size: 200,
+                            ),
+                          ),
+                        )
+                      : Image.network(
+                          user.photoUrl ??
+                              'https://picsum.photos/seed/1/358/199',
+                          fit: BoxFit.cover,
+                        ),
+                ),
               ),
             ),
             Positioned(
@@ -89,20 +152,28 @@ class _ProfileSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Name',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        Text(
+          user.displayName ?? 'Name',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
 }
 
-class StatsSection extends StatelessWidget {
-  const StatsSection({super.key});
+class _StatsSection extends ConsumerWidget {
+  const _StatsSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locationsAsync = ref.watch(filteredLocationsProvider);
+    final userCharacters = ref.watch(userSoopkomonProvider);
+
+    final visitedCount = locationsAsync.maybeWhen(
+      data: (locations) => locations.where((l) => l.isVisited == true).length,
+      orElse: () => 0,
+    );
+
     return Row(
       children: [
         Expanded(
@@ -114,7 +185,7 @@ class StatsSection extends StatelessWidget {
               );
             },
             title: '내가 가본 생태공원',
-            value: '8',
+            value: visitedCount.toString(),
             image: 'assets/images/park.png',
           ),
         ),
@@ -128,7 +199,7 @@ class StatsSection extends StatelessWidget {
               );
             },
             title: '내가 모은 캐릭터',
-            value: '25',
+            value: userCharacters.length.toString(),
             image: 'assets/images/character_silhouette.png',
           ),
         ),

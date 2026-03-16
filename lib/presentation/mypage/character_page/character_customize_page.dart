@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/presentation/mypage/character_page/widgets/character_create_popup.dart';
 import 'package:soopkomong/presentation/widgets/character_avatar.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/router/app_router.dart';
 
-class CharacterCustomizePage extends StatefulWidget {
+class CharacterCustomizePage extends ConsumerStatefulWidget {
   const CharacterCustomizePage({super.key});
 
   @override
-  State<CharacterCustomizePage> createState() => _CharacterCustomizePageState();
+  ConsumerState<CharacterCustomizePage> createState() => _CharacterCustomizePageState();
 }
 
-class _CharacterCustomizePageState extends State<CharacterCustomizePage>
+class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey _globalKey = GlobalKey(); // 캡쳐를 위한 키
+  bool _isSaving = false; // 저장 중 로딩 상태
 
   @override
   void dispose() {
@@ -78,11 +90,28 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
 
+    // 1. 기존 캐릭터 데이터 로드
+    final user = ref.read(userProvider).value;
+    if (user != null && user.characterSettings != null) {
+      final settings = user.characterSettings!;
+      _selectedHair = settings['hair'] ?? '01';
+      _selectedFace = settings['face'] ?? 'smile';
+      _selectedClothes = settings['clothes'] ?? '01';
+      _selectedShoes = settings['shoes'];
+      _selectedSkinColor = Color(settings['skinColor'] as int);
+      _selectedHairColor = Color(settings['hairColor'] as int);
+      _selectedClothesColor = Color(settings['clothesColor'] as int);
+      _selectedShoesColor = Color(settings['shoesColor'] as int? ?? 0xFFFFFFFF);
+    }
+
+    // 2. 캐릭터가 없는 경우에만 환영 팝업 표시
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        builder: (context) => const CharacterCreatePopup(),
-      );
+      if (user == null || !user.hasCharacter) {
+        showDialog(
+          context: context,
+          builder: (context) => const CharacterCreatePopup(),
+        );
+      }
     });
 
     _tabController.addListener(() {
@@ -170,28 +199,31 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
       color: const Color(0xFFF5F5F5),
       child: Column(
         children: [
-          // CharacterAvatar 위젯 사용!
-          CharacterAvatar(
-            baseImagePath: 'assets/images/parts/body_base.png',
-            bodyShadowImagePath: 'assets/images/parts/body_shadow.png',
-            baseColor: _selectedSkinColor,
-            hairImagePath: 'assets/images/parts/hair_$_selectedHair.png',
-            hairHighlightImagePath:
-                'assets/images/parts/hair_${_selectedHair}_highlight.png',
-            hairShadowImagePath:
-                'assets/images/parts/hair_${_selectedHair}_shadow.png',
-            hairSubShadowImagePath:
-                'assets/images/parts/hair_${_selectedHair}_sub_shadow.png',
-            hairColor: _selectedHairColor,
-            faceImagePath: 'assets/images/parts/face_$_selectedFace.png',
-            clothesImagePath:
-                'assets/images/parts/clothes_$_selectedClothes.png',
-            clothesColor: _selectedClothesColor,
-            shoesImagePath: _selectedShoes != null
-                ? 'assets/images/parts/shoes_$_selectedShoes.png'
-                : null,
-            shoesColor: _selectedShoesColor,
-            size: 280, // 크기를 220에서 280으로 확대
+          // RepaintBoundary로 감싸서 캡쳐 가능하게 함
+          RepaintBoundary(
+            key: _globalKey,
+            child: CharacterAvatar(
+              baseImagePath: 'assets/images/parts/body_base.png',
+              bodyShadowImagePath: 'assets/images/parts/body_shadow.png',
+              baseColor: _selectedSkinColor,
+              hairImagePath: 'assets/images/parts/hair_$_selectedHair.png',
+              hairHighlightImagePath:
+                  'assets/images/parts/hair_${_selectedHair}_highlight.png',
+              hairShadowImagePath:
+                  'assets/images/parts/hair_${_selectedHair}_shadow.png',
+              hairSubShadowImagePath:
+                  'assets/images/parts/hair_${_selectedHair}_sub_shadow.png',
+              hairColor: _selectedHairColor,
+              faceImagePath: 'assets/images/parts/face_$_selectedFace.png',
+              clothesImagePath:
+                  'assets/images/parts/clothes_$_selectedClothes.png',
+              clothesColor: _selectedClothesColor,
+              shoesImagePath: _selectedShoes != null
+                  ? 'assets/images/parts/shoes_$_selectedShoes.png'
+                  : null,
+              shoesColor: _selectedShoesColor,
+              size: 280,
+            ),
           ),
         ],
       ),
@@ -471,6 +503,105 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
     );
   }
 
+  /// 캐릭터 저장 로직
+  Future<void> _saveCharacter() async {
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final user = ref.read(userProvider).value;
+      if (user == null) {
+        throw Exception('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+      }
+
+      // UI 스레드가 로딩 상태를 그릴 시간을 줌
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // 1. 이미지 캡쳐
+      RenderRepaintBoundary? boundary = 
+          _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      
+      if (boundary == null) throw Exception('아바타 이미지를 캡쳐할 수 없습니다.');
+
+      ui.Image image = await boundary.toImage(pixelRatio: 2.0); // 3.0은 너무 무거울 수 있어 2.0으로 하향
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('이미지 변환에 실패했습니다.');
+      
+      Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // 2. 얼굴 영역 크롭 (image 패키지 사용)
+      final decodedImage = await Future(() => img.decodeImage(pngBytes));
+      if (decodedImage == null) throw Exception('이미지 파일을 해석할 수 없습니다.');
+
+      // 얼굴 부위 추출 (캐릭터의 70% 영역)
+      final int cropSize = (decodedImage.width * 0.7).toInt();
+      final int cropX = (decodedImage.width - cropSize) ~/ 2;
+      final int cropY = (decodedImage.height * 0.05).toInt();
+
+      final croppedImage = img.copyCrop(
+        decodedImage,
+        x: cropX,
+        y: cropY,
+        width: cropSize,
+        height: cropSize,
+      );
+      
+      final croppedBytes = Uint8List.fromList(img.encodePng(croppedImage));
+      if (croppedBytes.isEmpty) throw Exception('이미지 압축에 실패했습니다.');
+
+      // 3. Firebase Storage 관리
+      final storage = FirebaseStorage.instance;
+      
+      // 기존 이미지 삭제 시도 (Firebase Storage 이미지인 경우에만)
+      if (user.photoUrl != null && user.photoUrl!.contains('firebasestorage.googleapis.com')) {
+        try {
+          await storage.refFromURL(user.photoUrl!).delete();
+        } catch (e) {
+          debugPrint('기존 이미지 삭제 실패(무시가능): $e');
+        }
+      }
+
+      // 새 이미지 업로드
+      final fileName = 'profiles/${user.id}_${DateTime.now().millisecondsSinceEpoch}.png';
+      final uploadTask = await storage.ref(fileName).putData(croppedBytes);
+      final photoUrl = await uploadTask.ref.getDownloadURL();
+
+      // 4. Firestore 업데이트
+      final characterSettings = {
+        'hair': _selectedHair,
+        'face': _selectedFace,
+        'clothes': _selectedClothes,
+        'shoes': _selectedShoes,
+        'hairColor': _selectedHairColor.toARGB32(),
+        'skinColor': _selectedSkinColor.toARGB32(),
+        'clothesColor': _selectedClothesColor.toARGB32(),
+        'shoesColor': _selectedShoesColor.toARGB32(),
+      };
+
+      await FirebaseFirestore.instance.collection('users').doc(user.id).set({
+        'has_character': true,
+        'photoUrl': photoUrl,
+        'character_settings': characterSettings,
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        // 성공 시 페이지 이동 (라우터 리프레시 유도)
+        context.goNamed(AppRoute.home.name);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 실패: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   /// 하단 뒤로가기 + 다음 버튼
   Widget _buildBottomButtons() {
     return Container(
@@ -480,7 +611,7 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
         children: [
           // 초기화 버튼 (Undo 아이콘)
           GestureDetector(
-            onTap: _resetCharacter,
+            onTap: _isSaving ? null : _resetCharacter,
             child: Container(
               width: 48,
               height: 48,
@@ -495,25 +626,31 @@ class _CharacterCustomizePageState extends State<CharacterCustomizePage>
           // 완료 버튼
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                // TODO: 캐릭터 저장 로직
-                Navigator.pop(context);
-              },
+              onTap: _isSaving ? null : _saveCharacter,
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.black87,
+                  color: _isSaving ? Colors.grey : Colors.black87,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
-                child: const Text(
-                  '저장하기',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        '저장하기',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ),

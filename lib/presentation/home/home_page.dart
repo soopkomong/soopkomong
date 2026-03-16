@@ -207,17 +207,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     if (!mounted) return;
-    final size = MediaQuery.of(context).size;
 
-    // 화면 이동(스크롤) 제스처 비활성화하여 내 위치 중심 고정
-    // 핀치(확대/축소) 및 회전 시에도 화면 중앙 좌표를 축으로 사용하여 이탈 방지
-    await mapboxMap.gestures.updateSettings(
-      GesturesSettings(
-        scrollEnabled: false,
-        pinchPanEnabled: false,
-        focalPoint: ScreenCoordinate(x: size.width / 2.0, y: size.height / 2.0),
-      ),
-    );
+    // MediaQuery.of(context).size 대신 sizeOf를 사용하여 불필요한 리빌드 방지 및 
+    // 마이크로태스크나 프레임 지연을 통해 레이아웃이 확정된 후 실행되도록 함.
+    Future.microtask(() async {
+      if (!mounted) return;
+      final size = MediaQuery.sizeOf(context);
+
+      // 화면 이동(스크롤) 제스처 비활성화하여 내 위치 중심 고정
+      // 핀치(확대/축소) 및 회전 시에도 화면 중앙 좌표를 축으로 사용하여 이탈 방지
+      await mapboxMap.gestures.updateSettings(
+        GesturesSettings(
+          scrollEnabled: false,
+          pinchPanEnabled: false,
+          focalPoint:
+              ScreenCoordinate(x: size.width / 2.0, y: size.height / 2.0),
+        ),
+      );
+    });
 
     // ViewModel의 현재 상태를 가져와 마커 추가 시도
     final state = ref.read(homeViewModelProvider);

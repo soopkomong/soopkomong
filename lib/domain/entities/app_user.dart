@@ -17,6 +17,8 @@ class AppUser {
   final List<String> friends;
 
   final String? userCode;
+  final bool hasCharacter; // 캐릭터 생성 여부
+  final Map<String, dynamic>? characterSettings; // 캐릭터 파츠 설정 (머리, 얼굴, 옷 등)
 
   AppUser({
     required this.id,
@@ -24,6 +26,8 @@ class AppUser {
     this.displayName,
     this.photoUrl,
     this.userCode,
+    this.hasCharacter = false,
+    this.characterSettings,
     this.totalSteps = 0,
     this.lastStepUpdateAt,
     this.acquiredCharacters = const [],

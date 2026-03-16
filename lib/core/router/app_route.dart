@@ -6,6 +6,7 @@ enum AppRoute {
   details(name: 'details', path: 'details'),
   mypage(name: 'mypage', path: '/mypage'),
   characterCustomize(name: 'characterCustomize', path: '/characterCustomize'),
+  village(name: 'village', path: '/village'),
   friendProfile(name: 'friendProfile', path: 'profile'),
   signIn(name: 'signIn', path: '/signIn');
 
