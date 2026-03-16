@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
-import 'package:soopkomong/presentation/friends/friends_view_model.dart';
+import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/user_provider.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
@@ -315,67 +317,75 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                     const Divider(color: AppColors.gray50, height: 1),
                 itemBuilder: (context, index) {
                   final friend = friends[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundColor: AppColors.gray50,
-                          backgroundImage: AssetImage(
-                            'assets/images/characters/${friend.characterTemplateId}_big.png',
-                          ),
-                          onBackgroundImageError: (_, __) {
-                            // 이미지 없을 때 폴백 처리는 생략 (기본 배경 유지)
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              friend.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.black,
-                              ),
+                  return InkWell(
+                    onTap: () {
+                      context.goNamed(
+                        AppRoute.friendProfile.name,
+                        extra: friend,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: AppColors.gray50,
+                            backgroundImage: AssetImage(
+                              'assets/images/characters/${friend.characterTemplateId}_big.png',
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.eco,
-                                  size: 14,
-                                  color: AppColors.secondaryGreen,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${friend.leafProgress}/${friend.leafMax}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.gray600,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Icon(
-                                  Icons.pets,
-                                  size: 14,
+                            onBackgroundImageError: (_, __) {
+                              // 이미지 없을 때 폴백 처리는 생략 (기본 배경 유지)
+                            },
+                          ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                friend.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                   color: AppColors.black,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${friend.pawProgress}/${friend.pawMax}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.gray600,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.eco,
+                                    size: 14,
+                                    color: AppColors.secondaryGreen,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${friend.leafProgress}/${friend.leafMax}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.gray600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Icon(
+                                    Icons.pets,
+                                    size: 14,
+                                    color: AppColors.black,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${friend.pawProgress}/${friend.pawMax}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.gray600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
