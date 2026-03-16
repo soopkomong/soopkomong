@@ -20,26 +20,38 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateChangesProvider);
+  final userAsync = ref.watch(userProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
-      final user = authState.value;
+      final user = userAsync.value;
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
       if (user == null) {
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
+      final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
+
+      if (!user.hasCharacter) {
+        return isCustomizing ? null : AppRoute.characterCustomize.path;
+      }
+
+      // 로그인 페이지에 있거나, 모든 온보딩이 끝났는데 커스텀 페이지에 있는 경우 홈으로
+      // (온보딩 페이지에 있는 경우는 명시적으로 완료할 때까지 유지하도록 isOnboarding 제외)
       if (isLoggingIn) {
         return AppRoute.home.path;
       }
 
       return null;
     },
-    refreshListenable: ValueNotifier<AppUser?>(authState.value),
+    refreshListenable: userAsync.when(
+      data: (user) => ValueNotifier<AppUser?>(user),
+      error: (_, __) => ValueNotifier<AppUser?>(null),
+      loading: () => ValueNotifier<AppUser?>(null),
+    ),
     observers: [routeObserver],
     routes: [
       StatefulShellRoute.indexedStack(

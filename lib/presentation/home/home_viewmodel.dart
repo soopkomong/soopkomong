@@ -235,8 +235,14 @@ class HomeNotifier extends Notifier<HomeState> {
           _checkHatchingCondition(newStepCount);
         },
         onError: (error) {
+          debugPrint('만보기 스트림 에러: $error');
+          // 에러 발생 시(특히 지원되지 않는 기기) 불필요한 반복 호출을 막기 위해 구독 취소
+          _stepSubscription?.cancel();
+          _stepSubscription = null;
+
           if (Platform.isIOS) {
-            debugPrint('만보기 스트림 에러(iOS): $error');
+            // iOS에서 Step Count 사용 불가 시 별도 에러 메시지 없이 무시
+            // (시뮬레이터 등 기능 미지원 환경 대응)
           } else {
             state = state.copyWith(errorMessage: '만보기 에러: $error');
           }

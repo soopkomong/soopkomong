@@ -14,50 +14,79 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Stream<AppUser?> get authStateChanges =>
       _firebaseAuth.authStateChanges().asyncMap((user) async {
-        if (user != null) {
-          await _syncUserToFirestore(user);
-        }
-        return _mapFirebaseUser(user);
+        if (user == null) return null;
+        final userDoc = await _syncUserToFirestore(user);
+        return _mapFirebaseUser(user, userDoc);
       });
 
   @override
-  AppUser? get currentUser => _mapFirebaseUser(_firebaseAuth.currentUser);
+  Stream<AppUser?> get userStream => _firebaseAuth.authStateChanges().asyncMap((user) async {
+        if (user == null) return null;
+        return user;
+      }).asyncExpand((user) {
+        if (user == null) return Stream.value(null);
+        return _firestore
+            .collection('users')
+            .doc(user.uid)
+            .snapshots()
+            .map((doc) => _mapFirebaseUser(user, doc));
+      });
 
-  AppUser? _mapFirebaseUser(User? user) {
+  @override
+  AppUser? get currentUser {
+    final user = _firebaseAuth.currentUser;
     if (user == null) return null;
+    // 동기적으로 가져올 수 없는 Firestore 데이터는 일단 null로 처리하거나 
+    // 나중에 필요한 곳에서 별도로 가져와야 함. 
+    // 여기서는 기본 정보를 매핑.
+    return _mapFirebaseUser(user, null);
+  }
+
+  AppUser? _mapFirebaseUser(User? user, DocumentSnapshot? doc) {
+    if (user == null) return null;
+    
+    Map<String, dynamic>? data = doc?.data() as Map<String, dynamic>?;
+
     return AppUser(
       id: user.uid,
       email: user.email,
-      displayName: user.displayName,
-      photoUrl: user.photoURL,
-      // Firebase User에는 userCode가 없으므로 Firestore에서 가져와야 하지만, 
-      // 현재 리포지토리 패턴상 authStateChanges에서 합치거나 별도 조회가 필요함.
-      // 일단 AppUser 생성자 수정에 맞춰 null로 둠.
-      userCode: null, 
+      displayName: data?['displayName'],
+      photoUrl: data?['photoUrl'] ?? user.photoURL,
+      userCode: data?['user_code'],
+      hasCharacter: data?['has_character'] ?? false,
+      characterSettings: data?['character_settings'],
     );
   }
 
-  Future<void> _syncUserToFirestore(User? user) async {
-    if (user == null) return;
+  Future<DocumentSnapshot> _syncUserToFirestore(User? user) async {
+    if (user == null) throw Exception('User is null');
 
     final userRef = _firestore.collection('users').doc(user.uid);
     final userDoc = await userRef.get();
 
-    Map<String, dynamic> data = {
-      'id': user.uid,
-      'email': user.email,
-      'displayName': user.displayName,
-      'photoUrl': user.photoURL,
-      'lastLoginAt': FieldValue.serverTimestamp(),
-    };
-
-    // user_code가 없는 기존 유저나 신규 유저를 위해 코드 생성 로직 추가
-    if (!userDoc.exists || !userDoc.data()!.containsKey('user_code')) {
+    if (!userDoc.exists) {
+      // 신규 유저 초기 데이터
       final String newCode = await _generateUniqueUserCode();
-      data['user_code'] = newCode;
+      final data = {
+        'id': user.uid,
+        'email': user.email,
+        'displayName': user.displayName, // null 대신 소셜 계정 이름 사용
+        'photoUrl': user.photoURL,
+        'user_code': newCode,
+        'has_character': false,
+        'character_settings': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      };
+      await userRef.set(data);
+      return await userRef.get();
+    } else {
+      // 기존 유저 로그인 시각 업데이트
+      await userRef.update({
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      });
+      return userDoc;
     }
-
-    await userRef.set(data, SetOptions(merge: true));
   }
 
   /// 중복되지 않는 6~8자리 사용자 코드 생성
@@ -107,9 +136,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
-      await _syncUserToFirestore(userCredential.user);
-
-      return _mapFirebaseUser(userCredential.user);
+      final userDoc = await _syncUserToFirestore(userCredential.user);
+      return _mapFirebaseUser(userCredential.user, userDoc);
     } catch (e) {
       rethrow;
     }
@@ -145,9 +173,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
-      await _syncUserToFirestore(userCredential.user);
-
-      return _mapFirebaseUser(userCredential.user);
+      final userDoc = await _syncUserToFirestore(userCredential.user);
+      return _mapFirebaseUser(userCredential.user, userDoc);
     } catch (e) {
       rethrow;
     }
@@ -171,9 +198,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(oauthCredential);
 
-      await _syncUserToFirestore(userCredential.user);
-
-      return _mapFirebaseUser(userCredential.user);
+      final userDoc = await _syncUserToFirestore(userCredential.user);
+      return _mapFirebaseUser(userCredential.user, userDoc);
     } catch (e) {
       rethrow;
     }
