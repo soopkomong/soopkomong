@@ -27,13 +27,46 @@ class FriendRequest {
 
   factory FriendRequest.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    
+    // timestamp 파싱 로직: Timestamp 객체이거나 String 일치 처리
+    DateTime parsedTime = DateTime.now();
+    final rawTime = data['timestamp'];
+    if (rawTime is Timestamp) {
+      parsedTime = rawTime.toDate();
+    } else if (rawTime is String) {
+      // "2026년 3월 17일 20:00" 같은 형태가 들어올 경우 파싱 처리 시도
+      try {
+        final rawString = rawTime;
+        // intl 패키지의 DateFormat을 이용한 명시적 파싱 체계 적용
+        // "yyyy년 M월 d일 HH:mm" 형태 가정 (공백에 유의)
+        // 만약 형식이 일관되지 않다면 기본 파서를 먼저 시도
+        try {
+          // "년", "월" 등의 문맥을 제거해주는 방식 개선: 2026-03-17 20:00 형태로 강제 변환
+          final cleaned = rawString
+              .replaceAll('년', '-')
+              .replaceAll('월', '-')
+              .replaceAll('일', '')
+              .replaceAll(RegExp(r'\s+-\s*'), '-') // 불필요한 공백 제거
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+          
+          parsedTime = DateTime.parse(cleaned);
+        } catch (innerE) {
+          // 최후의 수단으로 현재 시간 배정
+          parsedTime = DateTime.now();
+        }
+      } catch (e) {
+        parsedTime = DateTime.now();
+      }
+    }
+
     return FriendRequest(
       id: doc.id,
       senderId: data['senderId'] ?? '',
       senderName: data['senderName'] ?? '익명', // 이름이 없으면 '익명 처리' 나중에 바꾸기
       receiverId: data['receiverId'] ?? '',
       status: _parseStatus(data['status']),
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: parsedTime,
     );
   }
 

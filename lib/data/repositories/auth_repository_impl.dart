@@ -5,6 +5,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/repositories/auth_repository.dart';
+import 'package:soopkomong/core/services/fcm_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -75,15 +76,17 @@ class AuthRepositoryImpl implements AuthRepository {
         'user_code': newCode,
         'has_character': false,
         'character_settings': null,
+        'fcmToken': await FcmService.getToken(),
         'createdAt': FieldValue.serverTimestamp(),
         'lastLoginAt': FieldValue.serverTimestamp(),
       };
       await userRef.set(data);
       return await userRef.get();
     } else {
-      // 기존 유저 로그인 시각 업데이트
+      // 기존 유저 로그인 시각 및 토큰 업데이트
       await userRef.update({
         'lastLoginAt': FieldValue.serverTimestamp(),
+        'fcmToken': await FcmService.getToken(),
       });
       return userDoc;
     }
