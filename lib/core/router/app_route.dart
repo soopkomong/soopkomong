@@ -8,6 +8,7 @@ enum AppRoute {
   characterCustomize(name: 'characterCustomize', path: '/characterCustomize'),
   village(name: 'village', path: '/village'),
   friendProfile(name: 'friendProfile', path: 'profile'),
+  notifications(name: 'notifications', path: '/notifications'),
   signIn(name: 'signIn', path: '/signIn');
 
   const AppRoute({required this.name, required this.path});
