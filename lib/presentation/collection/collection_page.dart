@@ -79,6 +79,8 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           address: park.address,
           information: park.information,
           tel: park.tel,
+          tel1: park.tel1,
+          tel2: park.tel2,
           isVisited: park.isVisited,
           naviLoc: park.naviLoc,
           naviLat: park.naviLat,
