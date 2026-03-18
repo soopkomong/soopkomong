@@ -425,6 +425,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           address: loc.address,
           information: loc.information,
           tel: loc.tel,
+          tel1: loc.tel1,
+          tel2: loc.tel2,
           isVisited: false,
           naviLoc: loc.naviLoc,
           naviLat: loc.naviLat,

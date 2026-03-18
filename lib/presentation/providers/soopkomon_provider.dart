@@ -5,10 +5,18 @@ import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
+import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
 
-/// 1. 리포지토리 프로바이더
+/// 1-1. 데이터 소스 프로바이더
+final remoteLocationDataSourceProvider = Provider<RemoteLocationDataSource>((ref) {
+  return RemoteLocationDataSourceImpl();
+});
+
+/// 1-3. 리포지토리 프로바이더
 final soopkomonRepositoryProvider = Provider<SoopkomonRepository>((ref) {
-  return SoopkomonRepositoryImpl();
+  return SoopkomonRepositoryImpl(
+    remoteDataSource: ref.watch(remoteLocationDataSourceProvider),
+  );
 });
 
 /// 2. 전체 도감 템플릿 프로바이더 (Async)

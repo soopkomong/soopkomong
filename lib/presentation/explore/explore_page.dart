@@ -163,6 +163,8 @@ class _ExplorePageState extends State<ExplorePage> {
                         final String information =
                             location['Information'] ?? '';
                         final String tel = location['tel'] ?? '';
+                        final String tel1 = location['tel1'] ?? '';
+                        final String tel2 = location['tel2'] ?? '';
                         final Map<String, dynamic> navi =
                             location['navi'] ?? {};
                         final String naviLoc = navi['loc'] ?? '';
@@ -206,6 +208,8 @@ class _ExplorePageState extends State<ExplorePage> {
                                 address: address,
                                 information: information,
                                 tel: tel,
+                                tel1: tel1,
+                                tel2: tel2,
                                 isVisited: true,
                                 naviLoc: naviLoc,
                                 naviLat: naviLat,

@@ -16,6 +16,8 @@ class Location {
   final String summary;
   final String information;
   final String tel;
+  final String tel1;
+  final String tel2;
   final String naviLoc;
   final double? naviLat;
   final double? naviLng;
@@ -35,6 +37,8 @@ class Location {
     this.summary = '',
     this.information = '',
     this.tel = '',
+    this.tel1 = '',
+    this.tel2 = '',
     this.naviLoc = '',
     this.naviLat,
     this.naviLng,

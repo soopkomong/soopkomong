@@ -6,6 +6,7 @@ import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ParkDetailSheet extends ConsumerStatefulWidget {
   final String id;
@@ -16,6 +17,8 @@ class ParkDetailSheet extends ConsumerStatefulWidget {
   final String address;
   final String information;
   final String tel;
+  final String tel1;
+  final String tel2;
   final bool isVisited;
   final String naviLoc;
   final double? naviLat;
@@ -32,6 +35,8 @@ class ParkDetailSheet extends ConsumerStatefulWidget {
     required this.address,
     required this.information,
     required this.tel,
+    this.tel1 = '',
+    this.tel2 = '',
     required this.isVisited,
     required this.naviLoc,
     required this.petIds,
@@ -391,24 +396,70 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
               const SizedBox(height: 20),
 
               /// 🔹 이용안내 카드
-              if (widget.information.isNotEmpty || widget.tel.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: InfoCard(
-                    leading: Image.asset(
-                      'assets/images/character_silhouette.png',
-                      width: 24,
-                    ),
-                    title: '이용안내',
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Text(
-                        '${widget.tel.isNotEmpty ? '${widget.tel}\n\n' : ''}${widget.information}'
-                            .trim(),
-                        style: const TextStyle(fontSize: 13, height: 1.5),
+              if (widget.information.isNotEmpty || widget.tel.isNotEmpty || widget.tel1.isNotEmpty || widget.tel2.isNotEmpty) ...[
+                Builder(
+                  builder: (context) {
+                    final allTels = [widget.tel, widget.tel1, widget.tel2]
+                        .where((t) => t.isNotEmpty)
+                        .toList();
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: InfoCard(
+                        leading: const Icon(Icons.info_outline, size: 24, color: Colors.grey),
+                        title: '이용안내',
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 전화번호 영역
+                              if (allTels.isNotEmpty)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      '문의',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: allTels.map((t) => GestureDetector(
+                                          onTap: () => _showPhonePopup([t]),
+                                          child: Text(
+                                            t,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              height: 1.5,
+                                              color: Colors.black87,
+                                              decoration: TextDecoration.underline,
+                                            ),
+                                          ),
+                                        )).toList(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              if (allTels.isNotEmpty && widget.information.isNotEmpty)
+                                const SizedBox(height: 12),
+                              // 이용안내 텍스트 영역
+                              if (widget.information.isNotEmpty)
+                                Text(
+                                  widget.information,
+                                  style: const TextStyle(fontSize: 13, height: 1.5),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }
                 ),
                 const SizedBox(height: 20),
               ],
@@ -630,6 +681,74 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPhonePopup(List<String> tels) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...tels.map((t) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final Uri url = Uri(scheme: 'tel', path: t);
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            }
+                            if (context.mounted) Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF48B200),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            '$t에 통화 연결',
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    )),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE0E0E0),
+                      foregroundColor: const Color(0xFF333333),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '취소하기',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

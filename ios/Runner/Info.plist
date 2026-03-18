@@ -4,28 +4,6 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-<key>NSLocationWhenInUseUsageDescription</key>
-	<string>현재 위치를 기반으로 안내하기 위해 위치 권한이 필요합니다.</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-		<key>NSAllowsArbitraryLoadsInWebContent</key>
-		<true/>
-	</dict>
-	<key>MBXAccessToken</key>
-<string>pk.eyJ1IjoiZXVuc2VvbmciLCJhIjoiY21tMXZwN2Y4MDBzbjJyb3ZuNHI4cjdsbiJ9.WMTq7b0HvD1yV3CHwfj56Q</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.1012942978199-ka1rann4nt2bp9tjm948qh4o4rcem1so</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -44,6 +22,8 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -55,12 +35,17 @@
 			</array>
 		</dict>
 	</array>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MBXAccessToken</key>
 	<string>pk.eyJ1IjoiZXVuc2VvbmciLCJhIjoiY21tMXZwN2Y4MDBzbjJyb3ZuNHI4cjdsbiJ9.WMTq7b0HvD1yV3CHwfj56Q</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>현재 위치를 기반으로 안내하기 위해 위치 권한이 필요합니다.</string>
 	<key>NSMotionUsageDescription</key>
