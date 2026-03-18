@@ -14,6 +14,7 @@ import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
+import 'package:soopkomong/presentation/home/notifications_page.dart';
 
 export 'app_route.dart';
 
@@ -35,11 +36,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
+      // final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
 
+      // TODO: 임시로 캐릭터 생성 화면 우회 (홈으로 바로 이동)
+      /*
       if (!user.hasCharacter) {
         return isCustomizing ? null : AppRoute.characterCustomize.path;
       }
+      */
 
       // 로그인 페이지에 있거나, 모든 온보딩이 끝났는데 커스텀 페이지에 있는 경우 홈으로
       // (온보딩 페이지에 있는 경우는 명시적으로 완료할 때까지 유지하도록 isOnboarding 제외)
@@ -123,6 +127,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.characterCustomize.path,
         name: AppRoute.characterCustomize.name,
         builder: (context, state) => const CharacterCustomizePage(),
+      ),
+      GoRoute(
+        path: AppRoute.notifications.path,
+        name: AppRoute.notifications.name,
+        builder: (context, state) => const NotificationsPage(),
       ),
       GoRoute(
         path: AppRoute.signIn.path,

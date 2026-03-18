@@ -14,6 +14,8 @@ import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/domain/entities/friend_request.dart';
+import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 
 /// [Presentation Layer] - View
 /// 사용자에게 직접 보여지는 화면을 구성하는 위젯입니다.
@@ -453,11 +455,16 @@ class _HomePageState extends ConsumerState<HomePage> {
         return Colors.grey;
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
     final templatesAsync = ref.watch(soopkomonTemplatesProvider);
+    final friendRequestsAsync = ref.watch(friendRequestProvider);
+    final friendRequests = friendRequestsAsync.value ?? [];
+    
+    // 배지 아이콘은 '대기 중(pending)'인 알림 개수만 표시합니다.
+    final pendingRequests = friendRequests.where(
+        (req) => req.status == FriendRequestStatus.pending).toList();
 
     // 다른 탭이나 페이지(도감 등)에서 복귀 시 줌 16.5 초기화 이벤트를 수신합니다.
     ref.listen(mapZoomResetProvider, (_, __) {
@@ -555,10 +562,19 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
+            icon: Badge(
+              isLabelVisible: pendingRequests.isNotEmpty,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              label: Text(
+                '${pendingRequests.length}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              child: const Icon(Icons.notifications),
+            ),
             onPressed: () async {
-              await context.pushNamed(AppRoute.mypage.name);
-              ref.read(mapZoomResetProvider.notifier).triggerReset();
+              // 아이콘 클릭 시 알림 숫자에 관계없이 알림 페이지로 이동시킵니다
+              context.pushNamed(AppRoute.notifications.name);
             },
             style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
