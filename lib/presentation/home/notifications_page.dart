@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
@@ -9,7 +10,7 @@ class NotificationsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final friendRequestsAsync = ref.watch(friendRequestProvider);
+    final friendRequestsAsync = ref.watch(friendRequestHistoryProvider);
     final requests = friendRequestsAsync.value ?? [];
 
     return Scaffold(
@@ -39,62 +40,76 @@ class NotificationsPage extends ConsumerWidget {
                 final req = requests[index];
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFF48B200),
-                    child: Icon(Icons.person, color: Colors.white),
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.gray50,
+                    backgroundImage: AssetImage(
+                      'assets/images/characters/${req.senderTemplateId}_big.png',
+                    ),
                   ),
-                  title: Text(
-                    '${req.senderName}님이 친구 신청을 보냈습니다.',
-                    style: const TextStyle(fontSize: 14),
+                  title: const Text(
+                    '친구 신청',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    '${req.timestamp.month}월 ${req.timestamp.day}일',
-                    style: const TextStyle(fontSize: 12),
+                    '${req.senderName}님이 친구 신청을 보냈습니다.',
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
                   ),
-                  trailing: req.status == FriendRequestStatus.pending
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                ref
-                                    .read(friendsViewModelProvider.notifier)
-                                    .acceptFriendRequest(req);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('친구 신청을 수락했습니다.')),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFF48B200)),
-                              child: const Text('수락',
-                                  style: TextStyle(fontWeight: FontWeight.bold)),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                ref
-                                    .read(friendsViewModelProvider.notifier)
-                                    .declineFriendRequest(req.id);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('친구 신청을 거절했습니다.')),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                  foregroundColor: Colors.red),
-                              child: const Text('거절'),
-                            ),
-                          ],
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            req.status == FriendRequestStatus.accepted
-                                ? '수락함'
-                                : '거절함',
-                            style: const TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        req.formattedTimestamp,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(width: 8),
+                      if (req.status == FriendRequestStatus.pending) ...[
+                        TextButton(
+                          onPressed: () {
+                            ref
+                                .read(friendsViewModelProvider.notifier)
+                                .acceptFriendRequest(req);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('친구 신청을 수락했습니다.')),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF48B200),
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                          child: const Text('수락',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref
+                                .read(friendsViewModelProvider.notifier)
+                                .declineFriendRequest(req.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('친구 신청을 거절했습니다.')),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                          child: const Text('거절'),
+                        ),
+                      ] else ...[
+                        Text(
+                          req.status == FriendRequestStatus.accepted ? '수락됨' : '거절됨',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: req.status == FriendRequestStatus.accepted
+                                ? const Color(0xFF48B200)
+                                : Colors.red,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ],
+                    ],
+                  ),
                 );
               },
             ),

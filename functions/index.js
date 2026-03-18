@@ -24,20 +24,23 @@ exports.sendFriendRequestNotification = onDocumentCreated("friend_requests/{requ
 
     try {
         // 1. 수신자의 사용자 문서에서 FCM 토큰 가져오기
+        // Firestore ID는 대소문자를 구분하므로, 입력된 receiverId를 그대로 사용합니다.
         const userDoc = await admin.firestore().collection('users').doc(receiverId).get();
         
         if (!userDoc.exists) {
-            console.log(`수신자 문서가 없습니다: ${receiverId}`);
+            console.log(`[경고] 수신자 문서가 존재하지 않음: ${receiverId}`);
             return null;
         }
 
-        const fcmToken = userDoc.data().fcmToken;
+        const userData = userDoc.data();
+        const fcmToken = userData.fcmToken;
+        
         if (!fcmToken) {
-            console.log(`수신자의 FCM 토큰이 없습니다. (유저: ${receiverId})`);
+            console.log(`[정보] 수신자의 FCM 토큰이 없음 (유저: ${receiverId}, 이름: ${userData.displayName || '미설정'})`);
             return null;
         }
 
-        // 2. 푸시 알림 메시지 구성
+        // 2. 푸시 알림 메시지 구성 (Android/iOS 안정성 강화)
         const message = {
             notification: {
                 title: '새로운 친구 요청!',
@@ -45,18 +48,35 @@ exports.sendFriendRequestNotification = onDocumentCreated("friend_requests/{requ
             },
             data: {
                 type: 'friend_request',
-                senderId: requestData.senderId
+                senderId: requestData.senderId,
+                click_action: 'FLUTTER_NOTIFICATION_CLICK'
+            },
+            android: {
+                priority: 'high',
+                notification: {
+                    channelId: 'high_importance_channel',
+                    clickAction: 'FLUTTER_NOTIFICATION_CLICK'
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        contentAvailable: true,
+                        badge: 1,
+                        sound: 'default'
+                    }
+                }
             },
             token: fcmToken
         };
 
         // 3. 메시지 전송
         const response = await admin.messaging().send(message);
-        console.log('푸시 알림 전송 성공:', response);
+        console.log(`[성공] 푸시 알림 전송 완료 (수신자: ${receiverId}):`, response);
         return response;
 
     } catch (error) {
-        console.error('푸시 알림 전송 중 에러 발생:', error);
+        console.error(`[에러] 푸시 알림 전송 중 실패 (수신자: ${receiverId}):`, error);
         return null;
     }
 });

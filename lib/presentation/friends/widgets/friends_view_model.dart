@@ -126,11 +126,19 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
         throw Exception('해당 코드 또는 ID의 유저를 찾을 수 없습니다.');
       }
 
+      // 내 캐릭터 템플릿 ID 가져오기
+      final myDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.id)
+          .get();
+      final myTemplateId = myDoc.data()?['templateId'] ?? '001';
+
       // 친구 요청 문서 생성
       final request = FriendRequest(
         id: '',
         senderId: currentUser.id,
         senderName: currentUser.displayName ?? '익명',
+        senderTemplateId: myTemplateId,
         receiverId: targetId,
         status: FriendRequestStatus.pending,
         timestamp: DateTime.now(),
