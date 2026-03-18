@@ -12,6 +12,7 @@ class FriendRequest {
   final String id; // Firestore 문서 고유 id
   final String senderId; // 친구 요청 id
   final String senderName; // 요청보낸 사람 이름
+  final String senderTemplateId; // 보낸 사람의 캐릭터 템플릿 ID
   final String receiverId; // 요청 받는 사람 id
   final FriendRequestStatus status; // 현재 상태 (대기/수락/거절)
   final DateTime timestamp; // 요청 생성 시간
@@ -20,10 +21,28 @@ class FriendRequest {
     required this.id,
     required this.senderId,
     required this.senderName,
+    required this.senderTemplateId,
     required this.receiverId,
     required this.status,
     required this.timestamp,
   });
+
+  String get formattedTimestamp {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.isNegative || difference.inMinutes < 1) {
+      return '방금 전';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}분 전';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}시간 전';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}일 전';
+    } else {
+      return '${timestamp.month}월 ${timestamp.day}일';
+    }
+  }
 
   factory FriendRequest.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -64,6 +83,7 @@ class FriendRequest {
       id: doc.id,
       senderId: data['senderId'] ?? '',
       senderName: data['senderName'] ?? '익명', // 이름이 없으면 '익명 처리' 나중에 바꾸기
+      senderTemplateId: data['senderTemplateId'] ?? '001',
       receiverId: data['receiverId'] ?? '',
       status: _parseStatus(data['status']),
       timestamp: parsedTime,
@@ -86,6 +106,7 @@ class FriendRequest {
     return {
       'senderId': senderId,
       'senderName': senderName,
+      'senderTemplateId': senderTemplateId,
       'receiverId': receiverId,
       'status': status.name,
       'timestamp': FieldValue.serverTimestamp(),

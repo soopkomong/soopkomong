@@ -84,10 +84,16 @@ class AuthRepositoryImpl implements AuthRepository {
       return await userRef.get();
     } else {
       // 기존 유저 로그인 시각 및 토큰 업데이트
-      await userRef.update({
+      final Map<String, dynamic> updates = {
         'lastLoginAt': FieldValue.serverTimestamp(),
-        'fcmToken': await FcmService.getToken(),
-      });
+      };
+      
+      final token = await FcmService.getToken();
+      if (token != null) {
+        updates['fcmToken'] = token;
+      }
+
+      await userRef.update(updates);
       return userDoc;
     }
   }

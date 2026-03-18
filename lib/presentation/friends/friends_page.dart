@@ -6,6 +6,7 @@ import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/user_provider.dart';
+import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({super.key});
@@ -26,6 +27,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
   @override
   Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsViewModelProvider);
+    final friendRequestsAsync = ref.watch(friendRequestProvider);
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -286,6 +288,144 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
               ),
             ),
             const SizedBox(height: 30),
+            // 친구 신청 목록
+            friendRequestsAsync.when(
+              data: (requests) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.people,
+                          size: 20,
+                          color: AppColors.black,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '친구 신청 목록 : ${requests.length}명',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (requests.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: requests.length,
+                        separatorBuilder: (context, index) =>
+                            const Divider(color: AppColors.gray50, height: 1),
+                        itemBuilder: (context, index) {
+                          final request = requests[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: AppColors.gray50,
+                                  backgroundImage: AssetImage(
+                                    'assets/images/characters/${request.senderTemplateId}_big.png',
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        request.senderName,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.black,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                                   Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () => ref
+                                              .read(friendsViewModelProvider.notifier)
+                                              .acceptFriendRequest(request),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary700,
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                            child: const Text(
+                                              '승인',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: () => ref
+                                              .read(friendsViewModelProvider.notifier)
+                                              .declineFriendRequest(request.id),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.gray100,
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                            child: const Text(
+                                              '거절',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.gray600,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 30),
+                  ],
+                );
+              },
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              error: (e, st) => Center(
+                child: Text(
+                  '친구 신청 로드 오류: $e',
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
+            ),
             // 내 친구 목록 헤더
             Row(
               children: [

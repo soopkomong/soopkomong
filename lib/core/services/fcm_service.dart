@@ -1,4 +1,6 @@
 import 'dart:developer';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -77,13 +79,35 @@ class FcmService {
       }
     });
 
-    // 6. FCM 토큰 확인 (테스트용 로그)
-    // 시뮬레이터 등에서 getToken()이 응답하지 않아 앱 구동이 막히는(흰 화면) 현상을 방지하기 위해 비동기로 분리합니다.
+    // 6. FCM 토큰 확인 및 갱신 리스너
     _firebaseMessaging.getToken().then((token) {
       log("FCM Token: $token");
+      if (token != null) {
+        _updateTokenInFirestore(token);
+      }
     }).catchError((e) {
       log("FCM Token Error: $e");
     });
+
+    _firebaseMessaging.onTokenRefresh.listen((newToken) {
+      log("FCM Token Refreshed: $newToken");
+      _updateTokenInFirestore(newToken);
+    });
+  }
+
+  static Future<void> _updateTokenInFirestore(String token) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({'fcmToken': token});
+        log("FCM Token updated in Firestore");
+      }
+    } catch (e) {
+      log("Failed to update FCM Token in Firestore: $e");
+    }
   }
 
   static Future<void> _showLocalNotification(
