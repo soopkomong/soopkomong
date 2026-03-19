@@ -11,6 +11,7 @@ import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 
 class CollectionPage extends ConsumerStatefulWidget {
   final int initialTab;
@@ -96,7 +97,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     // Provider 데이터 구독
     final locationsAsync = ref.watch(filteredLocationsProvider);
     final templatesAsync = ref.watch(filteredTemplatesProvider);
-    final userCharacters = ref.watch(userSoopkomonProvider);
+    final userCharactersAsync = ref.watch(userSoopkomonProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -110,9 +111,14 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
                 child: Column(
                   children: [
                     const SizedBox(height: 24),
-                    const Icon(Icons.book, size: 40),
-                    const SizedBox(height: 4),
-                    const Text('도감', style: AppTextStyles.subTitleL),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.book, size: 40),
+                        const SizedBox(width: 4),
+                        const Text('도감', style: AppTextStyles.subTitleL),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                     CollectionSlidingTab(
                       initialIndex: _selectedTabIndex,
@@ -142,8 +148,18 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
               }
             },
             children: [
-              _buildTabPage(locationsAsync, userCharacters, templatesAsync, 0),
-              _buildTabPage(locationsAsync, userCharacters, templatesAsync, 1),
+              _buildTabPage(
+                locationsAsync,
+                userCharactersAsync,
+                templatesAsync,
+                0,
+              ),
+              _buildTabPage(
+                locationsAsync,
+                userCharactersAsync,
+                templatesAsync,
+                1,
+              ),
             ],
           ),
         ),
@@ -153,110 +169,156 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
 
   Widget _buildTabPage(
     AsyncValue<List<Location>> locationsAsync,
-    List<Soopkomon> userCharacters,
+    AsyncValue<List<Soopkomon>> userCharactersAsync,
     AsyncValue<List<SoopkomonTemplate>> templatesAsync,
     int tabIndex,
   ) {
-    return SingleChildScrollView(
+    return CustomScrollView(
+      key: PageStorageKey<String>('tab_$tabIndex'),
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        children: [
-          locationsAsync.when(
-            loading: () => const CollectionProgressBadge(
-              currentCount: 0,
-              totalCount: 0,
-              iconPath: '',
-            ),
-            error: (err, stack) => const CollectionProgressBadge(
-              currentCount: 0,
-              totalCount: 0,
-              iconPath: '',
-            ),
-            data: (locations) => templatesAsync.when(
-              loading: () => const CollectionProgressBadge(
-                currentCount: 0,
-                totalCount: 0,
-                iconPath: '',
-              ),
-              error: (err, stack) => const CollectionProgressBadge(
-                currentCount: 0,
-                totalCount: 0,
-                iconPath: '',
-              ),
-              data: (templates) => CollectionProgressBadge(
-                currentCount: tabIndex == 0
-                    ? locations.where((l) => l.isVisited == true).length
-                    : userCharacters.length,
-                totalCount: tabIndex == 0 ? locations.length : templates.length,
-                iconPath: tabIndex == 0
-                    ? 'assets/images/park.png'
-                    : 'assets/images/character_silhouette.png',
+      slivers: [
+        // 1. 진행도 배지 영역
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+          sliver: SliverToBoxAdapter(
+            child: Center(
+              child: locationsAsync.when(
+                loading: () => const CollectionProgressBadge(
+                  currentCount: 0,
+                  totalCount: 0,
+                  iconPath: '',
+                ),
+                error: (err, stack) => const CollectionProgressBadge(
+                  currentCount: 0,
+                  totalCount: 0,
+                  iconPath: '',
+                ),
+                data: (locations) => templatesAsync.when(
+                  loading: () => const CollectionProgressBadge(
+                    currentCount: 0,
+                    totalCount: 0,
+                    iconPath: '',
+                  ),
+                  error: (err, stack) => const CollectionProgressBadge(
+                    currentCount: 0,
+                    totalCount: 0,
+                    iconPath: '',
+                  ),
+                  data: (templates) {
+                    final userCharacters = userCharactersAsync.value ?? [];
+                    return CollectionProgressBadge(
+                      currentCount: tabIndex == 0
+                          ? locations.where((l) => l.isVisited).length
+                          : userCharacters.length,
+                      totalCount:
+                          tabIndex == 0 ? locations.length : templates.length,
+                      iconPath: tabIndex == 0
+                          ? 'assets/images/park.png'
+                          : 'assets/images/character_silhouette.png',
+                    );
+                  },
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          tabIndex == 0
-              ? locationsAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) => Center(child: Text('에러 발생: $err')),
-                  data: (locations) => _buildParkGrid(locations),
-                )
-              : templatesAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) => Center(child: Text('에러 발생: $err')),
-                  data: (templates) =>
-                      _buildCharacterGrid(templates, userCharacters),
-                ),
-          const SizedBox(height: 100),
-        ],
+        ),
+
+        // 2. 그리드 리스트 영역
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          sliver: tabIndex == 0
+              ? _buildParkSliverGrid(locationsAsync)
+              : _buildCharacterSliverGrid(templatesAsync, userCharactersAsync),
+        ),
+
+        // 하단 여백
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+      ],
+    );
+  }
+
+  Widget _buildParkSliverGrid(AsyncValue<List<Location>> locationsAsync) {
+    return locationsAsync.when(
+      loading: () => SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1.1,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => const ParkCardSkeleton(),
+          childCount: 6, // 6개의 스켈레톤 노출
+        ),
+      ),
+      error: (err, stack) => SliverToBoxAdapter(
+        child: Center(child: Text('에러 발생: $err')),
+      ),
+      data: (locations) => SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1.1,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final park = locations[index];
+            return ParkCard(
+              park: park,
+              onTap: () => _showParkDetailBottomSheet(context, park),
+            );
+          },
+          childCount: locations.length,
+        ),
       ),
     );
   }
 
-  Widget _buildParkGrid(List<Location> locations) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 8,
-      ),
-      itemCount: locations.length,
-      itemBuilder: (context, index) {
-        final park = locations[index];
-        return ParkCard(
-          park: park,
-          onTap: () => _showParkDetailBottomSheet(context, park),
-        );
-      },
-    );
-  }
-
-  Widget _buildCharacterGrid(
-    List<SoopkomonTemplate> templates,
-    List<Soopkomon> userCharacters,
+  Widget _buildCharacterSliverGrid(
+    AsyncValue<List<SoopkomonTemplate>> templatesAsync,
+    AsyncValue<List<Soopkomon>> userCharactersAsync,
   ) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 0.7, // 캐릭터 카드가 잘리지 않도록 높이 비율 확보
+    return templatesAsync.when(
+      loading: () => SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 0.6,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => const SoopkomongCardSkeleton(),
+          childCount: 9, // 9개의 스켈레톤 노출
+        ),
       ),
-      itemCount: templates.length,
-      itemBuilder: (context, index) {
-        final template = templates[index];
-        final userCharacter = userCharacters
-            .where((c) => c.templateId == template.templateId)
-            .firstOrNull;
+      error: (err, stack) => SliverToBoxAdapter(
+        child: Center(child: Text('에러 발생: $err')),
+      ),
+      data: (templates) {
+        final userCharacters = userCharactersAsync.value ?? [];
+        return SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.6,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final template = templates[index];
+              final userCharacter = userCharacters
+                  .where((c) => c.templateId == template.templateId)
+                  .firstOrNull;
 
-        return SoopkomongCard(template: template, userCharacter: userCharacter);
+              return SoopkomongCard(
+                template: template,
+                userCharacter: userCharacter,
+              );
+            },
+            childCount: templates.length,
+          ),
+        );
       },
     );
   }

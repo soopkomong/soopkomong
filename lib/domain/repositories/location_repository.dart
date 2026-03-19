@@ -6,4 +6,5 @@ import 'package:soopkomong/domain/entities/location.dart';
 /// 의존하지 않도록 계약(Contract)을 정의합니다.
 abstract class LocationRepository {
   Future<List<Location>> getLocations();
+  Future<List<String>> getParkTitlesByPetId(String petId);
 }

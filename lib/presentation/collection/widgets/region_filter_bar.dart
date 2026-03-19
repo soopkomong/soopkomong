@@ -12,7 +12,7 @@ class RegionFilterBar extends StatefulWidget {
 }
 
 class _RegionFilterBarState extends State<RegionFilterBar> {
-  Region selected = Region.capital;
+  Region selected = Region.all;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,6 @@ class _RegionFilterBarState extends State<RegionFilterBar> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
-          // Spacing is supported in Flutter 3.27+
           spacing: 8,
           children: Region.values.map((region) {
             final isSelected = selected == region;

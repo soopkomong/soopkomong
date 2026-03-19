@@ -199,7 +199,7 @@ class _StatsSection extends ConsumerWidget {
               );
             },
             title: '내가 모은 캐릭터',
-            value: userCharacters.length.toString(),
+            value: (userCharacters.value?.length ?? 0).toString(),
             image: 'assets/images/character_silhouette.png',
           ),
         ),

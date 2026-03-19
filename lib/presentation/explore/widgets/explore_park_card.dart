@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 
 class ExploreParkCard extends StatelessWidget {
   final String region;
@@ -32,10 +34,17 @@ class ExploreParkCard extends StatelessWidget {
                 width: 120,
                 height: 120,
                 color: Colors.grey[200],
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
+                  fadeOutDuration: Duration.zero,
+                  placeholderFadeInDuration: Duration.zero,
+                  placeholder: (context, url) => const ShimmerLoading(
+                    width: double.infinity,
+                    height: double.infinity,
+                    borderRadius: 0,
+                  ),
+                  errorWidget: (context, url, error) {
                     return const Icon(Icons.image, color: Colors.grey);
                   },
                 ),

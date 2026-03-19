@@ -14,4 +14,13 @@ class LocationRepositoryImpl implements LocationRepository {
   Future<List<Location>> getLocations() async {
     return await dataSource.getLocalLocations();
   }
+
+  @override
+  Future<List<String>> getParkTitlesByPetId(String petId) async {
+    final locations = await getLocations();
+    return locations
+        .where((loc) => loc.petIds.contains(petId))
+        .map((loc) => loc.name)
+        .toList();
+  }
 }

@@ -1,0 +1,181 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
+
+class SoopkomongEggDetailView extends StatelessWidget {
+  final SoopkomonTemplate template;
+  final Soopkomon? soopkomon;
+
+  const SoopkomongEggDetailView({
+    super.key,
+    required this.template,
+    this.soopkomon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final int currentStepsValue = soopkomon?.traveledSteps ?? 0;
+    const int targetSteps = 3000;
+    final double progress = (currentStepsValue / targetSteps).clamp(0.0, 1.0);
+
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+
+        /// 1. 이미지 영역 (알 + 말풍선 실루엣)
+        Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            // 알 이미지
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Image.asset(
+                template.eggImagePath,
+                width: 120,
+                height: 120,
+                fit: BoxFit.contain,
+              ),
+            ),
+            // 말풍선 실루엣
+            Positioned(
+              top: 0,
+              right: -65,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  // 말풍선 몸체
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.black, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(2, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: SoopkomonImage(
+                          assetPath: template.actualImagePath,
+                          remoteUrl: template.remoteImagePath,
+                          color: Colors.black,
+                          colorBlendMode: BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 48),
+
+        /// 2. 타이틀 (공원 이름 숲코몽 알)
+        Text(
+          '${soopkomon?.discoveredSpotName ?? '숲'} 숲코몽 알',
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 24),
+
+        /// 3. 프로그래스 바 영역
+        Column(
+          children: [
+            Container(
+              width: double.infinity,
+              height: 10,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F0F0),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: progress,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '$currentStepsValue/$targetSteps',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 48),
+
+        /// 4. 정보 카드 (발견 장소 + 날짜)
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: const Color(0xFFE0E0E0).withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            children: [
+              _buildInfoRow(
+                Icons.location_on_outlined,
+                soopkomon?.discoveredSpotName ?? '미발견 지역',
+              ),
+              const SizedBox(height: 16),
+              _buildInfoRow(
+                Icons.calendar_today_outlined,
+                '발견한 날짜 : ${soopkomon != null ? DateFormat('yyyy년 M월 d일 EEEE', 'ko_KR').format(soopkomon!.discoveredAt) : '미발견'}',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 24, color: Colors.black),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

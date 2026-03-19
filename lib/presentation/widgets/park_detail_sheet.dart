@@ -502,9 +502,10 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         ?.value
                                         .where((t) => t.templateId == petId)
                                         .firstOrNull;
-                                    final isAcquired = userCharacters.any(
-                                      (c) => c.templateId == petId,
-                                    );
+                                    final isAcquired = userCharacters.value?.any(
+                                          (c) => c.templateId == petId,
+                                        ) ??
+                                        false;
 
                                     Widget imageWidget = Image.asset(
                                       'assets/images/character_silhouette.png',

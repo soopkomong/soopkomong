@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:uuid/uuid.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
 /// Providers for DI
 final locationDataSourceProvider = Provider<LocalLocationDataSource>((ref) {
@@ -108,6 +109,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
   @override
   HomeState build() {
+    debugPrint('[디버그] HomeNotifier build() 호출됨 (상태 초기화)');
     ref.onDispose(() {
       _stepSubscription?.cancel();
       _positionSubscription?.cancel();
@@ -116,10 +118,12 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> loadData() async {
+    debugPrint('[디버그] loadData 시작');
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final useCase = ref.read(getLocationsUseCaseProvider);
       final locations = await useCase();
+      debugPrint('[디버그] loadData 완료: ${locations.length}개의 위치 로드됨');
       state = state.copyWith(isLoading: false, locations: locations);
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: '데이터 로드 실패: $e');
@@ -127,11 +131,13 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> startTracking() async {
+    debugPrint('[디버그] startTracking 시작');
     await startPedometer();
     await _startLocationTracking();
   }
 
   Future<void> _startLocationTracking() async {
+    debugPrint('[디버그] _startLocationTracking 시작');
     bool serviceEnabled;
     geo.LocationPermission permission;
 
@@ -155,19 +161,24 @@ class HomeNotifier extends Notifier<HomeState> {
       return;
     }
 
+    debugPrint('[디버그] 현재 위치 가져오기 시도 중...');
     final initialPosition = await geo.Geolocator.getCurrentPosition();
+    debugPrint(
+      '[디버그] 초기 위치 획득: ${initialPosition.latitude}, ${initialPosition.longitude}',
+    );
     state = state.copyWith(currentPosition: initialPosition);
     _checkParkProximity(initialPosition);
 
-    _positionSubscription = geo.Geolocator.getPositionStream(
-      locationSettings: const geo.LocationSettings(
-        accuracy: geo.LocationAccuracy.high,
-        distanceFilter: 5,
-      ),
-    ).listen((geo.Position position) {
-      state = state.copyWith(currentPosition: position);
-      _checkParkProximity(position);
-    });
+    _positionSubscription =
+        geo.Geolocator.getPositionStream(
+          locationSettings: const geo.LocationSettings(
+            accuracy: geo.LocationAccuracy.high,
+            distanceFilter: 5,
+          ),
+        ).listen((geo.Position position) {
+          state = state.copyWith(currentPosition: position);
+          _checkParkProximity(position);
+        });
   }
 
   void _checkParkProximity(geo.Position position) {
@@ -184,8 +195,32 @@ class HomeNotifier extends Notifier<HomeState> {
 
       if (distance <= loc.radius) {
         detectedParkId = loc.id;
+        debugPrint(
+          '[디버그] 공원 범위 내 감지: ${loc.name} (거리: ${distance.toStringAsFixed(1)}m, 반경: ${loc.radius}m)',
+        );
         break;
       }
+    }
+
+    if (detectedParkId == null && state.locations.isNotEmpty) {
+      // 가장 가까운 공원과의 거리 로그 (디버깅용)
+      double minDistance = double.infinity;
+      String nearestPark = '';
+      for (final loc in state.locations) {
+        final d = geo.Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          loc.lat,
+          loc.lng,
+        );
+        if (d < minDistance) {
+          minDistance = d;
+          nearestPark = loc.name;
+        }
+      }
+      debugPrint(
+        '[디버그] 현재 공원이 감지되지 않음. 가장 가까운 공원: $nearestPark (거리: ${minDistance.toStringAsFixed(1)}m)',
+      );
     }
 
     if (detectedParkId != state.currentParkId) {
@@ -256,11 +291,18 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> _acquirePet(int parkId) async {
+    debugPrint('[디버그] _acquirePet 시도 - parkId: $parkId');
     final park = state.locations.firstWhere((loc) => loc.id == parkId);
-    if (park.petIds.isEmpty) return;
+    if (park.petIds.isEmpty) {
+      debugPrint('[디버그] _acquirePet 중단: 해당 공원에 설정된 petIds가 없음');
+      return;
+    }
 
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
-    if (!templatesAsync.hasValue) return;
+    if (!templatesAsync.hasValue) {
+      debugPrint('[디버그] _acquirePet 중단: templatesAsync 데이터가 아직 로드되지 않음');
+      return;
+    }
 
     final template = templatesAsync.value!.firstWhere(
       (t) => t.templateId == park.petIds.first,
@@ -279,30 +321,71 @@ class HomeNotifier extends Notifier<HomeState> {
       currentTotalSteps: state.stepCount,
     );
 
-    ref.read(userSoopkomonProvider.notifier).add(newPet);
+    ref
+        .read(soopkomonRepositoryProvider)
+        .addSoopkomon(ref.read(userProvider).value!.id, newPet);
+    debugPrint(
+      '[디버그] 상태 업데이트 직전: lastAcquiredPetName=${state.lastAcquiredPetName}',
+    );
     state = state.copyWith(
       isPetAcquiredInCurrentPark: true,
       lastAcquiredPetName: template.name,
       lastAcquiredParkName: park.name,
       lastAcquiredPetEggPath: template.eggImagePath,
     );
+    debugPrint(
+      '[디버그] 상태 업데이트 완료: lastAcquiredPetName=${state.lastAcquiredPetName}',
+    );
     debugPrint('펫 획득 성공: ${template.name} at ${park.name}');
   }
 
+  /// 획득 팝업 확인 후 상태 초기화
+  void clearAcquiredPet() {
+    debugPrint('[디버그] clearAcquiredPet() 호출');
+    state = state.copyWith(
+      lastAcquiredPetName: null,
+      lastAcquiredParkName: null,
+      lastAcquiredPetEggPath: null,
+    );
+  }
+
   void updateStepCount(int count) {
+    debugPrint(
+      '[디버그] updateStepCount 호출됨: $count (현재 state.stepCount: ${state.stepCount})',
+    );
     state = state.copyWith(stepCount: count);
 
-    // 보유 펫 걸음 수 동기화
-    ref.read(userSoopkomonProvider.notifier).updateAllSteps(count);
+    // 보유 펫 걸음 수 동기화 (Firestore 업데이트)
+    final userAsync = ref.read(userProvider);
+    final petsAsync = ref.read(userSoopkomonProvider);
+
+    if (userAsync.hasValue &&
+        userAsync.value != null &&
+        petsAsync.hasValue &&
+        petsAsync.value != null) {
+      final userId = userAsync.value!.id;
+      for (final pet in petsAsync.value!) {
+        ref
+            .read(soopkomonRepositoryProvider)
+            .updateSoopkomonSteps(userId, pet.instanceId, count);
+      }
+    }
 
     // 수동 업데이트 시에도 펫 획득 조건 체크
     if (state.currentParkId != null &&
         !state.isPetAcquiredInCurrentPark &&
         state.stepsAtParkEntry != null) {
       final stepsInPark = count - state.stepsAtParkEntry!;
+      debugPrint(
+        '[디버그] 펫 획득 조건 체크: parkId=${state.currentParkId}, isAcquired=${state.isPetAcquiredInCurrentPark}, entrySteps=${state.stepsAtParkEntry}, currentSteps=$count, stepsInPark=$stepsInPark',
+      );
       if (stepsInPark >= 100) {
         _acquirePet(state.currentParkId!);
       }
+    } else {
+      debugPrint(
+        '[디버그] 펫 획득 조건 미충족 (기본 상태): parkId=${state.currentParkId}, isAcquired=${state.isPetAcquiredInCurrentPark}, entrySteps=${state.stepsAtParkEntry}',
+      );
     }
 
     // 부화 조건 체크
@@ -310,31 +393,30 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   void _checkHatchingCondition(int newStepCount) {
-    final userPets = ref.read(userSoopkomonProvider);
-    for (final pet in userPets) {
-      if (!pet.isHatched && (newStepCount - pet.stepsAtDiscovery) >= 1000) {
-        _hatchPet(pet);
-        break; // 한 번에 하나의 부화만 처리 (다이얼로그 겹침 방지)
+    final userPetsAsync = ref.read(userSoopkomonProvider);
+    userPetsAsync.whenData((pets) {
+      for (final pet in pets) {
+        if (!pet.isHatched && (newStepCount - pet.stepsAtDiscovery) >= 1000) {
+          _hatchPet(pet);
+          break; // 한 번에 하나의 부화만 처리
+        }
       }
-    }
+    });
   }
 
   void _hatchPet(Soopkomon pet) {
-    ref.read(userSoopkomonProvider.notifier).markAsHatched(pet.instanceId);
+    final user = ref.read(userProvider).value;
+    if (user != null) {
+      ref
+          .read(soopkomonRepositoryProvider)
+          .markSoopkomonAsHatched(user.id, pet.instanceId);
+    }
     state = state.copyWith(
       lastHatchedPetName: pet.name,
       lastHatchedParkName: pet.discoveredSpotName,
       lastHatchedPetImagePath: pet.imagePath,
     );
     debugPrint('펫 부화 성공: ${pet.name} from ${pet.discoveredSpotName}');
-  }
-
-  void clearAcquiredPet() {
-    state = state.copyWith(
-      lastAcquiredPetName: null,
-      lastAcquiredParkName: null,
-      lastAcquiredPetEggPath: null,
-    );
   }
 
   void clearHatchedPet() {

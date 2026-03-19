@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 
@@ -35,14 +37,31 @@ class ParkCard extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: imageUrl.startsWith('http')
-                      ? Image.network(
-                          imageUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
                           fit: BoxFit.cover,
-                          color: isVisited ? null : Colors.grey,
-                          colorBlendMode: isVisited
-                              ? null
-                              : BlendMode.saturation,
-                          errorBuilder: (context, error, stackTrace) =>
+                          imageBuilder: (context, imageProvider) => Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
+                                colorFilter: isVisited
+                                    ? null
+                                    : const ColorFilter.mode(
+                                        Colors.grey,
+                                        BlendMode.saturation,
+                                      ),
+                              ),
+                            ),
+                          ),
+                          fadeOutDuration: Duration.zero,
+                          placeholderFadeInDuration: Duration.zero,
+                          placeholder: (context, url) => const ShimmerLoading(
+                            width: double.infinity,
+                            height: double.infinity,
+                            borderRadius: 0,
+                          ),
+                          errorWidget: (context, url, error) =>
                               const Icon(Icons.image, color: AppColors.gray300),
                         )
                       : Image.asset(
@@ -51,9 +70,7 @@ class ParkCard extends StatelessWidget {
                               : imageUrl,
                           fit: BoxFit.cover,
                           color: isVisited ? null : Colors.grey,
-                          colorBlendMode: isVisited
-                              ? null
-                              : BlendMode.saturation,
+                          colorBlendMode: isVisited ? null : BlendMode.saturation,
                           errorBuilder: (context, error, stackTrace) =>
                               const Icon(Icons.image, color: AppColors.gray300),
                         ),

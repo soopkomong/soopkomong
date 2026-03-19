@@ -16,7 +16,7 @@ class ExplorePage extends StatefulWidget {
 class _ExplorePageState extends State<ExplorePage> {
   List<dynamic> _allLocations = [];
   List<dynamic> _locations = [];
-  Region _selectedRegion = Region.capital;
+  Region _selectedRegion = Region.all;
   String _searchQuery = '';
   bool _isLoading = true;
 
@@ -47,8 +47,20 @@ class _ExplorePageState extends State<ExplorePage> {
 
   void _filterLocations() {
     setState(() {
-      _locations = _allLocations.where((location) {
-        final matchesRegion = location['region'] == _selectedRegion.label;
+      // 1. 고유 ID(contentId) 기준으로 중복 제거
+      final uniqueMap = <String, dynamic>{};
+      for (var location in _allLocations) {
+        final id = location['contentId']?.toString() ?? '';
+        if (id.isNotEmpty) {
+          uniqueMap[id] = location;
+        }
+      }
+      final deduplicated = uniqueMap.values.toList();
+
+      // 2. 필터링 수행
+      _locations = deduplicated.where((location) {
+        final matchesRegion = _selectedRegion == Region.all ||
+            location['region'] == _selectedRegion.label;
         final title = (location['title'] ?? '').toString().toLowerCase();
         final matchesSearch =
             _searchQuery.isEmpty || title.contains(_searchQuery.toLowerCase());

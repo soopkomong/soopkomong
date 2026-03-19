@@ -1,9 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 
 class SoopkomonImage extends StatelessWidget {
   final String assetPath;
-  final String remoteUrl;
+  final String? remoteUrl;
   final double? width;
   final double? height;
   final BoxFit fit;
@@ -14,7 +15,7 @@ class SoopkomonImage extends StatelessWidget {
   const SoopkomonImage({
     super.key,
     required this.assetPath,
-    required this.remoteUrl,
+    this.remoteUrl,
     this.width,
     this.height,
     this.fit = BoxFit.contain,
@@ -25,22 +26,43 @@ class SoopkomonImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 이제 로컬 에셋은 사용하지 않으므로 CachedNetworkImage를 기본으로 사용합니다.
-    return CachedNetworkImage(
-      imageUrl: remoteUrl,
+    // remoteUrl이 있는 경우에만 네트워크 이미지 사용
+    if (remoteUrl != null && remoteUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: remoteUrl!,
+        width: width,
+        height: height,
+        fit: fit,
+        color: color,
+        colorBlendMode: colorBlendMode,
+        fadeOutDuration: Duration.zero,
+        placeholderFadeInDuration: Duration.zero,
+        placeholder: (context, url) => const ShimmerLoading(
+          width: double.infinity,
+          height: double.infinity,
+          borderRadius: 0,
+        ),
+        errorWidget: (context, url, error) =>
+            errorWidget ??
+            Image.asset(
+              'assets/images/character_silhouette.png',
+              width: width,
+              height: height,
+              fit: fit,
+              color: Colors.grey.withValues(alpha: 0.5),
+            ),
+      );
+    }
+
+    // remoteUrl이 없으면 로컬 에셋 사용
+    return Image.asset(
+      assetPath,
       width: width,
       height: height,
       fit: fit,
       color: color,
       colorBlendMode: colorBlendMode,
-      placeholder: (context, url) => const Center(
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-      errorWidget: (context, url, error) =>
+      errorBuilder: (context, error, stackTrace) =>
           errorWidget ??
           Image.asset(
             'assets/images/character_silhouette.png',
