@@ -61,6 +61,7 @@ dependencies:
   image: ^4.8.0
   firebase_messaging: ^16.1.2
   flutter_local_notifications: ^21.0.0
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -100,7 +101,6 @@ flutter:
   assets:
     - assets/
     - assets/images/
-    - assets/images/characters/
     - assets/images/parts/
     - .env
   #   - images/a_dot_burr.jpeg

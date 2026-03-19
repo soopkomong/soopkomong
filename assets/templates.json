@@ -15,29 +15,29 @@
   },
   {
     "templateId": "003",
-    "name": "기러기",
-    "description": "기러기입니다.",
+    "name": "독수리",
+    "description": "독수리입니다.",
     "eggType": "flying",
     "region": "capital"
   },
   {
     "templateId": "004",
-    "name": "다람쥐",
-    "description": "다람쥐입니다.",
-    "eggType": "ground",
+    "name": "오색딱따구리",
+    "description": "오색딱따구리입니다.",
+    "eggType": "grass",
     "region": "capital"
   },
   {
     "templateId": "005",
     "name": "왜가리",
     "description": "왜가리입니다.",
-    "eggType": "flying",
+    "eggType": "water",
     "region": "capital"
   },
   {
     "templateId": "006",
-    "name": "쏘가리",
-    "description": "쏘가리입니다.",
+    "name": "원앙",
+    "description": "원앙입니다.",
     "eggType": "water",
     "region": "capital"
   },
@@ -45,7 +45,7 @@
     "templateId": "007",
     "name": "짱뚱어",
     "description": "짱뚱어입니다.",
-    "eggType": "water",
+    "eggType": "ground",
     "region": "capital"
   },
   {
@@ -57,22 +57,22 @@
   },
   {
     "templateId": "009",
-    "name": "부엉이",
-    "description": "부엉이입니다.",
-    "eggType": "flying",
+    "name": "수달",
+    "description": "수달입니다.",
+    "eggType": "ground",
     "region": "capital"
   },
   {
     "templateId": "010",
-    "name": "농게",
-    "description": "농게입니다.",
+    "name": "저어새",
+    "description": "저어새입니다.",
     "eggType": "water",
     "region": "capital"
   },
   {
     "templateId": "011",
-    "name": "자라",
-    "description": "자라입니다.",
+    "name": "물총새",
+    "description": "물총새입니다.",
     "eggType": "water",
     "region": "gangwon"
   },
@@ -80,13 +80,13 @@
     "templateId": "012",
     "name": "산양",
     "description": "산양입니다.",
-    "eggType": "grass",
+    "eggType": "ground",
     "region": "gangwon"
   },
   {
     "templateId": "013",
-    "name": "어름치",
-    "description": "어름치입니다.",
+    "name": "철갑상어",
+    "description": "철갑상어입니다.",
     "eggType": "water",
     "region": "gangwon"
   },
@@ -99,22 +99,22 @@
   },
   {
     "templateId": "015",
-    "name": "꿩",
-    "description": "꿩입니다.",
-    "eggType": "flying",
+    "name": "삵",
+    "description": "삵입니다.",
+    "eggType": "grass",
     "region": "gangwon"
   },
   {
     "templateId": "016",
-    "name": "박새",
-    "description": "박새입니다.",
+    "name": "담비",
+    "description": "담비입니다.",
     "eggType": "grass",
     "region": "gangwon"
   },
   {
     "templateId": "017",
-    "name": "수달",
-    "description": "수달입니다.",
+    "name": "가마우지",
+    "description": "가마우지입니다.",
     "eggType": "water",
     "region": "gangwon"
   },
@@ -127,22 +127,22 @@
   },
   {
     "templateId": "019",
-    "name": "박쥐",
-    "description": "박쥐입니다.",
+    "name": "황금박쥐",
+    "description": "황금박쥐입니다.",
     "eggType": "mystic",
     "region": "gangwon"
   },
   {
     "templateId": "020",
-    "name": "사슴벌레",
-    "description": "사슴벌레입니다.",
-    "eggType": "grass",
+    "name": "반딧불이",
+    "description": "반딧불이입니다.",
+    "eggType": "mystic",
     "region": "gangwon"
   },
   {
     "templateId": "021",
-    "name": "딱따구리",
-    "description": "딱따구리입니다.",
+    "name": "호랑나비",
+    "description": "호랑나비입니다.",
     "eggType": "grass",
     "region": "chungcheong"
   },
@@ -155,16 +155,16 @@
   },
   {
     "templateId": "023",
-    "name": "표범장지뱀",
-    "description": "표범장지뱀입니다.",
-    "eggType": "ground",
+    "name": "쇠똥구리",
+    "description": "쇠똥구리입니다.",
+    "eggType": "grass",
     "region": "chungcheong"
   },
   {
     "templateId": "024",
-    "name": "에코리온",
-    "description": "에코리온입니다.",
-    "eggType": "mystic",
+    "name": "수리부엉이",
+    "description": "수리부엉이입니다.",
+    "eggType": "flying",
     "region": "chungcheong"
   },
   {
@@ -176,16 +176,16 @@
   },
   {
     "templateId": "026",
-    "name": "하늘다람쥐",
-    "description": "하늘다람쥐입니다.",
-    "eggType": "flying",
+    "name": "호반새",
+    "description": "호반새입니다.",
+    "eggType": "grass",
     "region": "chungcheong"
   },
   {
     "templateId": "027",
-    "name": "솔부엉이",
-    "description": "솔부엉이입니다.",
-    "eggType": "grass",
+    "name": "하늘다람쥐",
+    "description": "하늘다람쥐입니다.",
+    "eggType": "flying",
     "region": "chungcheong"
   },
   {
@@ -197,156 +197,149 @@
   },
   {
     "templateId": "029",
-    "name": "자생식물요정",
-    "description": "자생식물요정입니다.",
-    "eggType": "mystic",
+    "name": "장수풍뎅이",
+    "description": "장수풍뎅이입니다.",
+    "eggType": "grass",
     "region": "jeolla"
   },
   {
     "templateId": "030",
-    "name": "팔색조",
-    "description": "팔색조입니다.",
-    "eggType": "flying",
+    "name": "호랑이",
+    "description": "호랑이입니다.",
+    "eggType": "ground",
     "region": "jeolla"
   },
   {
     "templateId": "031",
-    "name": "반달곰",
-    "description": "반달곰입니다.",
+    "name": "반달가슴곰",
+    "description": "반달가슴곰입니다.",
     "eggType": "ground",
     "region": "jeolla"
   },
   {
     "templateId": "032",
-    "name": "삵",
-    "description": "삵입니다.",
-    "eggType": "grass",
+    "name": "농게",
+    "description": "농게입니다.",
+    "eggType": "ground",
     "region": "jeolla"
   },
   {
     "templateId": "033",
-    "name": "게",
-    "description": "게입니다.",
-    "eggType": "water",
+    "name": "노란부리백로",
+    "description": "노란부리백로입니다.",
+    "eggType": "flying",
     "region": "jeolla"
   },
   {
     "templateId": "034",
-    "name": "낙지",
-    "description": "낙지입니다.",
+    "name": "꼬막",
+    "description": "꼬막입니다.",
     "eggType": "ground",
     "region": "jeolla"
   },
   {
     "templateId": "035",
-    "name": "꼬막",
-    "description": "꼬막입니다.",
-    "eggType": "water",
+    "name": "봉황",
+    "description": "봉황입니다.",
+    "eggType": "mystic",
     "region": "jeolla"
   },
   {
     "templateId": "036",
-    "name": "수달",
-    "description": "수달입니다.",
-    "eggType": "water",
-    "region": "jeolla"
-  },
-  {
-    "templateId": "037",
     "name": "여우",
     "description": "여우입니다.",
     "eggType": "mystic",
     "region": "jeolla"
   },
   {
-    "templateId": "038",
+    "templateId": "037",
     "name": "바위정령",
     "description": "바위정령입니다.",
     "eggType": "mystic",
     "region": "jeolla"
   },
   {
-    "templateId": "039",
-    "name": "석불정령",
-    "description": "석불정령입니다.",
-    "eggType": "mystic",
-    "region": "gyeongsang"
-  },
-  {
-    "templateId": "040",
-    "name": "까마귀",
-    "description": "까마귀입니다.",
+    "templateId": "038",
+    "name": "올빼미",
+    "description": "올빼미입니다.",
     "eggType": "flying",
     "region": "gyeongsang"
   },
   {
-    "templateId": "041",
-    "name": "소나무정령",
-    "description": "소나무정령입니다.",
+    "templateId": "039",
+    "name": "떼까마귀",
+    "description": "떼까마귀입니다.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "040",
+    "name": "송이버섯",
+    "description": "송이버섯입니다.",
     "eggType": "grass",
     "region": "gyeongsang"
   },
   {
+    "templateId": "041",
+    "name": "다람쥐",
+    "description": "다람쥐입니다.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  },
+  {
     "templateId": "042",
-    "name": "돌계단정령",
-    "description": "돌계단정령입니다.",
+    "name": "자라",
+    "description": "자라입니다.",
     "eggType": "ground",
     "region": "gyeongsang"
   },
   {
     "templateId": "043",
-    "name": "가마우지",
-    "description": "가마우지입니다.",
+    "name": "돌고래",
+    "description": "돌고래입니다.",
     "eggType": "water",
-    "region": "gyeongsang"
+    "region": "jeju"
   },
   {
     "templateId": "044",
-    "name": "불사조",
-    "description": "불사조입니다.",
-    "eggType": "mystic",
+    "name": "제주노루",
+    "description": "제주노루입니다.",
+    "eggType": "grass",
     "region": "jeju"
   },
   {
     "templateId": "045",
-    "name": "해마",
-    "description": "해마입니다.",
+    "name": "무태장어",
+    "description": "무태장어입니다.",
     "eggType": "water",
     "region": "jeju"
   },
   {
     "templateId": "046",
-    "name": "나비",
-    "description": "나비입니다.",
-    "eggType": "grass",
-    "region": "jeju"
-  },
-  {
-    "templateId": "047",
-    "name": "백록",
-    "description": "백록입니다.",
+    "name": "구상나무정령",
+    "description": "구상나무정령입니다.",
     "eggType": "mystic",
     "region": "jeju"
   },
   {
-    "templateId": "048",
-    "name": "재두루미",
-    "description": "재두루미입니다.",
+    "templateId": "047",
+    "name": "큰고니",
+    "description": "큰고니입니다.",
     "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "048",
+    "name": "동백나무정령",
+    "description": "동백나무정령입니다.",
+    "eggType": "grass",
     "region": "gyeongsang"
   },
   {
     "templateId": "049",
-    "name": "황조롱이",
-    "description": "황조롱이입니다.",
-    "eggType": "flying",
-    "region": "gyeongsang"
-  },
-  {
-    "templateId": "050",
-    "name": "귀이빨대칭이",
-    "description": "귀이빨대칭이입니다.",
-    "eggType": "water",
+    "name": "맹꽁이",
+    "description": "맹꽁이입니다.",
+    "eggType": "ground",
     "region": "gyeongsang"
   }
 ]

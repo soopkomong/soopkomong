@@ -16,7 +16,23 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<SoopkomonTemplate>> getSoopkomonTemplates() async {
-    // 템플릿은 아직 로컬 유지 (필요시 Firestore 이전 가능)
+    try {
+      // 1. 먼저 Firestore에서 템플릿 데이터를 시도합니다.
+      final snapshot = await _remoteDataSource.firestore
+          .collection('templates')
+          .orderBy('templateId')
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.map((doc) {
+          return SoopkomonTemplateModel.fromJson(doc.data()).toEntity();
+        }).toList();
+      }
+    } catch (e) {
+      print('Firestore 템플릿 로드 실패, 로컬 데이터를 사용합니다: $e');
+    }
+
+    // 2. 실패하거나 데이터가 없으면 로컬 에셋을 사용합니다 (Fail-safe).
     final String response = await rootBundle.loadString(
       'assets/templates.json',
     );

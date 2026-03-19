@@ -3,6 +3,7 @@ import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:intl/intl.dart'; // 날짜 포맷팅용
 
 class SoopkomongDetailSheet extends StatelessWidget {
@@ -88,8 +89,9 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                         (context, error, stackTrace) =>
                                             const Icon(Icons.egg, size: 80),
                                   )
-                                : Image.asset(
-                                    template.actualImagePath,
+                                : SoopkomonImage(
+                                    assetPath: template.actualImagePath,
+                                    remoteUrl: template.remoteImagePath,
                                     fit: BoxFit.contain,
                                     color: finalIsDiscovered
                                         ? null
@@ -97,13 +99,6 @@ class SoopkomongDetailSheet extends StatelessWidget {
                                     colorBlendMode: finalIsDiscovered
                                         ? null
                                         : BlendMode.srcIn,
-                                    errorBuilder:
-                                        (context, error, stackTrace) => Icon(
-                                          finalIsDiscovered
-                                              ? Icons.pets
-                                              : Icons.help_outline,
-                                          size: 80,
-                                        ),
                                   ),
                           ),
                         ),

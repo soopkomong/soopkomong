@@ -13,6 +13,7 @@ import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
@@ -346,7 +347,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(imagePath, width: 120, height: 120),
+              SoopkomonImage(
+                assetPath: imagePath,
+                // imagePath가 'assets/images/characters/001_big.png' 형식이면
+                // 템플릿 ID를 추출하여 원격 URL을 생성할 수 있습니다.
+                remoteUrl: 'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${imagePath.split('/').last.split('_').first}_big.png?alt=media',
+                width: 120,
+                height: 120,
+              ),
               const SizedBox(height: 24),
               Text(
                 '$parkName $petName',

@@ -4,6 +4,7 @@ import 'package:soopkomong/data/models/location_model.dart';
 /// [Data Layer] - Remote DataSource Interface
 /// Firebase Firestore 등 외부 서버로부터 데이터를 가져오는 규격을 정의합니다.
 abstract class RemoteLocationDataSource {
+  FirebaseFirestore get firestore; // Firestore 인스턴스 노출
   Future<List<LocationModel>> getRemoteLocations();
   Stream<List<LocationModel>> watchRemoteLocations();
   Future<void> saveLocation(LocationModel location);
@@ -14,6 +15,9 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
 
   RemoteLocationDataSourceImpl({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  @override
+  FirebaseFirestore get firestore => _firestore;
 
   @override
   Future<List<LocationModel>> getRemoteLocations() async {

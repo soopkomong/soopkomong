@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
 class SoopkomongCard extends StatelessWidget {
   const SoopkomongCard({
@@ -53,20 +54,20 @@ class SoopkomongCard extends StatelessWidget {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Image.asset(
-                          template.actualImagePath,
+                        child: SoopkomonImage(
+                          assetPath: template.actualImagePath,
+                          remoteUrl: template.remoteImagePath,
                           fit: BoxFit.contain,
                           color: isDiscovered
                               ? null
                               : Colors.black.withValues(alpha: 0.7),
                           colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset(
-                                'assets/images/character_silhouette.png',
-                                width: 40,
-                                height: 40,
-                                fit: BoxFit.contain,
-                              ),
+                          errorWidget: Image.asset(
+                            'assets/images/character_silhouette.png',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                     ),
