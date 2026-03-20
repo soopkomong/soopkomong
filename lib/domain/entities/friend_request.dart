@@ -83,7 +83,7 @@ class FriendRequest {
       id: doc.id,
       senderId: data['senderId'] ?? '',
       senderName: data['senderName'] ?? '익명', // 이름이 없으면 '익명 처리' 나중에 바꾸기
-      senderTemplateId: data['senderTemplateId'] ?? '001',
+      senderTemplateId: data['senderTemplateId'] ?? '007',
       receiverId: data['receiverId'] ?? '',
       status: _parseStatus(data['status']),
       timestamp: parsedTime,

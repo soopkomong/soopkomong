@@ -6,12 +6,25 @@ import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/app_bottom_nav_bar.dart';
 
-class MainPage extends ConsumerWidget {
+class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
+  @override
+  ConsumerState<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends ConsumerState<MainPage> {
+  // 이미 표시된 친구 요청 ID를 추적하여 중복 팝업 방지
+  final Set<String> _shownRequestIds = {};
+
   void _showFriendRequestDialog(BuildContext context, WidgetRef ref, dynamic request) {
+    // 이미 보여준 요청이면 스킵
+    if (_shownRequestIds.contains(request.id)) return;
+    
+    _shownRequestIds.add(request.id);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -66,13 +79,11 @@ class MainPage extends ConsumerWidget {
     // 실시간 친구 요청 리스닝
     ref.listen(friendRequestProvider, (previous, next) {
       if (next is AsyncData && next.value!.isNotEmpty) {
-        // 가장 최근 요청 하나만 표시
-        final latestRequest = next.value!.first;
-        
-        // 이전 데이터와 비교하여 정말 새로운 요청인지 확인 (간단하게 ID 비교)
-        final previousIds = previous?.value?.map((r) => r.id).toSet() ?? {};
-        if (!previousIds.contains(latestRequest.id)) {
-           _showFriendRequestDialog(context, ref, latestRequest);
+        // 모든 새로운 요청에 대해 팝업을 띄울 수 있도록 함
+        for (final request in next.value!) {
+          if (!_shownRequestIds.contains(request.id)) {
+            _showFriendRequestDialog(context, ref, request);
+          }
         }
       }
     });
@@ -84,11 +95,11 @@ class MainPage extends ConsumerWidget {
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            navigationShell,
+            widget.navigationShell,
             SafeArea(
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: AppBottomNavigationBar(navigationShell: navigationShell),
+                child: AppBottomNavigationBar(navigationShell: widget.navigationShell),
               ),
             ),
           ],
