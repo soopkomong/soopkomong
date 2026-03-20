@@ -16,7 +16,8 @@ class CharacterCustomizePage extends ConsumerStatefulWidget {
   const CharacterCustomizePage({super.key});
 
   @override
-  ConsumerState<CharacterCustomizePage> createState() => _CharacterCustomizePageState();
+  ConsumerState<CharacterCustomizePage> createState() =>
+      _CharacterCustomizePageState();
 }
 
 class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
@@ -519,25 +520,31 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       await Future.delayed(const Duration(milliseconds: 100));
 
       // 1. 이미지 캡쳐
-      RenderRepaintBoundary? boundary = 
-          _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      
+      RenderRepaintBoundary? boundary =
+          _globalKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+
       if (boundary == null) throw Exception('아바타 이미지를 캡쳐할 수 없습니다.');
 
-      ui.Image image = await boundary.toImage(pixelRatio: 2.0); // 3.0은 너무 무거울 수 있어 2.0으로 하향
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ui.Image image = await boundary.toImage(
+        pixelRatio: 2.0,
+      ); // 3.0은 너무 무거울 수 있어 2.0으로 하향
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       if (byteData == null) throw Exception('이미지 변환에 실패했습니다.');
-      
+
       Uint8List pngBytes = byteData.buffer.asUint8List();
 
       // 2. 얼굴 영역 크롭 (image 패키지 사용)
       final decodedImage = await Future(() => img.decodeImage(pngBytes));
       if (decodedImage == null) throw Exception('이미지 파일을 해석할 수 없습니다.');
 
-      // 얼굴 부위 추출 (캐릭터의 70% 영역)
-      final int cropSize = (decodedImage.width * 0.7).toInt();
+      // 얼굴 부위 추출 (캐릭터의 55% 영역으로 설정 - 확대감과 여백의 균형)
+      final int cropSize = (decodedImage.width * 0.6).toInt();
       final int cropX = (decodedImage.width - cropSize) ~/ 2;
-      final int cropY = (decodedImage.height * 0.05).toInt();
+      final int cropY = (decodedImage.height * 0.00)
+          .toInt(); // 상단 정수리 부분이 잘리지 않도록 오프셋 축소
 
       final croppedImage = img.copyCrop(
         decodedImage,
@@ -546,15 +553,16 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
         width: cropSize,
         height: cropSize,
       );
-      
+
       final croppedBytes = Uint8List.fromList(img.encodePng(croppedImage));
       if (croppedBytes.isEmpty) throw Exception('이미지 압축에 실패했습니다.');
 
       // 3. Firebase Storage 관리
       final storage = FirebaseStorage.instance;
-      
+
       // 기존 이미지 삭제 시도 (Firebase Storage 이미지인 경우에만)
-      if (user.photoUrl != null && user.photoUrl!.contains('firebasestorage.googleapis.com')) {
+      if (user.photoUrl != null &&
+          user.photoUrl!.contains('firebasestorage.googleapis.com')) {
         try {
           await storage.refFromURL(user.photoUrl!).delete();
         } catch (e) {
@@ -563,7 +571,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       }
 
       // 새 이미지 업로드
-      final fileName = 'profiles/${user.id}_${DateTime.now().millisecondsSinceEpoch}.png';
+      final fileName =
+          'profiles/${user.id}_${DateTime.now().millisecondsSinceEpoch}.png';
       final uploadTask = await storage.ref(fileName).putData(croppedBytes);
       final photoUrl = await uploadTask.ref.getDownloadURL();
 
@@ -591,9 +600,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
     } finally {
       if (mounted) {

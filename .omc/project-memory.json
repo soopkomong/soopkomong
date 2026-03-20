@@ -1,0 +1,373 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773970772314,
+  "projectRoot": "/Users/hyeonseo/Desktop/CODE/02_flutter/soopkomong",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "assets",
+      "lib",
+      "test"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "android": {
+      "path": "android",
+      "purpose": null,
+      "fileCount": 9,
+      "lastAccessed": 1773970772295,
+      "keyFiles": [
+        "build.gradle.kts",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat",
+        "local.properties"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 4,
+      "lastAccessed": 1773970772296,
+      "keyFiles": [
+        "locations.json",
+        "templates.json",
+        "total_locations_list.json"
+      ]
+    },
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 1,
+      "lastAccessed": 1773970772297,
+      "keyFiles": [
+        "f537d389bd7fe17e116f8b847863fcdd.cache.dill.track.dill"
+      ]
+    },
+    "functions": {
+      "path": "functions",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1773970772298,
+      "keyFiles": [
+        "index.js",
+        "package-lock.json",
+        "package.json"
+      ]
+    },
+    "ios": {
+      "path": "ios",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1773970772298,
+      "keyFiles": [
+        "Podfile",
+        "Podfile.lock"
+      ]
+    },
+    "lib": {
+      "path": "lib",
+      "purpose": "Library code",
+      "fileCount": 3,
+      "lastAccessed": 1773970772298,
+      "keyFiles": [
+        "firebase_options.dart",
+        "main.dart"
+      ]
+    },
+    "linux": {
+      "path": "linux",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1773970772298,
+      "keyFiles": [
+        "CMakeLists.txt"
+      ]
+    },
+    "macos": {
+      "path": "macos",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1773970772298,
+      "keyFiles": [
+        "Podfile"
+      ]
+    },
+    "test": {
+      "path": "test",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1773970772298,
+      "keyFiles": [
+        "widget_test.dart"
+      ]
+    },
+    "web": {
+      "path": "web",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1773970772299,
+      "keyFiles": [
+        "favicon.png",
+        "index.html",
+        "manifest.json"
+      ]
+    },
+    "windows": {
+      "path": "windows",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1773970772299,
+      "keyFiles": [
+        "CMakeLists.txt"
+      ]
+    },
+    "android/app": {
+      "path": "android/app",
+      "purpose": "Application code",
+      "fileCount": 2,
+      "lastAccessed": 1773970772299,
+      "keyFiles": [
+        "build.gradle.kts",
+        "google-services.json"
+      ]
+    },
+    "android/build": {
+      "path": "android/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1773970772300,
+      "keyFiles": []
+    },
+    "lib/data": {
+      "path": "lib/data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1773970772300,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "lib/presentation/providers/soopkomon_provider.dart",
+      "accessCount": 17,
+      "lastAccessed": 1773985398668,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/soopkomong_card.dart",
+      "accessCount": 15,
+      "lastAccessed": 1773985591255,
+      "type": "file"
+    },
+    {
+      "path": "lib/data/repositories/soopkomon_repository_impl.dart",
+      "accessCount": 12,
+      "lastAccessed": 1773986085335,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/collection_page.dart",
+      "accessCount": 9,
+      "lastAccessed": 1773986797893,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/home/home_viewmodel.dart",
+      "accessCount": 9,
+      "lastAccessed": 1773987348721,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/widgets/soopkomon_image.dart",
+      "accessCount": 7,
+      "lastAccessed": 1773975093178,
+      "type": "file"
+    },
+    {
+      "path": "lib/core/router/app_router.dart",
+      "accessCount": 5,
+      "lastAccessed": 1773973400899,
+      "type": "file"
+    },
+    {
+      "path": "lib/data/datasources/remote_location_datasource.dart",
+      "accessCount": 5,
+      "lastAccessed": 1773985353933,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/home/home_page.dart",
+      "accessCount": 5,
+      "lastAccessed": 1773985645988,
+      "type": "file"
+    },
+    {
+      "path": "pubspec.yaml",
+      "accessCount": 4,
+      "lastAccessed": 1773985553170,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/explore/explore_page.dart",
+      "accessCount": 4,
+      "lastAccessed": 1773985576523,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/layout/app_shell.dart",
+      "accessCount": 3,
+      "lastAccessed": 1773976096486,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/widgets/shimmer_loading.dart",
+      "accessCount": 3,
+      "lastAccessed": 1773978338242,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/providers/auth_provider.dart",
+      "accessCount": 3,
+      "lastAccessed": 1773978343078,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/widgets/park_detail_sheet.dart",
+      "accessCount": 3,
+      "lastAccessed": 1773986541447,
+      "type": "file"
+    },
+    {
+      "path": "lib",
+      "accessCount": 2,
+      "lastAccessed": 1773971071711,
+      "type": "directory"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/region_filter_bar.dart",
+      "accessCount": 2,
+      "lastAccessed": 1773975336623,
+      "type": "file"
+    },
+    {
+      "path": "lib/data/datasources/local_location_datasource.dart",
+      "accessCount": 2,
+      "lastAccessed": 1773978242536,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/park_card.dart",
+      "accessCount": 2,
+      "lastAccessed": 1773978337884,
+      "type": "file"
+    },
+    {
+      "path": "lib/data/repositories/auth_repository_impl.dart",
+      "accessCount": 2,
+      "lastAccessed": 1773978458693,
+      "type": "file"
+    },
+    {
+      "path": "lib/main.dart",
+      "accessCount": 2,
+      "lastAccessed": 1773978612407,
+      "type": "file"
+    },
+    {
+      "path": "lib/domain/repositories/soopkomon_repository.dart",
+      "accessCount": 2,
+      "lastAccessed": 1773985340580,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/collection_sliding_tab.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773970912894,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/soopkomong_detail_sheet.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773970917216,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/soopkomong_egg_detail_view.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773970921408,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/soopkomong_hatched_detail_view.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773970921747,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection",
+      "accessCount": 1,
+      "lastAccessed": 1773970925186,
+      "type": "directory"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/collection_progress_badge.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773970927834,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/collection/widgets/undiscovered_character_dialog.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773970928008,
+      "type": "file"
+    },
+    {
+      "path": "lib/presentation/providers/user_provider.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773971007350,
+      "type": "file"
+    },
+    {
+      "path": "lib/core/app_initializer.dart",
+      "accessCount": 1,
+      "lastAccessed": 1773976016099,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 1,
+      "lastAccessed": 1773983259216,
+      "type": "directory"
+    },
+    {
+      "path": "pubspec.lock",
+      "accessCount": 1,
+      "lastAccessed": 1773987912846,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

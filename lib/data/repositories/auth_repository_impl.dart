@@ -56,6 +56,13 @@ class AuthRepositoryImpl implements AuthRepository {
       userCode: data?['user_code'],
       hasCharacter: data?['has_character'] ?? false,
       characterSettings: data?['character_settings'],
+      totalSteps: data?['totalSteps'] ?? 0,
+      lastStepUpdateAt: data?['lastStepUpdateAt'] != null
+          ? (data?['lastStepUpdateAt'] as Timestamp).toDate()
+          : null,
+      createdAt: data?['createdAt'] != null
+          ? (data?['createdAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
