@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
+import 'package:soopkomong/data/models/location_model.dart';
+import 'package:soopkomong/data/models/soopkomon_template_model.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
@@ -24,14 +29,25 @@ final soopkomonRepositoryProvider = Provider<SoopkomonRepository>((ref) {
 final soopkomonTemplatesProvider = FutureProvider<List<SoopkomonTemplate>>((
   ref,
 ) async {
-  final repository = ref.watch(soopkomonRepositoryProvider);
-  return repository.getSoopkomonTemplates();
+  final jsonString = await rootBundle
+      .loadString('assets/templates.json')
+      .timeout(const Duration(seconds: 10));
+  final List<dynamic> templatesJson = json.decode(jsonString) as List<dynamic>;
+  return templatesJson
+      .map((e) => SoopkomonTemplateModel.fromJson(e as Map<String, dynamic>).toEntity())
+      .toList();
 });
 
 /// 3. 모든 공원 위치 데이터 프로바이더 (Async)
 final locationsProvider = FutureProvider<List<Location>>((ref) async {
-  final repository = ref.watch(soopkomonRepositoryProvider);
-  return repository.getLocations();
+  final jsonString = await rootBundle
+      .loadString('assets/locations.json')
+      .timeout(const Duration(seconds: 10));
+  final Map<String, dynamic> jsonData = json.decode(jsonString) as Map<String, dynamic>;
+  final List<dynamic> locationsData = jsonData['locations'] ?? [];
+  return locationsData
+      .map((e) => LocationModel.fromJson(e as Map<String, dynamic>))
+      .toList();
 });
 
 /// 4. 선택된 지역 상태 관리
@@ -56,7 +72,7 @@ final userSoopkomonProvider = StreamProvider<List<Soopkomon>>((ref) {
       if (user == null) return Stream.value([]);
       return repository.getUserSoopkomons(user.id);
     },
-    loading: () => const Stream.empty(),
+    loading: () => Stream.value([]),
     error: (err, stack) => Stream.value([]),
   );
 });

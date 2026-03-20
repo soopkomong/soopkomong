@@ -5,10 +5,8 @@ import 'package:soopkomong/domain/repositories/location_repository.dart';
 import 'package:soopkomong/domain/usecases/get_locations_usecase.dart';
 import 'package:soopkomong/data/repositories/location_repository_impl.dart';
 import 'package:soopkomong/data/datasources/local_location_datasource.dart';
-import 'package:pedometer/pedometer.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:health/health.dart';
 import 'dart:async';
-import 'dart:io';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:uuid/uuid.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
@@ -104,14 +102,16 @@ class HomeState {
 /// 화면(View)에서 보여줄 상태(State)를 관리하고 비즈니스 로직(UseCase)을 호출하는 역할입니다.
 /// Riverpod의 [Notifier]를 사용하여 상태 관리를 수행합니다.
 class HomeNotifier extends Notifier<HomeState> {
-  StreamSubscription<StepCount>? _stepSubscription;
+  Timer? _stepTimer;
   StreamSubscription<geo.Position>? _positionSubscription;
+  int _debugStepOffset = 0; // 테스트용 수동 걸음 수 증가분
+
 
   @override
   HomeState build() {
     debugPrint('[디버그] HomeNotifier build() 호출됨 (상태 초기화)');
     ref.onDispose(() {
-      _stepSubscription?.cancel();
+      _stepTimer?.cancel();
       _positionSubscription?.cancel();
     });
     return HomeState(isLoading: false, locations: []);
@@ -131,9 +131,9 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> startTracking() async {
-    debugPrint('[디버그] startTracking 시작');
-    await startPedometer();
-    await _startLocationTracking();
+    // 위치 추적과 건강 데이터 추적을 병렬로 시작하여 초기화 지연 방지
+    _startLocationTracking();
+    startHealthTracking();
   }
 
   Future<void> _startLocationTracking() async {
@@ -244,50 +244,63 @@ class HomeNotifier extends Notifier<HomeState> {
     }
   }
 
-  Future<void> startPedometer() async {
-    // 권한 요청
-    final status = Platform.isIOS
-        ? await Permission.sensors.request()
-        : await Permission.activityRecognition.request();
+  Future<void> startHealthTracking() async {
+    Health().configure();
 
-    if (status.isGranted) {
-      _stepSubscription = Pedometer.stepCountStream.listen(
-        (StepCount event) {
-          final newStepCount = event.steps;
-          state = state.copyWith(stepCount: newStepCount);
+    final types = [HealthDataType.STEPS];
+    final permissions = [HealthDataAccess.READ];
 
-          // 펫 획득 조건 체크 (공원 내 100걸음)
-          if (state.currentParkId != null &&
-              !state.isPetAcquiredInCurrentPark &&
-              state.stepsAtParkEntry != null) {
-            final stepsInPark = newStepCount - state.stepsAtParkEntry!;
-            if (stepsInPark >= 100) {
-              _acquirePet(state.currentParkId!);
-            }
-          }
+    try {
+      bool hasPermissions = await Health().hasPermissions(types, permissions: permissions) ?? false;
+      if (!hasPermissions) {
+        bool requested = await Health().requestAuthorization(types, permissions: permissions);
+        if (!requested) {
+          debugPrint('[디버그] 건강 앱 접근 권한이 거부되었습니다.');
+          return;
+        }
+      }
 
-          // 부화 조건 체크 (모든 보유 펫 대상)
-          _checkHatchingCondition(newStepCount);
-        },
-        onError: (error) {
-          debugPrint('만보기 스트림 에러: $error');
-          // 에러 발생 시(특히 지원되지 않는 기기) 불필요한 반복 호출을 막기 위해 구독 취소
-          _stepSubscription?.cancel();
-          _stepSubscription = null;
+      await _fetchTodaySteps();
+      
+      _stepTimer?.cancel();
+      _stepTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+        _fetchTodaySteps();
+      });
+    } catch (error) {
+      debugPrint('건강 앱 연동 에러: $error');
+      state = state.copyWith(errorMessage: '건강 앱 에러: $error');
+    }
+  }
 
-          if (Platform.isIOS) {
-            // iOS에서 Step Count 사용 불가 시 별도 에러 메시지 없이 무시
-            // (시뮬레이터 등 기능 미지원 환경 대응)
-          } else {
-            state = state.copyWith(errorMessage: '만보기 에러: $error');
-          }
-        },
-      );
-    } else {
-      if (!Platform.isIOS) {
-        state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.');
+  Future<void> _fetchTodaySteps() async {
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day);
+    
+    try {
+      int? steps = await Health().getTotalStepsInInterval(midnight, now);
+      if (steps != null) {
+        _processNewStepCount(steps + _debugStepOffset);
+      }
+    } catch (e) {
+      debugPrint('걸음 수 조회 실패: $e');
+    }
+  }
+
+  void _processNewStepCount(int newStepCount) {
+    if (newStepCount == state.stepCount) return;
+
+    state = state.copyWith(stepCount: newStepCount);
+
+    if (state.currentParkId != null &&
+        !state.isPetAcquiredInCurrentPark &&
+        state.stepsAtParkEntry != null) {
+      final stepsInPark = newStepCount - state.stepsAtParkEntry!;
+      if (stepsInPark >= 100) {
+        _acquirePet(state.currentParkId!);
       }
     }
+
+    _checkHatchingCondition(newStepCount);
   }
 
   Future<void> _acquirePet(int parkId) async {
@@ -353,43 +366,16 @@ class HomeNotifier extends Notifier<HomeState> {
     debugPrint(
       '[디버그] updateStepCount 호출됨: $count (현재 state.stepCount: ${state.stepCount})',
     );
-    state = state.copyWith(stepCount: count);
-
-    // 보유 펫 걸음 수 동기화 (Firestore 업데이트)
-    final userAsync = ref.read(userProvider);
-    final petsAsync = ref.read(userSoopkomonProvider);
-
-    if (userAsync.hasValue &&
-        userAsync.value != null &&
-        petsAsync.hasValue &&
-        petsAsync.value != null) {
-      final userId = userAsync.value!.id;
-      for (final pet in petsAsync.value!) {
-        ref
-            .read(soopkomonRepositoryProvider)
-            .updateSoopkomonSteps(userId, pet.instanceId, count);
-      }
+    
+    // 수동으로 증가시킨 만큼 오프셋으로 기록하여 폴링 시에도 유지되게 함
+    if (count > state.stepCount) {
+      _debugStepOffset += (count - state.stepCount);
     }
+    
+    _processNewStepCount(count);
 
-    // 수동 업데이트 시에도 펫 획득 조건 체크
-    if (state.currentParkId != null &&
-        !state.isPetAcquiredInCurrentPark &&
-        state.stepsAtParkEntry != null) {
-      final stepsInPark = count - state.stepsAtParkEntry!;
-      debugPrint(
-        '[디버그] 펫 획득 조건 체크: parkId=${state.currentParkId}, isAcquired=${state.isPetAcquiredInCurrentPark}, entrySteps=${state.stepsAtParkEntry}, currentSteps=$count, stepsInPark=$stepsInPark',
-      );
-      if (stepsInPark >= 100) {
-        _acquirePet(state.currentParkId!);
-      }
-    } else {
-      debugPrint(
-        '[디버그] 펫 획득 조건 미충족 (기본 상태): parkId=${state.currentParkId}, isAcquired=${state.isPetAcquiredInCurrentPark}, entrySteps=${state.stepsAtParkEntry}',
-      );
-    }
-
-    // 부화 조건 체크
-    _checkHatchingCondition(count);
+    // 기존의 updateStepCount 내부 로직은 _processNewStepCount로 이전되었으므로
+    // 여기서 직접 _checkHatchingCondition 등을 다시 부를 필요가 없습니다. (이미 _processNewStepCount 안에서 호출함)
   }
 
   void _checkHatchingCondition(int newStepCount) {

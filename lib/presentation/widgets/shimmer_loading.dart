@@ -75,7 +75,7 @@ class SoopkomongCardSkeleton extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

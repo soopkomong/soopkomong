@@ -17,28 +17,9 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<SoopkomonTemplate>> getSoopkomonTemplates() async {
-    try {
-      // 1. 먼저 Firestore에서 템플릿 데이터를 시도합니다.
-      final snapshot = await _remoteDataSource.firestore
-          .collection('templates')
-          .orderBy('templateId')
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        return snapshot.docs.map((doc) {
-          return SoopkomonTemplateModel.fromJson(doc.data()).toEntity();
-        }).toList();
-      }
-    } catch (e) {
-      print('Firestore 템플릿 로드 실패, 로컬 데이터를 사용합니다: $e');
-    }
-
-    // 2. 실패하거나 데이터가 없으면 로컬 에셋을 사용합니다 (Fail-safe).
-    final String response = await rootBundle.loadString(
-      'assets/templates.json',
-    );
+    // 로컬 에셋을 즉시 로드 (빠른 초기 렌더링)
+    final String response = await rootBundle.loadString('assets/templates.json');
     final List<dynamic> templatesJson = json.decode(response) as List<dynamic>;
-
     return templatesJson
         .map((json) => SoopkomonTemplateModel.fromJson(json).toEntity())
         .toList();
@@ -46,20 +27,8 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<Location>> getLocations() async {
-    try {
-      // 1. 먼저 Firestore에서 데이터를 시도합니다.
-      final locations = await _remoteDataSource.getRemoteLocations();
-      if (locations.isNotEmpty) {
-        return locations;
-      }
-    } catch (e) {
-      print('Firestore 데이터 로드 실패, 로컬 데이터를 사용합니다: $e');
-    }
-
-    // 2. 실패하거나 데이터가 없으면 로컬 에셋을 백업으로 사용합니다.
-    final String response = await rootBundle.loadString(
-      'assets/locations.json',
-    );
+    // 로컬 에셋을 즉시 로드 (빠른 초기 렌더링)
+    final String response = await rootBundle.loadString('assets/locations.json');
     final data = json.decode(response);
     final List<dynamic> locationsJson = data['locations'] ?? [];
     return locationsJson.map((json) => LocationModel.fromJson(json)).toList();

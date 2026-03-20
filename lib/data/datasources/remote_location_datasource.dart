@@ -21,7 +21,7 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
 
   @override
   Future<List<LocationModel>> getRemoteLocations() async {
-    final snapshot = await _firestore.collection('locations').get();
+    final snapshot = await _firestore.collection('locations').get().timeout(const Duration(seconds: 5));
     return snapshot.docs
         .map((doc) => LocationModel.fromJson({...doc.data(), 'id': doc.id}))
         .toList();

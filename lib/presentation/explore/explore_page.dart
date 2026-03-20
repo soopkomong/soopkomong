@@ -31,6 +31,7 @@ class _ExplorePageState extends State<ExplorePage> {
       final String response = await rootBundle.loadString(
         'assets/locations.json',
       );
+      if (!mounted) return;
       final data = json.decode(response);
       setState(() {
         _allLocations = data['locations'] ?? [];
@@ -39,6 +40,7 @@ class _ExplorePageState extends State<ExplorePage> {
       });
     } catch (e) {
       debugPrint('Error loading locations: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });

@@ -104,64 +104,51 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
-        child: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.book, size: 40),
-                        const SizedBox(width: 4),
-                        const Text('도감', style: AppTextStyles.subTitleL),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    CollectionSlidingTab(
-                      initialIndex: _selectedTabIndex,
-                      onChanged: _onTabChanged,
-                    ),
-                    const SizedBox(height: 24),
-                    RegionFilterBar(
-                      onChanged: (region) {
-                        ref
-                            .read(selectedRegionProvider.notifier)
-                            .update(region);
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.book, size: 40),
+                const SizedBox(width: 4),
+                const Text('도감', style: AppTextStyles.subTitleL),
+              ],
+            ),
+            const SizedBox(height: 24),
+            CollectionSlidingTab(
+              initialIndex: _selectedTabIndex,
+              onChanged: _onTabChanged,
+            ),
+            const SizedBox(height: 24),
+            RegionFilterBar(
+              onChanged: (region) {
+                ref.read(selectedRegionProvider.notifier).update(region);
+              },
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: 2,
+                onPageChanged: (index) {
+                  if (_selectedTabIndex != index) {
+                    setState(() {
+                      _selectedTabIndex = index;
+                    });
+                  }
+                },
+                itemBuilder: (context, index) {
+                  return _buildTabPage(
+                    locationsAsync,
+                    userCharactersAsync,
+                    templatesAsync,
+                    index,
+                  );
+                },
               ),
-            ];
-          },
-          body: PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              if (_selectedTabIndex != index) {
-                setState(() {
-                  _selectedTabIndex = index;
-                });
-              }
-            },
-            children: [
-              _buildTabPage(
-                locationsAsync,
-                userCharactersAsync,
-                templatesAsync,
-                0,
-              ),
-              _buildTabPage(
-                locationsAsync,
-                userCharactersAsync,
-                templatesAsync,
-                1,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -182,42 +169,11 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
           sliver: SliverToBoxAdapter(
             child: Center(
-              child: locationsAsync.when(
-                loading: () => const CollectionProgressBadge(
-                  currentCount: 0,
-                  totalCount: 0,
-                  iconPath: '',
-                ),
-                error: (err, stack) => const CollectionProgressBadge(
-                  currentCount: 0,
-                  totalCount: 0,
-                  iconPath: '',
-                ),
-                data: (locations) => templatesAsync.when(
-                  loading: () => const CollectionProgressBadge(
-                    currentCount: 0,
-                    totalCount: 0,
-                    iconPath: '',
-                  ),
-                  error: (err, stack) => const CollectionProgressBadge(
-                    currentCount: 0,
-                    totalCount: 0,
-                    iconPath: '',
-                  ),
-                  data: (templates) {
-                    final userCharacters = userCharactersAsync.value ?? [];
-                    return CollectionProgressBadge(
-                      currentCount: tabIndex == 0
-                          ? locations.where((l) => l.isVisited).length
-                          : userCharacters.length,
-                      totalCount:
-                          tabIndex == 0 ? locations.length : templates.length,
-                      iconPath: tabIndex == 0
-                          ? 'assets/images/park.png'
-                          : 'assets/images/character_silhouette.png',
-                    );
-                  },
-                ),
+              child: _buildProgressBadge(
+                locationsAsync,
+                userCharactersAsync,
+                templatesAsync,
+                tabIndex,
               ),
             ),
           ),
@@ -244,33 +200,29 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           crossAxisCount: 2,
           mainAxisSpacing: 16,
           crossAxisSpacing: 8,
-          childAspectRatio: 1.1,
+          childAspectRatio: 0.85,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) => const ParkCardSkeleton(),
           childCount: 6, // 6개의 스켈레톤 노출
         ),
       ),
-      error: (err, stack) => SliverToBoxAdapter(
-        child: Center(child: Text('에러 발생: $err')),
-      ),
+      error: (err, stack) =>
+          SliverToBoxAdapter(child: Center(child: Text('에러 발생: $err'))),
       data: (locations) => SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           mainAxisSpacing: 16,
           crossAxisSpacing: 8,
-          childAspectRatio: 1.1,
+          childAspectRatio: 0.85,
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final park = locations[index];
-            return ParkCard(
-              park: park,
-              onTap: () => _showParkDetailBottomSheet(context, park),
-            );
-          },
-          childCount: locations.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final park = locations[index];
+          return ParkCard(
+            park: park,
+            onTap: () => _showParkDetailBottomSheet(context, park),
+          );
+        }, childCount: locations.length),
       ),
     );
   }
@@ -289,14 +241,19 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) => const SoopkomongCardSkeleton(),
-          childCount: 9, // 9개의 스켈레톤 노출
+          childCount: 9,
         ),
       ),
-      error: (err, stack) => SliverToBoxAdapter(
-        child: Center(child: Text('에러 발생: $err')),
-      ),
+      error: (err, stack) =>
+          SliverToBoxAdapter(child: Center(child: Text('에러 발생: $err'))),
       data: (templates) {
         final userCharacters = userCharactersAsync.value ?? [];
+
+        // 최적화: 유저 캐릭터 리스트를 맵으로 변환하여 O(1) 조회 가능하게 함
+        final Map<String, Soopkomon> userCharacterMap = {
+          for (var char in userCharacters) char.templateId: char,
+        };
+
         return SliverGrid(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
@@ -304,22 +261,50 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
             crossAxisSpacing: 8,
             childAspectRatio: 0.6,
           ),
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final template = templates[index];
-              final userCharacter = userCharacters
-                  .where((c) => c.templateId == template.templateId)
-                  .firstOrNull;
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final template = templates[index];
+            final userCharacter = userCharacterMap[template.templateId];
 
-              return SoopkomongCard(
-                template: template,
-                userCharacter: userCharacter,
-              );
-            },
-            childCount: templates.length,
-          ),
+            return SoopkomongCard(
+              key: ValueKey(template.templateId),
+              template: template,
+              userCharacter: userCharacter,
+            );
+          }, childCount: templates.length),
         );
       },
+    );
+  }
+
+  /// 진행도 배지를 빌드하는 별도 헬퍼 (중첩 AsyncValue 가독성 개선)
+  Widget _buildProgressBadge(
+    AsyncValue<List<Location>> locationsAsync,
+    AsyncValue<List<Soopkomon>> userCharactersAsync,
+    AsyncValue<List<SoopkomonTemplate>> templatesAsync,
+    int tabIndex,
+  ) {
+    // 모든 필요 데이터가 준비되었을 때만 계산
+    if (locationsAsync.hasValue && templatesAsync.hasValue) {
+      final locations = locationsAsync.value!;
+      final templates = templatesAsync.value!;
+      final userCharacters = userCharactersAsync.value ?? [];
+
+      return CollectionProgressBadge(
+        currentCount: tabIndex == 0
+            ? locations.where((l) => l.isVisited).length
+            : userCharacters.length,
+        totalCount: tabIndex == 0 ? locations.length : templates.length,
+        iconPath: tabIndex == 0
+            ? 'assets/images/park.png'
+            : 'assets/images/character_silhouette.png',
+      );
+    }
+
+    // 로딩 중이거나 에러 발생 시 기본값 표시
+    return const CollectionProgressBadge(
+      currentCount: 0,
+      totalCount: 0,
+      iconPath: '',
     );
   }
 }

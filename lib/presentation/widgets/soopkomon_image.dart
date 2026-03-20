@@ -11,6 +11,7 @@ class SoopkomonImage extends StatelessWidget {
   final Color? color;
   final BlendMode? colorBlendMode;
   final Widget? errorWidget;
+  final VoidCallback? onLoaded;
 
   const SoopkomonImage({
     super.key,
@@ -22,6 +23,7 @@ class SoopkomonImage extends StatelessWidget {
     this.color,
     this.colorBlendMode,
     this.errorWidget,
+    this.onLoaded,
   });
 
   @override
@@ -42,15 +44,28 @@ class SoopkomonImage extends StatelessWidget {
           height: double.infinity,
           borderRadius: 0,
         ),
-        errorWidget: (context, url, error) =>
-            errorWidget ??
-            Image.asset(
-              'assets/images/character_silhouette.png',
-              width: width,
-              height: height,
-              fit: fit,
-              color: Colors.grey.withValues(alpha: 0.5),
-            ),
+        imageBuilder: (context, imageProvider) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+          return Image(
+            image: imageProvider,
+            width: width,
+            height: height,
+            fit: fit,
+            color: color,
+            colorBlendMode: colorBlendMode,
+          );
+        },
+        errorWidget: (context, url, error) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+          return errorWidget ??
+              Image.asset(
+                'assets/images/character_silhouette.png',
+                width: width,
+                height: height,
+                fit: fit,
+                color: Colors.grey.withValues(alpha: 0.5),
+              );
+        },
       );
     }
 
@@ -62,15 +77,23 @@ class SoopkomonImage extends StatelessWidget {
       fit: fit,
       color: color,
       colorBlendMode: colorBlendMode,
-      errorBuilder: (context, error, stackTrace) =>
-          errorWidget ??
-          Image.asset(
-            'assets/images/character_silhouette.png',
-            width: width,
-            height: height,
-            fit: fit,
-            color: Colors.grey.withValues(alpha: 0.5),
-          ),
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (frame != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+        }
+        return child;
+      },
+      errorBuilder: (context, error, stackTrace) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+        return errorWidget ??
+            Image.asset(
+              'assets/images/character_silhouette.png',
+              width: width,
+              height: height,
+              fit: fit,
+              color: Colors.grey.withValues(alpha: 0.5),
+            );
+      },
     );
   }
 }
