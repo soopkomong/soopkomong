@@ -14,6 +14,8 @@ import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
+import 'package:soopkomong/domain/entities/app_user.dart';
+
 
 export 'app_route.dart';
 
@@ -49,8 +51,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final user = userAsync.value;
-      final user = notifier.value;
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
+
 
       // 2. 사용자가 없고 로그인 중이 아니라면 로그인 페이지로
       if (user == null) {
@@ -65,8 +67,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     refreshListenable: refreshNotifier,
-    refreshListenable: notifier,
     observers: [routeObserver],
+
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

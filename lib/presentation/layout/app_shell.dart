@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/domain/entities/friend_request.dart';
+import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/app_bottom_nav_bar.dart';
@@ -16,15 +18,8 @@ class MainPage extends ConsumerStatefulWidget {
 }
 
 class _MainPageState extends ConsumerState<MainPage> {
-  // 이미 표시된 친구 요청 ID를 추적하여 중복 팝업 방지
-  final Set<String> _shownRequestIds = {};
 
-  void _showFriendRequestDialog(BuildContext context, WidgetRef ref, dynamic request) {
-    // 이미 보여준 요청이면 스킵
-    if (_shownRequestIds.contains(request.id)) return;
-    
-    _shownRequestIds.add(request.id);
-
+  void _showFriendRequestDialog(BuildContext context, WidgetRef ref, FriendRequest request) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -55,7 +50,11 @@ class _MainPageState extends ConsumerState<MainPage> {
         actionsAlignment: MainAxisAlignment.center,
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // 알림 확인 처리 (Firestore 업데이트)
+              ref.read(friendsViewModelProvider.notifier).markNotified(request.id);
+              Navigator.pop(context);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary700,
               foregroundColor: AppColors.white,
@@ -71,7 +70,8 @@ class _MainPageState extends ConsumerState<MainPage> {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+
     // 탭 진입 전 미리 로드 (collection 탭 shimmer 방지)
     ref.watch(locationsProvider);
     ref.watch(soopkomonTemplatesProvider);
@@ -79,9 +79,9 @@ class _MainPageState extends ConsumerState<MainPage> {
     // 실시간 친구 요청 리스닝
     ref.listen(friendRequestProvider, (previous, next) {
       if (next is AsyncData && next.value!.isNotEmpty) {
-        // 모든 새로운 요청에 대해 팝업을 띄울 수 있도록 함
+        // 아직 알림이 노출되지 않은 요청(notified == false)에 대해서만 팝업 노출
         for (final request in next.value!) {
-          if (!_shownRequestIds.contains(request.id)) {
+          if (!request.notified) {
             _showFriendRequestDialog(context, ref, request);
           }
         }
