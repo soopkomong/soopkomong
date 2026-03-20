@@ -9,6 +9,7 @@ enum AppRoute {
   village(name: 'village', path: '/village'),
   friendProfile(name: 'friendProfile', path: 'profile'),
   notifications(name: 'notifications', path: '/notifications'),
+  profileEdit(name: 'profileEdit', path: '/profileEdit'),
   signIn(name: 'signIn', path: '/signIn');
 
   const AppRoute({required this.name, required this.path});
