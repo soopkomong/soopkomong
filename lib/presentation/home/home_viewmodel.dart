@@ -1,30 +1,13 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:soopkomong/domain/entities/location.dart';
-import 'package:soopkomong/domain/repositories/location_repository.dart';
-import 'package:soopkomong/domain/usecases/get_locations_usecase.dart';
-import 'package:soopkomong/data/repositories/location_repository_impl.dart';
-import 'package:soopkomong/data/datasources/local_location_datasource.dart';
-import 'package:health/health.dart';
-import 'dart:async';
 import 'package:geolocator/geolocator.dart' as geo;
+import 'package:pedometer/pedometer.dart';
 import 'package:uuid/uuid.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
-
-/// Providers for DI
-final locationDataSourceProvider = Provider<LocalLocationDataSource>((ref) {
-  return LocalLocationDataSourceImpl();
-});
-
-final locationRepositoryProvider = Provider<LocationRepository>((ref) {
-  return LocationRepositoryImpl(ref.watch(locationDataSourceProvider));
-});
-
-final getLocationsUseCaseProvider = Provider<GetLocationsUseCase>((ref) {
-  return GetLocationsUseCase(ref.watch(locationRepositoryProvider));
-});
 
 /// Home State
 class HomeState {
@@ -99,41 +82,50 @@ class HomeState {
 }
 
 /// [Presentation Layer] - ViewModel (Notifier)
-/// 화면(View)에서 보여줄 상태(State)를 관리하고 비즈니스 로직(UseCase)을 호출하는 역할입니다.
-/// Riverpod의 [Notifier]를 사용하여 상태 관리를 수행합니다.
 class HomeNotifier extends Notifier<HomeState> {
-  Timer? _stepTimer;
   StreamSubscription<geo.Position>? _positionSubscription;
-  int _debugStepOffset = 0; // 테스트용 수동 걸음 수 증가분
-
+  StreamSubscription<StepCount>? _stepSubscription;
 
   @override
   HomeState build() {
-    debugPrint('[디버그] HomeNotifier build() 호출됨 (상태 초기화)');
-    ref.onDispose(() {
-      _stepTimer?.cancel();
-      _positionSubscription?.cancel();
+    // 전역 locationsProvider를 감시하여 언어 변경 시 상태 자동 갱신
+    ref.listen(locationsProvider, (prev, next) {
+      next.whenData((locations) {
+        state = state.copyWith(
+          locations: locations,
+          isLoading: false,
+        );
+      });
     });
-    return HomeState(isLoading: false, locations: []);
+
+    final locationsAsync = ref.watch(locationsProvider);
+
+    ref.onDispose(() {
+      _positionSubscription?.cancel();
+      _stepSubscription?.cancel();
+    });
+
+    return HomeState(
+      isLoading: locationsAsync.isLoading,
+      locations: locationsAsync.value ?? [],
+    );
   }
 
+  /// 데이터 로드 (실제로는 build에서 초기값 설정 및 감시 중이므로 수동 트리거용)
   Future<void> loadData() async {
-    debugPrint('[디버그] loadData 시작');
-    state = state.copyWith(isLoading: true, errorMessage: null);
-    try {
-      final useCase = ref.read(getLocationsUseCaseProvider);
-      final locations = await useCase();
-      debugPrint('[디버그] loadData 완료: ${locations.length}개의 위치 로드됨');
-      state = state.copyWith(isLoading: false, locations: locations);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: '데이터 로드 실패: $e');
+    final locationsAsync = ref.read(locationsProvider);
+    if (locationsAsync.hasValue) {
+      state = state.copyWith(
+        locations: locationsAsync.value,
+        isLoading: false,
+      );
     }
   }
 
   Future<void> startTracking() async {
-    // 위치 추적과 건강 데이터 추적을 병렬로 시작하여 초기화 지연 방지
+    // 위치 추적과 걸음 수 추적을 병렬로 시작하여 초기화 지연 방지
     _startLocationTracking();
-    startHealthTracking();
+    _startPedometerTracking();
   }
 
   Future<void> _startLocationTracking() async {
@@ -203,7 +195,6 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     if (detectedParkId == null && state.locations.isNotEmpty) {
-      // 가장 가까운 공원과의 거리 로그 (디버깅용)
       double minDistance = double.infinity;
       String nearestPark = '';
       for (final loc in state.locations) {
@@ -225,7 +216,6 @@ class HomeNotifier extends Notifier<HomeState> {
 
     if (detectedParkId != state.currentParkId) {
       if (detectedParkId != null) {
-        // 새로운 공원 진입
         state = state.copyWith(
           currentParkId: detectedParkId,
           stepsAtParkEntry: state.stepCount,
@@ -233,7 +223,6 @@ class HomeNotifier extends Notifier<HomeState> {
         );
         debugPrint('공원 진입: $detectedParkId, 진입 시 걸음수: ${state.stepCount}');
       } else {
-        // 공원에서 벗어남
         state = state.copyWith(
           currentParkId: null,
           stepsAtParkEntry: null,
@@ -244,46 +233,16 @@ class HomeNotifier extends Notifier<HomeState> {
     }
   }
 
-  Future<void> startHealthTracking() async {
-    Health().configure();
-
-    final types = [HealthDataType.STEPS];
-    final permissions = [HealthDataAccess.READ];
-
-    try {
-      bool hasPermissions = await Health().hasPermissions(types, permissions: permissions) ?? false;
-      if (!hasPermissions) {
-        bool requested = await Health().requestAuthorization(types, permissions: permissions);
-        if (!requested) {
-          debugPrint('[디버그] 건강 앱 접근 권한이 거부되었습니다.');
-          return;
-        }
-      }
-
-      await _fetchTodaySteps();
-      
-      _stepTimer?.cancel();
-      _stepTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-        _fetchTodaySteps();
-      });
-    } catch (error) {
-      debugPrint('건강 앱 연동 에러: $error');
-      state = state.copyWith(errorMessage: '건강 앱 에러: $error');
-    }
-  }
-
-  Future<void> _fetchTodaySteps() async {
-    final now = DateTime.now();
-    final midnight = DateTime(now.year, now.month, now.day);
-    
-    try {
-      int? steps = await Health().getTotalStepsInInterval(midnight, now);
-      if (steps != null) {
-        _processNewStepCount(steps + _debugStepOffset);
-      }
-    } catch (e) {
-      debugPrint('걸음 수 조회 실패: $e');
-    }
+  void _startPedometerTracking() {
+    _stepSubscription?.cancel();
+    _stepSubscription = Pedometer.stepCountStream.listen(
+      (StepCount event) {
+        _processNewStepCount(event.steps);
+      },
+      onError: (error) {
+        debugPrint('[디버그] 걸음 수 스트림 에러: $error');
+      },
+    );
   }
 
   void _processNewStepCount(int newStepCount) {
@@ -363,19 +322,7 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   void updateStepCount(int count) {
-    debugPrint(
-      '[디버그] updateStepCount 호출됨: $count (현재 state.stepCount: ${state.stepCount})',
-    );
-    
-    // 수동으로 증가시킨 만큼 오프셋으로 기록하여 폴링 시에도 유지되게 함
-    if (count > state.stepCount) {
-      _debugStepOffset += (count - state.stepCount);
-    }
-    
     _processNewStepCount(count);
-
-    // 기존의 updateStepCount 내부 로직은 _processNewStepCount로 이전되었으므로
-    // 여기서 직접 _checkHatchingCondition 등을 다시 부를 필요가 없습니다. (이미 _processNewStepCount 안에서 호출함)
   }
 
   void _checkHatchingCondition(int newStepCount) {
@@ -384,7 +331,7 @@ class HomeNotifier extends Notifier<HomeState> {
       for (final pet in pets) {
         if (!pet.isHatched && (newStepCount - pet.stepsAtDiscovery) >= 1000) {
           _hatchPet(pet);
-          break; // 한 번에 하나의 부화만 처리
+          break;
         }
       }
     });

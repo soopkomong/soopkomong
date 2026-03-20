@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
 import 'package:soopkomong/data/models/location_model.dart';
 import 'package:soopkomong/data/models/soopkomon_template_model.dart';
@@ -17,7 +18,6 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<SoopkomonTemplate>> getSoopkomonTemplates() async {
-    // 로컬 에셋을 즉시 로드 (빠른 초기 렌더링)
     final String response = await rootBundle.loadString('assets/templates.json');
     final List<dynamic> templatesJson = json.decode(response) as List<dynamic>;
     return templatesJson
@@ -26,12 +26,61 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
   }
 
   @override
-  Future<List<Location>> getLocations() async {
-    // 로컬 에셋을 즉시 로드 (빠른 초기 렌더링)
+  Future<List<Location>> getLocations({AppLocale locale = AppLocale.ko}) async {
+    // 1. 먼저 Firestore에서 데이터를 시도합니다.
+    try {
+      final remoteLocations = await _remoteDataSource.getRemoteLocations(locale: locale);
+      if (remoteLocations.isNotEmpty) {
+        return remoteLocations;
+      }
+    } catch (e) {
+      print('Firestore 데이터 로드 실패 ($locale), 로컬 데이터를 사용합니다: $e');
+    }
+
+    // 2. 리모트 데이터가 없으면 로컬 에셋 로드 및 병합
     final String response = await rootBundle.loadString('assets/locations.json');
-    final data = json.decode(response);
-    final List<dynamic> locationsJson = data['locations'] ?? [];
-    return locationsJson.map((json) => LocationModel.fromJson(json)).toList();
+    final Map<String, dynamic> data = json.decode(response);
+    final List<dynamic> localJsonList = data['locations'] ?? [];
+
+    if (locale == AppLocale.en) {
+      try {
+        final String enResponse = await rootBundle.loadString('assets/en_locations.json');
+        final List<dynamic> enJsonList = json.decode(enResponse);
+
+        final Map<int, Map<String, dynamic>> enMap = {
+          for (var item in enJsonList)
+            (item['id'] as int): item as Map<String, dynamic>,
+        };
+
+        final mergedJsonList = localJsonList.map((locJson) {
+          final Map<String, dynamic> loc = Map<String, dynamic>.from(locJson as Map<String, dynamic>);
+          final int id = loc['id'] as int;
+
+          if (enMap.containsKey(id)) {
+            final enData = enMap[id]!;
+            loc['title'] = enData['title'];
+            loc['summary'] = enData['summary'];
+            loc['Information'] = enData['information'] ?? enData['Information'] ?? loc['Information'];
+          }
+          return loc;
+        }).toList();
+
+        return mergedJsonList.map((json) => LocationModel.fromJson(json)).toList();
+      } catch (e) {
+        print('로컬 영어 데이터 병합 실패: $e');
+      }
+    }
+
+    return localJsonList.map((json) => LocationModel.fromJson(json as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<String>> getParkTitlesByPetId(String petId) async {
+    final locations = await getLocations();
+    return locations
+        .where((loc) => loc.petIds.contains(petId))
+        .map((loc) => loc.name)
+        .toList();
   }
 
   @override

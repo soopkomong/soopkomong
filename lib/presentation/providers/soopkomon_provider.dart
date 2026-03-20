@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
-import 'package:soopkomong/data/models/location_model.dart';
 import 'package:soopkomong/data/models/soopkomon_template_model.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
@@ -40,14 +39,9 @@ final soopkomonTemplatesProvider = FutureProvider<List<SoopkomonTemplate>>((
 
 /// 3. 모든 공원 위치 데이터 프로바이더 (Async)
 final locationsProvider = FutureProvider<List<Location>>((ref) async {
-  final jsonString = await rootBundle
-      .loadString('assets/locations.json')
-      .timeout(const Duration(seconds: 10));
-  final Map<String, dynamic> jsonData = json.decode(jsonString) as Map<String, dynamic>;
-  final List<dynamic> locationsData = jsonData['locations'] ?? [];
-  return locationsData
-      .map((e) => LocationModel.fromJson(e as Map<String, dynamic>))
-      .toList();
+  final repository = ref.watch(soopkomonRepositoryProvider);
+  final locale = ref.watch(localeProvider); // 언어 변경 감시
+  return repository.getLocations(locale: locale);
 });
 
 /// 4. 선택된 지역 상태 관리
@@ -76,9 +70,6 @@ final userSoopkomonProvider = StreamProvider<List<Soopkomon>>((ref) {
     error: (err, stack) => Stream.value([]),
   );
 });
-
-// 기존 Notifier 기반의 add/update 로직은 이제 Firestore에 직접 쓰고 스트림으로 반영받는 식으로 변경되어야 하므로 제거하거나 별도 UI 핸들러로 이동
-// (현재 도감 뷰 기능에 집중하기 위해 StreamProvider로 교체)
 
 /// 6. 필터링된 공원 리스트 (조합 프로바이더)
 final filteredLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {

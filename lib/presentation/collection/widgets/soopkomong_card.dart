@@ -5,7 +5,7 @@ import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
 import 'package:soopkomong/presentation/collection/widgets/undiscovered_character_dialog.dart';
-import 'package:soopkomong/presentation/home/home_viewmodel.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
@@ -45,7 +45,7 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
           () async {
             if (!isDiscovered) {
               final parkTitles = await ref
-                  .read(locationRepositoryProvider)
+                  .read(soopkomonRepositoryProvider)
                   .getParkTitlesByPetId(widget.template.templateId);
 
               if (context.mounted) {
