@@ -15,6 +15,7 @@ class FriendRequest {
   final String senderTemplateId; // 보낸 사람의 캐릭터 템플릿 ID
   final String receiverId; // 요청 받는 사람 id
   final FriendRequestStatus status; // 현재 상태 (대기/수락/거절)
+  final bool notified; // 알림(팝업) 노출 여부
   final DateTime timestamp; // 요청 생성 시간
 
   FriendRequest({
@@ -24,6 +25,7 @@ class FriendRequest {
     required this.senderTemplateId,
     required this.receiverId,
     required this.status,
+    required this.notified,
     required this.timestamp,
   });
 
@@ -86,6 +88,7 @@ class FriendRequest {
       senderTemplateId: data['senderTemplateId'] ?? '007',
       receiverId: data['receiverId'] ?? '',
       status: _parseStatus(data['status']),
+      notified: data['notified'] ?? false,
       timestamp: parsedTime,
     );
   }
@@ -109,6 +112,7 @@ class FriendRequest {
       'senderTemplateId': senderTemplateId,
       'receiverId': receiverId,
       'status': status.name,
+      'notified': notified,
       'timestamp': FieldValue.serverTimestamp(),
     };
   }
