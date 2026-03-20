@@ -1,8 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
-import 'package:soopkomong/data/models/soopkomon_template_model.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
 import 'package:soopkomong/domain/entities/location.dart';
@@ -28,13 +25,9 @@ final soopkomonRepositoryProvider = Provider<SoopkomonRepository>((ref) {
 final soopkomonTemplatesProvider = FutureProvider<List<SoopkomonTemplate>>((
   ref,
 ) async {
-  final jsonString = await rootBundle
-      .loadString('assets/templates.json')
-      .timeout(const Duration(seconds: 10));
-  final List<dynamic> templatesJson = json.decode(jsonString) as List<dynamic>;
-  return templatesJson
-      .map((e) => SoopkomonTemplateModel.fromJson(e as Map<String, dynamic>).toEntity())
-      .toList();
+  final repository = ref.watch(soopkomonRepositoryProvider);
+  final locale = ref.watch(localeProvider);
+  return repository.getSoopkomonTemplates(locale: locale);
 });
 
 /// 3. 모든 공원 위치 데이터 프로바이더 (Async)

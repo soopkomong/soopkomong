@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_chip.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
-class RegionFilterBar extends StatefulWidget {
+class RegionFilterBar extends ConsumerStatefulWidget {
   const RegionFilterBar({super.key, required this.onChanged});
 
   final ValueChanged<Region> onChanged;
 
   @override
-  State<RegionFilterBar> createState() => _RegionFilterBarState();
+  ConsumerState<RegionFilterBar> createState() => _RegionFilterBarState();
 }
 
-class _RegionFilterBarState extends State<RegionFilterBar> {
+class _RegionFilterBarState extends ConsumerState<RegionFilterBar> {
   Region selected = Region.all;
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Container(
@@ -29,7 +35,7 @@ class _RegionFilterBarState extends State<RegionFilterBar> {
             final isSelected = selected == region;
 
             return RegionChip(
-              label: region.label,
+              label: region.getLabel(isEn),
               selected: isSelected,
               onTap: () {
                 setState(() {

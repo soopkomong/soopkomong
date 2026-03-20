@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 /// 개인정보처리방침 & 약관동의 링크 위젯
-class PolicyLinks extends StatelessWidget {
+class PolicyLinks extends ConsumerWidget {
   const PolicyLinks({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isEn = ref.watch(localeProvider) == AppLocale.en;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         GestureDetector(
           onTap: () {
-            _showPolicyDialog(context, '개인정보처리방침', '개인정보처리방침 내용이 준비 중입니다.');
+            _showPolicyDialog(
+              context,
+              isEn ? 'Privacy Policy' : '개인정보처리방침',
+              isEn ? 'Privacy policy content is being prepared.' : '개인정보처리방침 내용이 준비 중입니다.',
+            );
           },
-          child: const Text(
-            '개인정보처리방침',
-            style: TextStyle(
+          child: Text(
+            isEn ? 'Privacy Policy' : '개인정보처리방침',
+            style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF999999),
               decoration: TextDecoration.underline,
@@ -32,11 +40,15 @@ class PolicyLinks extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            _showPolicyDialog(context, '약관동의', '이용약관 내용이 준비 중입니다.');
+            _showPolicyDialog(
+              context,
+              isEn ? 'Terms of Service' : '약관동의',
+              isEn ? 'Terms of service content is being prepared.' : '이용약관 내용이 준비 중입니다.',
+            );
           },
-          child: const Text(
-            '약관동의',
-            style: TextStyle(
+          child: Text(
+            isEn ? 'Terms of Service' : '약관동의',
+            style: const TextStyle(
               fontSize: 13,
               color: Color(0xFF999999),
               decoration: TextDecoration.underline,

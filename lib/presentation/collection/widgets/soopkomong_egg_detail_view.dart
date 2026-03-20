@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
-class SoopkomongEggDetailView extends StatelessWidget {
+class SoopkomongEggDetailView extends ConsumerWidget {
   final SoopkomonTemplate template;
   final Soopkomon? soopkomon;
 
@@ -15,10 +18,12 @@ class SoopkomongEggDetailView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final int currentStepsValue = soopkomon?.traveledSteps ?? 0;
     const int targetSteps = 3000;
     final double progress = (currentStepsValue / targetSteps).clamp(0.0, 1.0);
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
 
     return Column(
       children: [
@@ -85,7 +90,9 @@ class SoopkomongEggDetailView extends StatelessWidget {
 
         /// 2. 타이틀 (공원 이름 숲코몽 알)
         Text(
-          '${soopkomon?.discoveredSpotName ?? '숲'} 숲코몽 알',
+          isEn 
+              ? '${soopkomon?.discoveredSpotName ?? 'Eco'} Soopkomong Egg'
+              : '${soopkomon?.discoveredSpotName ?? '숲'} 숲코몽 알',
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -146,12 +153,14 @@ class SoopkomongEggDetailView extends StatelessWidget {
             children: [
               _buildInfoRow(
                 Icons.location_on_outlined,
-                soopkomon?.discoveredSpotName ?? '미발견 지역',
+                soopkomon?.discoveredSpotName ?? (isEn ? 'Undiscovered region' : '미발견 지역'),
               ),
               const SizedBox(height: 16),
               _buildInfoRow(
                 Icons.calendar_today_outlined,
-                '발견한 날짜 : ${soopkomon != null ? DateFormat('yyyy년 M월 d일 EEEE', 'ko_KR').format(soopkomon!.discoveredAt) : '미발견'}',
+                isEn
+                    ? 'Discovered on : ${soopkomon != null ? DateFormat('EEEE, MMMM d, yyyy', 'en_US').format(soopkomon!.discoveredAt) : 'Undiscovered'}'
+                    : '발견한 날짜 : ${soopkomon != null ? DateFormat('yyyy년 M월 d일 EEEE', 'ko_KR').format(soopkomon!.discoveredAt) : '미발견'}',
               ),
             ],
           ),

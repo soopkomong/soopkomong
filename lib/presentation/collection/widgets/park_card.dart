@@ -3,15 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/location.dart';
+import 'package:soopkomong/core/enums/region.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ParkCard extends StatelessWidget {
+class ParkCard extends ConsumerWidget {
   const ParkCard({super.key, required this.park, this.onTap});
 
   final Location park;
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isEn = ref.watch(localeProvider) == AppLocale.en;
+    final regionLabel = Region.fromValue(park.region).getLabel(isEn);
     final String imageUrl = park.imageUrl;
     final bool isVisited = park.isVisited;
 
@@ -108,7 +114,7 @@ class ParkCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  park.region,
+                  regionLabel,
                   style: const TextStyle(
                     color: Color(0xFF123800),
                     fontSize: 12,

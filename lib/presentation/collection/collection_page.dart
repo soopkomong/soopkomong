@@ -12,6 +12,8 @@ import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dar
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class CollectionPage extends ConsumerStatefulWidget {
   final int initialTab;
@@ -98,6 +100,8 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     final locationsAsync = ref.watch(filteredLocationsProvider);
     final templatesAsync = ref.watch(filteredTemplatesProvider);
     final userCharactersAsync = ref.watch(userSoopkomonProvider);
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -112,7 +116,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
               children: [
                 const Icon(Icons.book, size: 40),
                 const SizedBox(width: 4),
-                const Text('도감', style: AppTextStyles.subTitleL),
+                Text(isEn ? 'Collection' : '도감', style: AppTextStyles.subTitleL),
               ],
             ),
             const SizedBox(height: 24),
@@ -144,6 +148,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
                     userCharactersAsync,
                     templatesAsync,
                     index,
+                    isEn,
                   );
                 },
               ),
@@ -159,6 +164,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     AsyncValue<List<Soopkomon>> userCharactersAsync,
     AsyncValue<List<SoopkomonTemplate>> templatesAsync,
     int tabIndex,
+    bool isEn,
   ) {
     return CustomScrollView(
       key: PageStorageKey<String>('tab_$tabIndex'),
@@ -183,8 +189,8 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           sliver: tabIndex == 0
-              ? _buildParkSliverGrid(locationsAsync)
-              : _buildCharacterSliverGrid(templatesAsync, userCharactersAsync),
+              ? _buildParkSliverGrid(locationsAsync, isEn)
+              : _buildCharacterSliverGrid(templatesAsync, userCharactersAsync, isEn),
         ),
 
         // 하단 여백
@@ -193,7 +199,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     );
   }
 
-  Widget _buildParkSliverGrid(AsyncValue<List<Location>> locationsAsync) {
+  Widget _buildParkSliverGrid(AsyncValue<List<Location>> locationsAsync, bool isEn) {
     return locationsAsync.when(
       loading: () => SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -208,7 +214,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         ),
       ),
       error: (err, stack) =>
-          SliverToBoxAdapter(child: Center(child: Text('에러 발생: $err'))),
+          SliverToBoxAdapter(child: Center(child: Text(isEn ? 'Error occurred: $err' : '에러 발생: $err'))),
       data: (locations) => SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -230,6 +236,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
   Widget _buildCharacterSliverGrid(
     AsyncValue<List<SoopkomonTemplate>> templatesAsync,
     AsyncValue<List<Soopkomon>> userCharactersAsync,
+    bool isEn,
   ) {
     return templatesAsync.when(
       loading: () => SliverGrid(
@@ -245,7 +252,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         ),
       ),
       error: (err, stack) =>
-          SliverToBoxAdapter(child: Center(child: Text('에러 발생: $err'))),
+          SliverToBoxAdapter(child: Center(child: Text(isEn ? 'Error occurred: $err' : '에러 발생: $err'))),
       data: (templates) {
         final userCharacters = userCharactersAsync.value ?? [];
 

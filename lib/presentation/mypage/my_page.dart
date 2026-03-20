@@ -10,12 +10,16 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
@@ -28,7 +32,10 @@ class MyPage extends ConsumerWidget {
             Navigator.pop(context);
           },
         ),
-        title: const Text('마이페이지'),
+        title: Text(
+          isEn ? 'My Page' : '마이페이지',
+          style: const TextStyle(color: Colors.black),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -43,14 +50,14 @@ class MyPage extends ConsumerWidget {
               const SoundSection(),
               const SizedBox(height: 12),
               SettingTile(
-                title: '언어',
+                title: isEn ? 'Language' : '언어',
                 trailing: ref.watch(localeProvider).label,
                 onTap: () => _showLanguageDialog(context, ref),
               ),
               const SizedBox(height: 16),
-              const SettingTile(title: '개인정보 처리 방침'),
+              SettingTile(title: isEn ? 'Privacy Policy' : '개인정보 처리 방침'),
               const SizedBox(height: 16),
-              const SettingTile(title: '이용 약관'),
+              SettingTile(title: isEn ? 'Terms of Service' : '이용 약관'),
               const SizedBox(height: 40),
               _BottomActions(ref: ref),
             ],
@@ -61,6 +68,7 @@ class MyPage extends ConsumerWidget {
   }
 
   void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+    final isEn = ref.read(localeProvider) == AppLocale.en;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -71,15 +79,15 @@ class MyPage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(20),
+              Padding(
+                padding: const EdgeInsets.all(20),
                 child: Text(
-                  '언어 선택 / Select Language',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  isEn ? 'Select Language' : '언어 선택',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               ListTile(
-                title: const Text('한국어'),
+                title: Text(isEn ? 'Korean (한국어)' : '한국어'),
                 trailing: ref.watch(localeProvider) == AppLocale.ko
                     ? const Icon(Icons.check, color: Colors.green)
                     : null,
@@ -113,6 +121,8 @@ class _SummaryCards extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider).value;
     if (user == null) return const SizedBox.shrink();
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
 
     // 방문한 공원 수 계산 (중복 제외)
     final visitedParksCount = user.acquiredCharacters
@@ -125,7 +135,7 @@ class _SummaryCards extends ConsumerWidget {
       children: [
         Expanded(
           child: _SummaryCard(
-            title: '내가 가본 생태공원',
+            title: isEn ? 'Parks Visited' : '내가 가본 생태공원',
             count: visitedParksCount,
             iconPath: 'assets/images/park.png',
             color: const Color(0xFF48B200),
@@ -138,7 +148,7 @@ class _SummaryCards extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _SummaryCard(
-            title: '내가 모은 캐릭터',
+            title: isEn ? 'Characters Collected' : '내가 모은 캐릭터',
             count: user.acquiredCharacters.length,
             iconPath: 'assets/images/character_silhouette.png',
             color: Colors.black,
@@ -326,27 +336,28 @@ class _ProfileCard extends ConsumerWidget {
   }
 }
 
-class SoundSection extends StatelessWidget {
+class SoundSection extends ConsumerWidget {
   const SoundSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isEn = ref.watch(localeProvider) == AppLocale.en;
     return MyPageCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Text(
-            '소리',
-            style: TextStyle(
+            isEn ? 'Sound' : '소리',
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Colors.grey,
             ),
           ),
-          SizedBox(height: 12),
-          SwitchTile(title: '배경음'),
-          SwitchTile(title: '진동'),
-          SwitchTile(title: '효과음'),
+          const SizedBox(height: 12),
+          SwitchTile(title: isEn ? 'BGM' : '배경음'),
+          SwitchTile(title: isEn ? 'Vibration' : '진동'),
+          SwitchTile(title: isEn ? 'SFX' : '효과음'),
         ],
       ),
     );
@@ -433,19 +444,22 @@ class _BottomActions extends StatelessWidget {
   const _BottomActions({required this.ref});
 
   Future<void> _showLogoutDialog(BuildContext context) async {
+    final locale = ref.read(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('로그아웃'),
-        content: const Text('로그아웃 하시겠습니까?'),
+        title: Text(isEn ? 'Log Out' : '로그아웃'),
+        content: Text(isEn ? 'Would you like to log out?' : '로그아웃 하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('아니오'),
+            child: Text(isEn ? 'No' : '아니오'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('예'),
+            child: Text(isEn ? 'Yes' : '예'),
           ),
         ],
       ),
@@ -458,16 +472,43 @@ class _BottomActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         GestureDetector(
-          onTap: () {
-            // 회원 탈퇴 로직
+          onTap: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(isEn ? 'Delete Account' : '회원 탈퇴'),
+                content: Text(
+                  isEn 
+                      ? 'Are you sure you want to delete your account? All data will be permanently deleted.' 
+                      : '정말로 탈퇴하시겠습니까? 모든 데이터가 영구적으로 삭제됩니다.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(isEn ? 'Cancel' : '취소'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: Text(isEn ? 'Delete' : '탈퇴'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              // TODO: 회원 탈퇴 로직 구현
+            }
           },
-          child: const Text(
-            '회원탈퇴',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+          child: Text(
+            isEn ? 'Delete Account' : '회원탈퇴',
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
           ),
         ),
         const SizedBox(width: 8),
@@ -478,9 +519,9 @@ class _BottomActions extends StatelessWidget {
         const SizedBox(width: 8),
         GestureDetector(
           onTap: () => _showLogoutDialog(context),
-          child: const Text(
-            '로그아웃',
-            style: TextStyle(fontSize: 13, color: Colors.grey),
+          child: Text(
+            isEn ? 'Log Out' : '로그아웃',
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
           ),
         ),
       ],

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
-class ExpandableText extends StatefulWidget {
+class ExpandableText extends ConsumerStatefulWidget {
   final String text;
   final int trimLines;
   final TextStyle? style;
@@ -13,10 +16,10 @@ class ExpandableText extends StatefulWidget {
   });
 
   @override
-  State<ExpandableText> createState() => _ExpandableTextState();
+  ConsumerState<ExpandableText> createState() => _ExpandableTextState();
 }
 
-class _ExpandableTextState extends State<ExpandableText>
+class _ExpandableTextState extends ConsumerState<ExpandableText>
     with TickerProviderStateMixin {
   bool _expanded = false;
   bool _showButton = false;
@@ -41,6 +44,7 @@ class _ExpandableTextState extends State<ExpandableText>
 
   @override
   Widget build(BuildContext context) {
+    final displayText = widget.text.replaceAll('<br>', '\n').replaceAll('<br/>', '\n');
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
@@ -48,7 +52,7 @@ class _ExpandableTextState extends State<ExpandableText>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.text,
+            displayText,
             style: widget.style,
             maxLines: _expanded ? null : widget.trimLines,
             overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
@@ -67,7 +71,9 @@ class _ExpandableTextState extends State<ExpandableText>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _expanded ? '내용 접기' : '더보기',
+                      _expanded 
+                        ? (ref.watch(localeProvider) == AppLocale.en ? 'Collapse' : '내용 접기')
+                        : (ref.watch(localeProvider) == AppLocale.en ? 'Read more' : '더보기'),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

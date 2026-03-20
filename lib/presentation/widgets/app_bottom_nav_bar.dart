@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class AppBottomNavigationBar extends ConsumerStatefulWidget {
   const AppBottomNavigationBar({super.key, required this.navigationShell});
@@ -32,8 +34,12 @@ class _AppBottomNavigationBarState
   @override
   Widget build(BuildContext context) {
     final currentIndex = widget.navigationShell.currentIndex;
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
 
-    final labels = ['홈', '도감', '생태공원', '친구'];
+    final labels = isEn 
+        ? ['Home', 'Collection', 'Parks', 'Friends']
+        : ['홈', '도감', '생태공원', '친구'];
     final baseIconPaths = [
       'assets/images/Home',
       'assets/images/Notebook',

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
-class CollectionSlidingTab extends StatefulWidget {
+class CollectionSlidingTab extends ConsumerStatefulWidget {
   final ValueChanged<int> onChanged;
   final int initialIndex;
 
@@ -13,10 +16,10 @@ class CollectionSlidingTab extends StatefulWidget {
   });
 
   @override
-  State<CollectionSlidingTab> createState() => _CollectionSlidingTabState();
+  ConsumerState<CollectionSlidingTab> createState() => _CollectionSlidingTabState();
 }
 
-class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
+class _CollectionSlidingTabState extends ConsumerState<CollectionSlidingTab> {
   late int selectedIndex;
 
   @override
@@ -37,6 +40,9 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return SizedBox(
       height: 48,
       child: Stack(
@@ -67,7 +73,10 @@ class _CollectionSlidingTabState extends State<CollectionSlidingTab> {
             },
           ),
           // 탭 버튼들
-          Row(children: [_buildTab(0, '생태공원'), _buildTab(1, '숲코몽')]),
+          Row(children: [
+            _buildTab(0, isEn ? 'Parks' : '생태공원'),
+            _buildTab(1, isEn ? 'Soopkomong' : '숲코몽'),
+          ]),
         ],
       ),
     );

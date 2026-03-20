@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
-class SoopkomongHatchedDetailView extends StatelessWidget {
+class SoopkomongHatchedDetailView extends ConsumerWidget {
   final SoopkomonTemplate template;
   final Soopkomon? soopkomon;
   final bool isDiscovered;
@@ -18,7 +21,10 @@ class SoopkomongHatchedDetailView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return Column(
       children: [
         const SizedBox(height: 16),
@@ -64,16 +70,16 @@ class SoopkomongHatchedDetailView extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildStatCard(
-                  '캐릭터 속성',
-                  template.eggType.label,
+                  isEn ? 'Character Attribute' : '캐릭터 속성',
+                  isEn ? template.eggType.labelEn : template.eggType.label,
                   template.eggType.color,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  '함께 걸은 걸음 수',
-                  '${NumberFormat('#,###').format(soopkomon?.traveledSteps ?? 0)} 걸음',
+                  isEn ? 'Steps walked together' : '함께 걸은 걸음 수',
+                  '${NumberFormat('#,###').format(soopkomon?.traveledSteps ?? 0)} ${isEn ? 'steps' : '걸음'}',
                   null,
                 ),
               ),
@@ -82,7 +88,7 @@ class SoopkomongHatchedDetailView extends StatelessWidget {
           const SizedBox(height: 16),
           InfoCard(
             leading: const Icon(Icons.description_outlined),
-            title: '캐릭터 설명',
+            title: isEn ? 'Character Description' : '캐릭터 설명',
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(

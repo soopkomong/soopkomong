@@ -1,18 +1,23 @@
 enum Region {
-  all('전체'),
-  capital('수도권'),
-  gangwon('강원권'),
-  chungcheong('충청권'),
-  gyeongsang('경상권'),
-  jeolla('전라권'),
-  jeju('제주권');
+  all('전체', 'All'),
+  capital('수도권', 'Capital'),
+  gangwon('강원권', 'Gangwon'),
+  chungcheong('충청권', 'Chungcheong'),
+  gyeongsang('경상권', 'Gyeongsang'),
+  jeolla('전라권', 'Jeolla'),
+  jeju('제주권', 'Jeju');
 
-  final String label;
-  const Region(this.label);
+  final String koLabel;
+  final String enLabel;
+  const Region(this.koLabel, this.enLabel);
+
+  String get label => koLabel; // Default to Korean for backward compatibility if needed, but we'll use a method for locale
+
+  String getLabel(bool isEn) => isEn ? enLabel : koLabel;
 
   factory Region.fromValue(String value) {
     return Region.values.firstWhere(
-      (e) => e.name == value || e.label == value,
+      (e) => e.name == value || e.koLabel == value || e.enLabel == value,
       orElse: () => Region.all,
     );
   }

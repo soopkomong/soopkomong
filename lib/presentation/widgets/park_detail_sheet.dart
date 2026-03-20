@@ -457,7 +457,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                               // 이용안내 텍스트 영역
                               if (widget.information.isNotEmpty)
                                 Text(
-                                  widget.information,
+                                  widget.information.replaceAll('<br>', '\n').replaceAll('<br/>', '\n'),
                                   style: const TextStyle(fontSize: 13, height: 1.5),
                                 ),
                             ],

@@ -17,8 +17,12 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
       : _remoteDataSource = remoteDataSource;
 
   @override
-  Future<List<SoopkomonTemplate>> getSoopkomonTemplates() async {
-    final String response = await rootBundle.loadString('assets/templates.json');
+  Future<List<SoopkomonTemplate>> getSoopkomonTemplates({AppLocale locale = AppLocale.ko}) async {
+    final String assetPath = locale == AppLocale.en 
+        ? 'assets/en_templates.json' 
+        : 'assets/templates.json';
+    
+    final String response = await rootBundle.loadString(assetPath);
     final List<dynamic> templatesJson = json.decode(response) as List<dynamic>;
     return templatesJson
         .map((json) => SoopkomonTemplateModel.fromJson(json).toEntity())
@@ -75,8 +79,8 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
   }
 
   @override
-  Future<List<String>> getParkTitlesByPetId(String petId) async {
-    final locations = await getLocations();
+  Future<List<String>> getParkTitlesByPetId(String petId, {AppLocale locale = AppLocale.ko}) async {
+    final locations = await getLocations(locale: locale);
     final uniqueMap = <int, Location>{};
     for (var loc in locations) {
       uniqueMap[loc.id] = loc;
