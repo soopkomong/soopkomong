@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
-import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/domain/entities/friend_request.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -52,10 +52,15 @@ class NotificationsPage extends ConsumerWidget {
                   ),
                   title: Text(
                     isEn ? 'Friend Request' : '친구 신청',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   subtitle: Text(
-                    isEn ? '${req.senderName} sent you a friend request.' : '${req.senderName}님이 친구 신청을 보냈습니다.',
+                    isEn
+                        ? '${req.senderName} sent you a friend request.'
+                        : '${req.senderName}님이 친구 신청을 보냈습니다.',
                     style: const TextStyle(fontSize: 13, color: Colors.black87),
                   ),
                   trailing: Row(
@@ -63,7 +68,10 @@ class NotificationsPage extends ConsumerWidget {
                     children: [
                       Text(
                         req.formattedTimestamp,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       if (req.status == FriendRequestStatus.pending) ...[
@@ -73,16 +81,25 @@ class NotificationsPage extends ConsumerWidget {
                                 .read(friendsViewModelProvider.notifier)
                                 .acceptFriendRequest(req);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(isEn ? 'Friend request accepted.' : '친구 신청을 수락했습니다.')),
+                              SnackBar(
+                                content: Text(
+                                  isEn
+                                      ? 'Friend request accepted.'
+                                      : '친구 신청을 수락했습니다.',
+                                ),
+                              ),
                             );
                           },
                           style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF48B200),
-                              minimumSize: Size.zero,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          child: Text(isEn ? 'Accept' : '수락',
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                            foregroundColor: const Color(0xFF48B200),
+                            minimumSize: Size.zero,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            isEn ? 'Accept' : '수락',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -90,21 +107,28 @@ class NotificationsPage extends ConsumerWidget {
                                 .read(friendsViewModelProvider.notifier)
                                 .declineFriendRequest(req.id);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(isEn ? 'Friend request declined.' : '친구 신청을 거절했습니다.')),
+                              SnackBar(
+                                content: Text(
+                                  isEn
+                                      ? 'Friend request declined.'
+                                      : '친구 신청을 거절했습니다.',
+                                ),
+                              ),
                             );
                           },
                           style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              minimumSize: Size.zero,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                            foregroundColor: Colors.red,
+                            minimumSize: Size.zero,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: Text(isEn ? 'Decline' : '거절'),
                         ),
                       ] else ...[
                         Text(
-                          req.status == FriendRequestStatus.accepted 
-                            ? (isEn ? 'Accepted' : '수락됨') 
-                            : (isEn ? 'Declined' : '거절됨'),
+                          req.status == FriendRequestStatus.accepted
+                              ? (isEn ? 'Accepted' : '수락됨')
+                              : (isEn ? 'Declined' : '거절됨'),
                           style: TextStyle(
                             fontSize: 12,
                             color: req.status == FriendRequestStatus.accepted

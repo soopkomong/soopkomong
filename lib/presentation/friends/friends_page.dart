@@ -42,11 +42,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.people, color: AppColors.black),
-            const SizedBox(width: 8),
+            Icon(Icons.people, color: AppColors.black),
+            SizedBox(width: 8),
             Text(
               isEn ? 'Friends' : '친구목록',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.black,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -55,154 +55,148 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // 내 ID 카드
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: AppColors.gray100),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.black,
-                        fontWeight: FontWeight.w500,
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 20),
+                // 내 ID 카드
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: AppColors.gray100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                      children: [
-                        TextSpan(text: isEn ? 'My Code : ' : '내 코드 : '),
-                        TextSpan(
-                          text: (ref.watch(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'] ?? '-',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      final userCode = (ref.read(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'];
-                      if (userCode == null) return;
-                      
-                      // Clipboard: 텍스트 복사 기능
-                      Clipboard.setData(ClipboardData(text: userCode));
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                  child: Row(
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.black,
+                            fontWeight: FontWeight.w500,
                           ),
-                          actionsAlignment: MainAxisAlignment.center,
-                          content: Text(
-                            isEn ? 'Code copied to clipboard.' : '코드가 클립보드에 복사되었습니다.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(
-                                isEn ? 'OK' : '확인',
-                                style: const TextStyle(color: AppColors.primary700),
-                              ),
+                          children: [
+                            TextSpan(text: isEn ? 'My Code : ' : '내 코드 : '),
+                            TextSpan(
+                              text: (ref.watch(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'] ?? '-',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
-                      );
-                    },
-                    child: const Icon(
-                      Icons.copy,
-                      size: 18,
-                      color: AppColors.gray500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // 친구 요청 보내기
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.gray100),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isEn ? 'Send Friend Request' : '친구 요청 보내기',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.gray50,
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _idController,
-                            decoration: InputDecoration(
-                              hintText: isEn ? 'Enter friend code...' : '친구 코드를 입력해주세요',
-                              hintStyle: const TextStyle(
-                                color: AppColors.gray400,
-                                fontSize: 13,
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () {
+                          final userCode = (ref.read(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'];
+                          if (userCode == null) return;
+                          
+                          Clipboard.setData(ClipboardData(text: userCode));
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
                               ),
-                              prefixIcon: const Icon(
-                                Icons.search,
-                                color: AppColors.gray400,
+                              actionsAlignment: MainAxisAlignment.center,
+                              content: Text(
+                                isEn ? 'Code copied to clipboard.' : '코드가 클립보드에 복사되었습니다.',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w500),
                               ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(
+                                    isEn ? 'OK' : '확인',
+                                    style: const TextStyle(color: AppColors.primary700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: const Icon(
+                          Icons.copy,
+                          size: 18,
+                          color: AppColors.gray500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // 친구 요청 보내기
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.gray100),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isEn ? 'Send Friend Request' : '친구 요청 보내기',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.gray50,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _idController,
+                                decoration: InputDecoration(
+                                  hintText: isEn ? 'Enter friend code...' : '친구 코드를 입력해주세요',
+                                  hintStyle: const TextStyle(
+                                    color: AppColors.gray400,
+                                    fontSize: 13,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    color: AppColors.gray400,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
                               ),
                             ),
-                            onSubmitted: (value) async {
-                              if (value.isNotEmpty) {
-                                await ref
-                                    .read(friendsViewModelProvider.notifier)
-                                    .addFriend(value);
-                                _idController.clear();
-                              }
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: TextButton(
-                            onPressed: () async {
-                              final value = _idController.text;
-                              if (value.isNotEmpty) {
-                                try {
-                                  await ref
-                                      .read(friendsViewModelProvider.notifier)
-                                      .sendFriendRequest(value);
-                                  _idController.clear();
-                                  if (mounted) {
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: TextButton(
+                                onPressed: () async {
+                                  final value = _idController.text;
+                                  if (value.isEmpty) return;
+                                  
+                                  try {
+                                    await ref
+                                        .read(friendsViewModelProvider.notifier)
+                                        .sendFriendRequest(value);
+                                    _idController.clear();
+                                    
+                                    if (!context.mounted) return;
                                     FocusScope.of(context).unfocus();
                                     showDialog(
                                       context: context,
@@ -230,9 +224,8 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                         actionsAlignment: MainAxisAlignment.center,
                                       ),
                                     );
-                                  }
-                                } catch (e) {
-                                  if (mounted) {
+                                  } catch (e) {
+                                    if (!context.mounted) return;
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
@@ -262,44 +255,49 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                       ),
                                     );
                                   }
-                                }
-                              }
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: AppColors.primary700,
-                              foregroundColor: AppColors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: AppColors.primary700,
+                                  foregroundColor: AppColors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  isEn ? 'Send' : '보내기',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: Text(
-                              isEn ? 'Send' : '보내기',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 30),
+              ]),
             ),
-            const SizedBox(height: 30),
-            // 친구 신청 목록
-            friendRequestsAsync.when(
-              data: (requests) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          ),
+          // 친구 신청 목록
+          friendRequestsAsync.when(
+            data: (requests) {
+              if (requests.isEmpty) {
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              }
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
                     Row(
                       children: [
                         const Icon(
@@ -318,54 +316,78 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                         ),
                       ],
                     ),
-                    if (requests.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: requests.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(color: AppColors.gray50, height: 1),
-                        itemBuilder: (context, index) {
-                          final request = requests[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: AppColors.gray50,
-                                  backgroundImage: AssetImage(
-                                    'assets/images/characters/${request.senderTemplateId}_big.png',
-                                  ),
+                    const SizedBox(height: 16),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: requests.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(color: AppColors.gray50, height: 1),
+                      itemBuilder: (context, index) {
+                        final request = requests[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundColor: AppColors.gray50,
+                                backgroundImage: AssetImage(
+                                  'assets/images/characters/${request.senderTemplateId}_big.png',
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        request.senderName,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.black,
-                                        ),
+                                onBackgroundImageError: (exception, stackTrace) {},
+                                child: const Icon(
+                                  Icons.person,
+                                  color: AppColors.gray300,
+                                  size: 30,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      request.senderName,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.black,
                                       ),
-                                      const SizedBox(height: 4),
-                                                   Row(
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
                                       children: [
                                         GestureDetector(
-                                          onTap: () => ref
-                                              .read(friendsViewModelProvider.notifier)
-                                              .acceptFriendRequest(request),
+                                          onTap: friendsAsync.isLoading 
+                                            ? null 
+                                            : () async {
+                                              try {
+                                                await ref
+                                                    .read(friendsViewModelProvider.notifier)
+                                                    .acceptFriendRequest(request);
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('친구 요청을 수락했습니다.')),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('수락 실패: $e')),
+                                                  );
+                                                }
+                                              }
+                                            },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
                                               vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: AppColors.primary700,
+                                              color: friendsAsync.isLoading 
+                                                ? AppColors.gray300 
+                                                : AppColors.primary700,
                                               borderRadius:
                                                   BorderRadius.circular(15),
                                             ),
@@ -381,9 +403,26 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                         ),
                                         const SizedBox(width: 8),
                                         GestureDetector(
-                                          onTap: () => ref
-                                              .read(friendsViewModelProvider.notifier)
-                                              .declineFriendRequest(request.id),
+                                          onTap: friendsAsync.isLoading 
+                                            ? null 
+                                            : () async {
+                                              try {
+                                                await ref
+                                                    .read(friendsViewModelProvider.notifier)
+                                                    .declineFriendRequest(request.id);
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('친구 요청을 거절했습니다.')),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('거절 실패: $e')),
+                                                  );
+                                                }
+                                              }
+                                            },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
@@ -396,9 +435,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                             ),
                                             child: Text(
                                               isEn ? 'Decline' : '거절',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12,
-                                                color: AppColors.gray600,
+                                                color: friendsAsync.isLoading 
+                                                  ? AppColors.gray300 
+                                                  : AppColors.gray600,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -406,144 +447,170 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                         ),
                                       ],
                                     ),
-                                    ],
-                                  ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 30),
-                  ],
-                );
-              },
-              loading: () => const Center(
+                  ]),
+                ),
+              );
+            },
+            loading: () => const SliverToBoxAdapter(
+              child: Center(
                 child: Padding(
                   padding: EdgeInsets.all(8.0),
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (e, st) => Center(
+            ),
+            error: (e, st) => SliverToBoxAdapter(
+              child: Center(
                 child: Text(
                   isEn ? 'Error loading requests: $e' : '친구 신청 로드 오류: $e',
                   style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
             ),
-            // 내 친구 목록 헤더
-            Row(
-              children: [
-                const Icon(
-                  Icons.people_outline,
-                  size: 20,
-                  color: AppColors.black,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  isEn ? 'My Friends : ${friendsAsync.value?.length ?? 0}' : '내 친구 : ${friendsAsync.value?.length ?? 0}명',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
+          ),
+          // 내 친구 목록 헤더
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.people_outline,
+                        size: 20,
+                        color: AppColors.black,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isEn ? 'My Friends : ${friendsAsync.value?.length ?? 0}' : '내 친구 : ${friendsAsync.value?.length ?? 0}명',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            // 친구 리스트
-            friendsAsync.when(
-              // 1. 데이터ㅓ 성공적으로 가져왔을때
-              data: (friends) => ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: friends.length,
-                separatorBuilder: (context, index) =>
-                    const Divider(color: AppColors.gray50, height: 1),
-                itemBuilder: (context, index) {
-                  final friend = friends[index];
-                  return InkWell(
-                    onTap: () {
-                      context.goNamed(
-                        AppRoute.friendProfile.name,
-                        extra: friend,
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: AppColors.gray50,
-                            backgroundImage: AssetImage(
-                              'assets/images/characters/${friend.characterTemplateId}_big.png',
-                            ),
-                            onBackgroundImageError: (_, __) {
-                              // 이미지 없을 때 폴백 처리는 생략 (기본 배경 유지)
-                            },
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                friend.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
-                                ),
+          ),
+          // 친구 리스트
+          friendsAsync.when(
+            data: (friends) => SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index.isOdd) {
+                      return const Divider(color: AppColors.gray50, height: 1);
+                    }
+                    final itemIndex = index ~/ 2;
+                    final friend = friends[itemIndex];
+                    return InkWell(
+                      onTap: () {
+                        context.pushNamed(
+                          AppRoute.friendProfile.name,
+                          extra: friend,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: AppColors.gray50,
+                              backgroundImage: AssetImage(
+                                'assets/images/characters/${friend.characterTemplateId}_big.png',
                               ),
-                              const SizedBox(height: 4),
-                              Row(
+                              onBackgroundImageError: (exception, stackTrace) {},
+                              child: const Icon(
+                                Icons.person,
+                                color: AppColors.gray300,
+                                size: 30,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
-                                    Icons.eco,
-                                    size: 14,
-                                    color: AppColors.secondaryGreen,
-                                  ),
-                                  const SizedBox(width: 4),
                                   Text(
-                                    '${friend.leafProgress}/${friend.leafMax}',
+                                    friend.name,
                                     style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.gray600,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.black,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Icon(
-                                    Icons.pets,
-                                    size: 14,
-                                    color: AppColors.black,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${friend.pawProgress}/${friend.pawMax}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.gray600,
-                                    ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.eco,
+                                        size: 14,
+                                        color: AppColors.secondaryGreen,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${friend.leafProgress}/${friend.leafMax}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.gray600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Icon(
+                                        Icons.pets,
+                                        size: 14,
+                                        color: AppColors.black,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${friend.pawProgress}/${friend.pawMax}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.gray600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                  childCount: friends.isEmpty ? 0 : friends.length * 2 - 1,
+                ),
               ),
-              // 2. 데이터 불러오는 중일때
-              loading: () => const Center(child: CircularProgressIndicator()),
-              // 3. 오류 발생시
-              error: (e, _) => Center(child: Text(isEn ? 'Error occurred: $e' : '오류 발생: $e')),
             ),
-            const SizedBox(height: 20),
-          ],
-        ),
+            loading: () => const SliverToBoxAdapter(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) => SliverToBoxAdapter(
+              child: Center(child: Text(isEn ? 'Error occurred: $e' : '오류 발생: $e')),
+            ),
+          ),
+          // 하단 네비게이션 바 공간 확보를 위한 여백
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 100),
+          ),
+        ],
       ),
     );
   }

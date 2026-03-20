@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -56,6 +57,14 @@ class AuthRepositoryImpl implements AuthRepository {
       userCode: data?['user_code'],
       hasCharacter: data?['has_character'] ?? false,
       characterSettings: data?['character_settings'],
+      totalSteps: data?['totalSteps'] ?? 0,
+      lastStepUpdateAt: data?['lastStepUpdateAt'] != null
+          ? (data?['lastStepUpdateAt'] as Timestamp).toDate()
+          : null,
+      createdAt: data?['createdAt'] != null
+          ? (data?['createdAt'] as Timestamp).toDate()
+          : null,
+      friends: List<String>.from(data?['friends'] ?? []),
     );
   }
 
@@ -64,19 +73,27 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final userRef = _firestore.collection('users').doc(user.uid);
     final userDoc = await userRef.get();
-
+    
     if (!userDoc.exists) {
       // 신규 유저 초기 데이터
       final String newCode = await _generateUniqueUserCode();
+      
+      String? fcmToken;
+      try {
+        fcmToken = await FcmService.getToken();
+      } catch (e) {
+        log('Failed to get FCM token during signup: $e');
+      }
+
       final data = {
         'id': user.uid,
         'email': user.email,
-        'displayName': user.displayName, // null 대신 소셜 계정 이름 사용
+        'displayName': user.displayName,
         'photoUrl': user.photoURL,
         'user_code': newCode,
         'has_character': false,
         'character_settings': null,
-        'fcmToken': await FcmService.getToken(),
+        'fcmToken': fcmToken,
         'createdAt': FieldValue.serverTimestamp(),
         'lastLoginAt': FieldValue.serverTimestamp(),
       };
@@ -88,9 +105,13 @@ class AuthRepositoryImpl implements AuthRepository {
         'lastLoginAt': FieldValue.serverTimestamp(),
       };
       
-      final token = await FcmService.getToken();
-      if (token != null) {
-        updates['fcmToken'] = token;
+      try {
+        final token = await FcmService.getToken();
+        if (token != null) {
+          updates['fcmToken'] = token;
+        }
+      } catch (e) {
+        log('Failed to get FCM token during login update: $e');
       }
 
       await userRef.update(updates);

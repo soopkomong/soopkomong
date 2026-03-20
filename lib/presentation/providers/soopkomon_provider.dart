@@ -64,6 +64,12 @@ final userSoopkomonProvider = StreamProvider<List<Soopkomon>>((ref) {
   );
 });
 
+/// 5-2. 특정 사용자가 획득한 캐릭터 리스트 관리 (매개변수 기반)
+final friendSoopkomonProvider = StreamProvider.family<List<Soopkomon>, String>((ref, userId) {
+  final repository = ref.watch(soopkomonRepositoryProvider);
+  return repository.getUserSoopkomons(userId);
+});
+
 /// 6. 필터링된 공원 리스트 (조합 프로바이더)
 final filteredLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
   final locationsAsync = ref.watch(locationsProvider);
