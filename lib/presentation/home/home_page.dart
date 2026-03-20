@@ -19,6 +19,7 @@ import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
+import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 
 /// [Presentation Layer] - View
 class HomePage extends ConsumerStatefulWidget {
@@ -435,7 +436,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final isEn = locale == AppLocale.en;
 
     final friendRequests = friendRequestsAsync.value ?? [];
-    final pendingRequests = friendRequests.where((req) => req.status == FriendRequestStatus.pending).toList();
+    final pendingRequests = friendRequests.where((req) => req.status == FriendRequestStatus.pending && !req.notified).toList();
 
     // 언어 변경 시 마커 갱신 트리거
     ref.listen(localeProvider, (prev, next) {
@@ -511,7 +512,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               label: Text('${pendingRequests.length}', style: const TextStyle(fontWeight: FontWeight.bold)),
               child: const Icon(Icons.notifications),
             ),
-            onPressed: () => context.pushNamed(AppRoute.notifications.name),
+            onPressed: () {
+              ref.read(friendsViewModelProvider.notifier).markAllPendingRequestsAsNotified();
+              context.pushNamed(AppRoute.notifications.name);
+            },
             style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
           IconButton(

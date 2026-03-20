@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
-import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
-import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -61,53 +59,7 @@ class NotificationsPage extends ConsumerWidget {
                         req.formattedTimestamp,
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
-                      const SizedBox(width: 8),
-                      if (req.status == FriendRequestStatus.pending) ...[
-                        TextButton(
-                          onPressed: () {
-                            ref
-                                .read(friendsViewModelProvider.notifier)
-                                .acceptFriendRequest(req);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('친구 신청을 수락했습니다.')),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF48B200),
-                              minimumSize: Size.zero,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          child: const Text('수락',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            ref
-                                .read(friendsViewModelProvider.notifier)
-                                .declineFriendRequest(req.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('친구 신청을 거절했습니다.')),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              minimumSize: Size.zero,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          child: const Text('거절'),
-                        ),
-                      ] else ...[
-                        Text(
-                          req.status == FriendRequestStatus.accepted ? '수락됨' : '거절됨',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: req.status == FriendRequestStatus.accepted
-                                ? const Color(0xFF48B200)
-                                : Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+
                     ],
                   ),
                 );

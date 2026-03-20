@@ -2,16 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/domain/entities/friend_request.dart';
+import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/app_bottom_nav_bar.dart';
 
-class MainPage extends ConsumerWidget {
+class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  void _showFriendRequestDialog(BuildContext context, WidgetRef ref, dynamic request) {
+  @override
+  ConsumerState<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends ConsumerState<MainPage> {
+
+  void _showFriendRequestDialog(BuildContext context, WidgetRef ref, FriendRequest request) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -42,7 +50,11 @@ class MainPage extends ConsumerWidget {
         actionsAlignment: MainAxisAlignment.center,
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // 알림 확인 처리 (Firestore 업데이트)
+              ref.read(friendsViewModelProvider.notifier).markNotified(request.id);
+              Navigator.pop(context);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary700,
               foregroundColor: AppColors.white,
@@ -58,7 +70,8 @@ class MainPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+
     // 탭 진입 전 미리 로드 (collection 탭 shimmer 방지)
     ref.watch(locationsProvider);
     ref.watch(soopkomonTemplatesProvider);
@@ -66,13 +79,11 @@ class MainPage extends ConsumerWidget {
     // 실시간 친구 요청 리스닝
     ref.listen(friendRequestProvider, (previous, next) {
       if (next is AsyncData && next.value!.isNotEmpty) {
-        // 가장 최근 요청 하나만 표시
-        final latestRequest = next.value!.first;
-        
-        // 이전 데이터와 비교하여 정말 새로운 요청인지 확인 (간단하게 ID 비교)
-        final previousIds = previous?.value?.map((r) => r.id).toSet() ?? {};
-        if (!previousIds.contains(latestRequest.id)) {
-           _showFriendRequestDialog(context, ref, latestRequest);
+        // 아직 알림이 노출되지 않은 요청(notified == false)에 대해서만 팝업 노출
+        for (final request in next.value!) {
+          if (!request.notified) {
+            _showFriendRequestDialog(context, ref, request);
+          }
         }
       }
     });
@@ -84,11 +95,11 @@ class MainPage extends ConsumerWidget {
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            navigationShell,
+            widget.navigationShell,
             SafeArea(
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: AppBottomNavigationBar(navigationShell: navigationShell),
+                child: AppBottomNavigationBar(navigationShell: widget.navigationShell),
               ),
             ),
           ],

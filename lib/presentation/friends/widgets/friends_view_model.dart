@@ -14,6 +14,9 @@ class FriendModel {
   final int pawProgress; // 얻은 캐릭터
   final int pawMax; // 최대 캐릭터
 
+  final int totalSteps; // 친구의 총 걸음 수
+  final DateTime? friendedAt; // 친구가 된 날짜
+
   FriendModel({
     required this.id,
     required this.name,
@@ -22,18 +25,24 @@ class FriendModel {
     required this.leafMax,
     required this.pawProgress,
     required this.pawMax,
+    this.totalSteps = 0,
+    this.friendedAt,
   });
 
-  factory FriendModel.fromFirestore(DocumentSnapshot doc) {
+  factory FriendModel.fromFirestore(DocumentSnapshot doc, {DateTime? friendedAtOverride}) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     return FriendModel(
       id: doc.id,
       name: data['displayName'] ?? '이름 없음',
-      characterTemplateId: data['templateId'] ?? '001',
+      characterTemplateId: data['templateId'] ?? '007',
       leafProgress: data['leafProgress'] ?? 0,
       leafMax: data['leafMax'] ?? 50,
       pawProgress: data['pawProgress'] ?? 0,
       pawMax: data['pawMax'] ?? 30,
+      totalSteps: data['totalSteps'] ?? 0,
+      friendedAt: friendedAtOverride ?? (data['friendedAt'] != null
+          ? (data['friendedAt'] as Timestamp).toDate()
+          : null),
     );
   }
 }
@@ -51,19 +60,32 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
         final List<String> friendIds = List<String>.from(data?['friends'] ?? [])
             .where((id) => id.trim().isNotEmpty)
             .toList();
+        final Map<String, dynamic> friendships = data?['friendships'] ?? {};
 
         if (friendIds.isEmpty) return [];
 
         final List<FriendModel> friends = [];
-        for (var friendId in friendIds) {
-          final friendDoc = await FirebaseFirestore.instance
+        
+        for (var i = 0; i < friendIds.length; i += 30) {
+          final chunk = friendIds.sublist(i, i + 30 > friendIds.length ? friendIds.length : i + 30);
+          final querySnapshot = await FirebaseFirestore.instance
               .collection('users')
-              .doc(friendId)
+              .where(FieldPath.documentId, whereIn: chunk)
               .get();
-          if (friendDoc.exists) {
-            friends.add(FriendModel.fromFirestore(friendDoc));
-          }
+          
+          friends.addAll(querySnapshot.docs.map((doc) {
+            final friendshipTimestamp = friendships[doc.id];
+            DateTime? friendedAt;
+            if (friendshipTimestamp is Timestamp) {
+              friendedAt = friendshipTimestamp.toDate();
+            }
+            return FriendModel.fromFirestore(doc, friendedAtOverride: friendedAt);
+          }));
         }
+        
+        // 추가된 순서대로 정렬 (friendIds 리스트의 인덱스 기준)
+        friends.sort((a, b) => friendIds.indexOf(a.id).compareTo(friendIds.indexOf(b.id)));
+        
         return friends;
       },
       loading: () => state.value ?? [],
@@ -131,7 +153,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .collection('users')
           .doc(currentUser.id)
           .get();
-      final myTemplateId = myDoc.data()?['templateId'] ?? '001';
+      final myTemplateId = myDoc.data()?['templateId'] ?? '007';
 
       // 친구 요청 문서 생성
       final request = FriendRequest(
@@ -141,6 +163,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
         senderTemplateId: myTemplateId,
         receiverId: targetId,
         status: FriendRequestStatus.pending,
+        notified: false,
         timestamp: DateTime.now(),
       );
 
@@ -154,8 +177,34 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
 
   // 친구 요청 수락
   Future<void> acceptFriendRequest(FriendRequest request) async {
+    final currentUser = ref.read(authRepositoryProvider).currentUser;
+
+    print('-----------------------------------------');
+    print('🚀 [DEBUG] 1. 수락 프로세스 시작');
+    print('📍 [DEBUG] 요청 문서 ID: ${request.id}');
+    print('📍 [DEBUG] 보낸 사람 ID(Sender): ${request.senderId}');
+    print('📍 [DEBUG] 받는 사람 ID(Me): ${currentUser?.id}');
+
+    if (currentUser == null) {
+      print('❌ [DEBUG] 에러: 로그인된 사용자가 없습니다.');
+      return;
+    }
+
+    // 본인에게 온 요청인지 확인 (ID 불일치 방지)
+    if (request.receiverId != currentUser.id) {
+      print('❌ [DEBUG] 에러: 본인에게 온 요청이 아닙니다.');
+      throw Exception('본인에게 온 친구 요청만 수락할 수 있습니다.');
+    }
+
+    if (request.id.isEmpty) {
+      print('❌ [DEBUG] 에러: request.id가 비어있습니다. Firestore 문서를 수정할 수 없습니다.');
+      throw Exception('요청 ID가 유효하지 않습니다.');
+    }
+
     try {
       final batch = FirebaseFirestore.instance.batch();
+
+      print('🛠️ [DEBUG] 2. Batch 작업 준비 중...');
 
       // 1. 요청 상태 변경
       final requestRef = FirebaseFirestore.instance
@@ -163,25 +212,38 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .doc(request.id);
       batch.update(requestRef, {'status': 'accepted'});
 
-      // 2. 내 친구 목록에 추가
+      // 2. 내 친구 목록 및 날짜 추가
       final myRef = FirebaseFirestore.instance
           .collection('users')
-          .doc(request.receiverId);
+          .doc(currentUser.id);
       batch.update(myRef, {
-        'friends': FieldValue.arrayUnion([request.senderId])
+        'friends': FieldValue.arrayUnion([request.senderId]),
+        'friendships.${request.senderId}': FieldValue.serverTimestamp(),
       });
+      print('📍 friendships.${request.senderId} 에 서버 시간 추가');
 
-      // 3. 상대방 친구 목록에 추가
+      // 3. 상대방 친구 목록 및 날짜 추가
       final senderRef = FirebaseFirestore.instance
           .collection('users')
           .doc(request.senderId);
       batch.update(senderRef, {
-        'friends': FieldValue.arrayUnion([request.receiverId])
+        'friends': FieldValue.arrayUnion([currentUser.id]),
+        'friendships.${currentUser.id}': FieldValue.serverTimestamp(),
       });
+      print('📍 friendships.${currentUser.id} 에 서버 시간 추가 (상대방 측)');
+
+      print('⚙️ [DEBUG] 3. Batch Commit 시도...');
 
       await batch.commit();
-      ref.invalidateSelf();
-    } catch (e) {
+
+      print('✅ [DEBUG] 4. 수락 완료! Firestore 데이터 변경 성공');
+      print('-----------------------------------------');
+      
+    } catch (e, stack) {
+      print('❌ [DEBUG] 5. 수락 처리 중 치명적 에러 발생!');
+      print('❌ [DEBUG] 에러 내용: $e');
+      print('❌ [DEBUG] 스택 트레이스: $stack');
+      print('-----------------------------------------');
       rethrow;
     }
   }
@@ -198,10 +260,95 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
     }
   }
 
-  // (기존 addFriend 메서드는 유지하되 내부 로직은 sendFriendRequest 호출로 가이드하거나 삭제 가능)
-  // 여기서는 호환성을 위해 유지하거나 sendFriendRequest로 대체 안내
+  // 모든 대기 중인 친구 요청 알림 확인 처리
+  Future<void> markAllPendingRequestsAsNotified() async {
+    final currentUser = ref.read(authRepositoryProvider).currentUser;
+    if (currentUser == null) return;
+
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .where('receiverId', isEqualTo: currentUser.id)
+          .where('status', isEqualTo: 'pending')
+          .where('notified', isEqualTo: false)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) return;
+
+      final batch = FirebaseFirestore.instance.batch();
+      for (var doc in querySnapshot.docs) {
+        batch.update(doc.reference, {'notified': true});
+      }
+      await batch.commit();
+    } catch (e) {
+      print('❌ [DEBUG] markAllPendingRequestsAsNotified 에러: $e');
+    }
+  }
+
+  // 친구 요청 알림 확인 처리 (팝업 노출 완료 표시)
+  Future<void> markNotified(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(requestId)
+          .update({'notified': true});
+    } catch (e) {
+      print('❌ [DEBUG] markNotified 에러: $e');
+    }
+  }
+
   Future<void> addFriend(String code) async {
     await sendFriendRequest(code);
+  }
+
+  // 친구 삭제
+  Future<void> removeFriend(String friendId) async {
+    final currentUser = ref.read(authRepositoryProvider).currentUser;
+    if (currentUser == null) return;
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      // 1. 내 친구 목록 및 날짜 데이터 삭제
+      final myRef = FirebaseFirestore.instance.collection('users').doc(currentUser.id);
+      batch.update(myRef, {
+        'friends': FieldValue.arrayRemove([friendId]),
+        'friendships.$friendId': FieldValue.delete(),
+      });
+
+      // 2. 상대방 친구 목록 및 날짜 데이터 삭제
+      final friendRef = FirebaseFirestore.instance.collection('users').doc(friendId);
+      batch.update(friendRef, {
+        'friends': FieldValue.arrayRemove([currentUser.id]),
+        'friendships.${currentUser.id}': FieldValue.delete(),
+      });
+
+      // 3. 관련 친구 요청 문서 삭제 (재신청이 가능하도록 정리)
+      final requestsQuery = await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .where('senderId', whereIn: [currentUser.id, friendId])
+          .get();
+
+      for (var doc in requestsQuery.docs) {
+        final data = doc.data();
+        final senderId = data['senderId'];
+        final receiverId = data['receiverId'];
+
+        // 내 ID와 상대방 ID가 서로 교차되어 있는지 확인 (A->B or B->A)
+        if ((senderId == currentUser.id && receiverId == friendId) ||
+            (senderId == friendId && receiverId == currentUser.id)) {
+          batch.delete(doc.reference);
+        }
+      }
+
+      await batch.commit();
+
+      // UI 즉시 업데이트를 위해 리프레시
+      ref.invalidateSelf();
+    } catch (e) {
+      print('❌ [DEBUG] 친구 삭제 중 에러 발생: $e');
+      rethrow;
+    }
   }
 }
 
