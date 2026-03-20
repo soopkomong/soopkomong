@@ -1,64 +1,32 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/explore/widgets/explore_park_card.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 
-class ExplorePage extends StatefulWidget {
+class ExplorePage extends ConsumerStatefulWidget {
   const ExplorePage({super.key});
 
   @override
-  State<ExplorePage> createState() => _ExplorePageState();
+  ConsumerState<ExplorePage> createState() => _ExplorePageState();
 }
 
-class _ExplorePageState extends State<ExplorePage> {
-  List<dynamic> _allLocations = [];
-  List<dynamic> _locations = [];
+class _ExplorePageState extends ConsumerState<ExplorePage> {
   Region _selectedRegion = Region.capital;
   String _searchQuery = '';
-  bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadLocations();
-  }
-
-  Future<void> _loadLocations() async {
-    try {
-      final String response = await rootBundle.loadString(
-        'assets/locations.json',
-      );
-      final data = json.decode(response);
-      setState(() {
-        _allLocations = data['locations'] ?? [];
-        _filterLocations();
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error loading locations: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _filterLocations() {
+  void _onRegionChanged(Region region) {
     setState(() {
-      _locations = _allLocations.where((location) {
-        final matchesRegion = location['region'] == _selectedRegion.label;
-        final title = (location['title'] ?? '').toString().toLowerCase();
-        final matchesSearch =
-            _searchQuery.isEmpty || title.contains(_searchQuery.toLowerCase());
-        return matchesRegion && matchesSearch;
-      }).toList();
+      _selectedRegion = region;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final locationsAsync = ref.watch(locationsProvider);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: SafeArea(
@@ -67,7 +35,7 @@ class _ExplorePageState extends State<ExplorePage> {
           child: Column(
             children: [
               const SizedBox(height: 24),
-              // 상단 헤더 (중앙 정렬 해결)
+              // 상단 헤더
               Center(
                 child: Column(
                   children: [
@@ -99,8 +67,9 @@ class _ExplorePageState extends State<ExplorePage> {
                   child: TextField(
                     textAlignVertical: TextAlignVertical.center,
                     onChanged: (value) {
-                      _searchQuery = value;
-                      _filterLocations();
+                      setState(() {
+                        _searchQuery = value;
+                      });
                     },
                     decoration: const InputDecoration(
                       hintText: '검색어를 입력해주세요',
@@ -130,97 +99,63 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               const SizedBox(height: 16),
               RegionFilterBar(
-                onChanged: (region) {
-                  setState(() {
-                    _selectedRegion = region;
-                    _filterLocations();
-                  });
-                },
+                onChanged: _onRegionChanged,
               ),
               const SizedBox(height: 16),
               // 공원 리스트
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: _locations.length,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.only(bottom: 100),
-                      itemBuilder: (context, index) {
-                        final location = _locations[index];
-                        final String id = location['id']?.toString() ?? '';
-                        final String region = location['region'] ?? '';
-                        final String name = location['title'] ?? '';
-                        final String description = location['summary'] ?? '';
-                        final String imageUrl =
-                            (location['imageUrls'] as List<dynamic>?)
-                                    ?.isNotEmpty ==
-                                true
-                            ? (location['imageUrls'] as List<dynamic>).first
-                                  .toString()
-                            : '';
-                        final String address = location['address'] ?? '';
-                        final String information =
-                            location['Information'] ?? '';
-                        final String tel = location['tel'] ?? '';
-                        final String tel1 = location['tel1'] ?? '';
-                        final String tel2 = location['tel2'] ?? '';
-                        final Map<String, dynamic> navi =
-                            location['navi'] ?? {};
-                        final String naviLoc = navi['loc'] ?? '';
-                        final double? naviLat = navi['lat'] != null
-                            ? (navi['lat'] as num).toDouble()
-                            : null;
-                        final double? naviLng = navi['lng'] != null
-                            ? (navi['lng'] as num).toDouble()
-                            : null;
-                        final List<String> petIds =
-                            (location['petIds'] as List<dynamic>?)
-                                ?.map((e) => e.toString())
-                                .toList() ??
-                            [];
+              locationsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('에러 발생: $err')),
+                data: (allLocations) {
+                  final filteredLocations = allLocations.where((loc) {
+                    final matchesRegion = loc.region == _selectedRegion.label;
+                    final matchesSearch = _searchQuery.isEmpty ||
+                        loc.name.toLowerCase().contains(_searchQuery.toLowerCase());
+                    return matchesRegion && matchesSearch;
+                  }).toList();
 
-                        return ExploreParkCard(
-                          region: region,
-                          name: name,
-                          description: description,
-                          imageUrl: imageUrl,
-                          onTap: () {
-                            // JSON의 imageUrls 배열 직접 사용
-                            final List<String> imgUrls =
-                                (location['imageUrls'] as List<dynamic>?)
-                                    ?.map((e) => e.toString())
-                                    .where((url) => url.isNotEmpty)
-                                    .toList() ??
-                                [];
-
-                            showModalBottomSheet(
-                              context: context,
-                              useRootNavigator: true,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) => ParkDetailSheet(
-                                id: id,
-                                name: name,
-                                description: description,
-                                imageUrl: imageUrl,
-                                imageUrls: imgUrls,
-                                address: address,
-                                information: information,
-                                tel: tel,
-                                tel1: tel1,
-                                tel2: tel2,
-                                isVisited: true,
-                                naviLoc: naviLoc,
-                                naviLat: naviLat,
-                                naviLng: naviLng,
-                                petIds: petIds,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                  return ListView.builder(
+                    itemCount: filteredLocations.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 100),
+                    itemBuilder: (context, index) {
+                      final location = filteredLocations[index];
+                      return ExploreParkCard(
+                        region: location.region,
+                        name: location.name,
+                        description: location.summary,
+                        imageUrl: location.imageUrl,
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            useRootNavigator: true,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => ParkDetailSheet(
+                              id: location.id.toString(),
+                              name: location.name,
+                              description: location.summary,
+                              imageUrl: location.imageUrl,
+                              imageUrls: location.imageUrls,
+                              address: location.address,
+                              information: location.information,
+                              tel: location.tel,
+                              tel1: location.tel1,
+                              tel2: location.tel2,
+                              isVisited: location.isVisited,
+                              naviLoc: location.naviLoc,
+                              naviLat: location.naviLat,
+                              naviLng: location.naviLng,
+                              petIds: location.petIds,
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ],
           ),
         ),

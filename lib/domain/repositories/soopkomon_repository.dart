@@ -1,3 +1,4 @@
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 
@@ -6,6 +7,6 @@ abstract class SoopkomonRepository {
   /// 모든 숲코몽 템플릿 로드
   Future<List<SoopkomonTemplate>> getSoopkomonTemplates();
 
-  /// 모든 공원 위치 데이터 로드
-  Future<List<Location>> getLocations();
+  /// 모든 공원 위치 데이터 로드 (언어 설정 반영)
+  Future<List<Location>> getLocations({AppLocale locale = AppLocale.ko});
 }

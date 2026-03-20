@@ -1,31 +1,14 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:soopkomong/domain/entities/location.dart';
-import 'package:soopkomong/domain/repositories/location_repository.dart';
-import 'package:soopkomong/domain/usecases/get_locations_usecase.dart';
-import 'package:soopkomong/data/repositories/location_repository_impl.dart';
-import 'package:soopkomong/data/datasources/local_location_datasource.dart';
-import 'package:pedometer/pedometer.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' as geo;
+import 'package:pedometer/pedometer.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
-
-/// Providers for DI
-final locationDataSourceProvider = Provider<LocalLocationDataSource>((ref) {
-  return LocalLocationDataSourceImpl();
-});
-
-final locationRepositoryProvider = Provider<LocationRepository>((ref) {
-  return LocationRepositoryImpl(ref.watch(locationDataSourceProvider));
-});
-
-final getLocationsUseCaseProvider = Provider<GetLocationsUseCase>((ref) {
-  return GetLocationsUseCase(ref.watch(locationRepositoryProvider));
-});
 
 /// Home State
 class HomeState {
@@ -100,29 +83,43 @@ class HomeState {
 }
 
 /// [Presentation Layer] - ViewModel (Notifier)
-/// 화면(View)에서 보여줄 상태(State)를 관리하고 비즈니스 로직(UseCase)을 호출하는 역할입니다.
-/// Riverpod의 [Notifier]를 사용하여 상태 관리를 수행합니다.
 class HomeNotifier extends Notifier<HomeState> {
-  StreamSubscription<StepCount>? _stepSubscription;
   StreamSubscription<geo.Position>? _positionSubscription;
+  StreamSubscription<StepCount>? _stepSubscription;
 
   @override
   HomeState build() {
+    // 전역 locationsProvider를 감시하여 언어 변경 시 상태 자동 갱신
+    ref.listen(locationsProvider, (prev, next) {
+      next.whenData((locations) {
+        state = state.copyWith(
+          locations: locations,
+          isLoading: false,
+        );
+      });
+    });
+
+    final locationsAsync = ref.watch(locationsProvider);
+
     ref.onDispose(() {
       _stepSubscription?.cancel();
       _positionSubscription?.cancel();
     });
-    return HomeState(isLoading: false, locations: []);
+
+    return HomeState(
+      isLoading: locationsAsync.isLoading,
+      locations: locationsAsync.value ?? [],
+    );
   }
 
+  /// 데이터 로드 (실제로는 build에서 초기값 설정 및 감시 중이므로 수동 트리거용)
   Future<void> loadData() async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-    try {
-      final useCase = ref.read(getLocationsUseCaseProvider);
-      final locations = await useCase();
-      state = state.copyWith(isLoading: false, locations: locations);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: '데이터 로드 실패: $e');
+    final locationsAsync = ref.read(locationsProvider);
+    if (locationsAsync.hasValue) {
+      state = state.copyWith(
+        locations: locationsAsync.value,
+        isLoading: false,
+      );
     }
   }
 
