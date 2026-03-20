@@ -6,6 +6,7 @@ import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -516,23 +517,20 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                       'assets/images/character_silhouette.png',
                                     );
 
-                                    if (template != null &&
-                                        template.actualImagePath.isNotEmpty) {
-                                      imageWidget = Image.asset(
-                                        template.actualImagePath,
+                                    if (template != null) {
+                                      imageWidget = SoopkomonImage(
+                                        assetPath: template.actualImagePath,
+                                        remoteUrl: template.remoteImagePath,
+                                        fit: BoxFit.contain,
                                         color: isAcquired
                                             ? null
-                                            : Colors.black.withValues(
-                                                alpha: 0.7,
-                                              ),
+                                            : Colors.black.withValues(alpha: 0.7),
                                         colorBlendMode: isAcquired
                                             ? null
                                             : BlendMode.srcIn,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Image.asset(
-                                            'assets/images/character_silhouette.png',
-                                          );
-                                        },
+                                        errorWidget: Image.asset(
+                                          'assets/images/character_silhouette.png',
+                                        ),
                                       );
                                     }
 

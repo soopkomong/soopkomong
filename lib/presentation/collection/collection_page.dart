@@ -292,7 +292,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
       return CollectionProgressBadge(
         currentCount: tabIndex == 0
             ? locations.where((l) => l.isVisited).length
-            : userCharacters.length,
+            : userCharacters.map((c) => c.templateId).toSet().length,
         totalCount: tabIndex == 0 ? locations.length : templates.length,
         iconPath: tabIndex == 0
             ? 'assets/images/park.png'

@@ -270,6 +270,15 @@ class HomeNotifier extends Notifier<HomeState> {
       return;
     }
 
+    // 이미 해당 templateId 보유 중이면 스킵
+    final userPets = ref.read(userSoopkomonProvider).value ?? [];
+    final alreadyHas = userPets.any((p) => p.templateId == park.petIds.first);
+    if (alreadyHas) {
+      debugPrint('[디버그] _acquirePet 중단: 이미 보유한 숲코몽');
+      state = state.copyWith(isPetAcquiredInCurrentPark: true);
+      return;
+    }
+
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
     if (!templatesAsync.hasValue) {
       debugPrint('[디버그] _acquirePet 중단: templatesAsync 데이터가 아직 로드되지 않음');

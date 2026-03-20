@@ -77,7 +77,11 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
   @override
   Future<List<String>> getParkTitlesByPetId(String petId) async {
     final locations = await getLocations();
-    return locations
+    final uniqueMap = <int, Location>{};
+    for (var loc in locations) {
+      uniqueMap[loc.id] = loc;
+    }
+    return uniqueMap.values
         .where((loc) => loc.petIds.contains(petId))
         .map((loc) => loc.name)
         .toList();
