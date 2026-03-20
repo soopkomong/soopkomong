@@ -5,6 +5,7 @@ import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
 import 'package:soopkomong/data/models/location_model.dart';
 import 'package:soopkomong/data/models/soopkomon_template_model.dart';
 import 'package:soopkomong/domain/entities/location.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
 
@@ -17,12 +18,8 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<SoopkomonTemplate>> getSoopkomonTemplates() async {
-    // 템플릿은 아직 로컬 유지 (필요시 Firestore 이전 가능)
-    final String response = await rootBundle.loadString(
-      'assets/templates.json',
-    );
+    final String response = await rootBundle.loadString('assets/templates.json');
     final List<dynamic> templatesJson = json.decode(response) as List<dynamic>;
-
     return templatesJson
         .map((json) => SoopkomonTemplateModel.fromJson(json).toEntity())
         .toList();
@@ -30,7 +27,7 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
 
   @override
   Future<List<Location>> getLocations({AppLocale locale = AppLocale.ko}) async {
-    // 1. 먼저 Firestore에서 데이터를 시도합니다. (locale에 해당하는 컬렉션 사용)
+    // 1. 먼저 Firestore에서 데이터를 시도합니다.
     try {
       final remoteLocations = await _remoteDataSource.getRemoteLocations(locale: locale);
       if (remoteLocations.isNotEmpty) {
@@ -75,5 +72,67 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
     }
 
     return localJsonList.map((json) => LocationModel.fromJson(json as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<String>> getParkTitlesByPetId(String petId) async {
+    final locations = await getLocations();
+    final uniqueMap = <int, Location>{};
+    for (var loc in locations) {
+      uniqueMap[loc.id] = loc;
+    }
+    return uniqueMap.values
+        .where((loc) => loc.petIds.contains(petId))
+        .map((loc) => loc.name)
+        .toList();
+  }
+
+  @override
+  Stream<List<Soopkomon>> getUserSoopkomons(String userId) {
+    return _remoteDataSource.firestore
+        .collection('users')
+        .doc(userId)
+        .collection('acquired_soopkomons')
+        .orderBy('discoveredAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Soopkomon.fromMap(doc.data(), doc.id);
+      }).toList();
+    });
+  }
+
+  @override
+  Future<void> addSoopkomon(String userId, Soopkomon soopkomon) async {
+    await _remoteDataSource.firestore
+        .collection('users')
+        .doc(userId)
+        .collection('acquired_soopkomons')
+        .doc(soopkomon.instanceId)
+        .set(soopkomon.toMap());
+  }
+
+  @override
+  Future<void> updateSoopkomonSteps(
+    String userId,
+    String instanceId,
+    int steps,
+  ) async {
+    await _remoteDataSource.firestore
+        .collection('users')
+        .doc(userId)
+        .collection('acquired_soopkomons')
+        .doc(instanceId)
+        .update({'currentTotalSteps': steps});
+  }
+
+  @override
+  Future<void> markSoopkomonAsHatched(String userId, String instanceId) async {
+    await _remoteDataSource.firestore
+        .collection('users')
+        .doc(userId)
+        .collection('acquired_soopkomons')
+        .doc(instanceId)
+        .update({'isHatched': true});
   }
 }

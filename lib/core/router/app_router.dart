@@ -23,41 +23,30 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final userAsync = ref.watch(userProvider);
+  final notifier = ValueNotifier<AppUser?>(ref.read(userProvider).value);
+  ref.listen<AsyncValue<AppUser?>>(userProvider, (_, next) {
+    notifier.value = next.value;
+  });
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
-      final user = userAsync.value;
+      final user = notifier.value;
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
       if (user == null) {
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
-
-      // TODO: 임시로 캐릭터 생성 화면 우회 (홈으로 바로 이동)
-      /*
-      if (!user.hasCharacter) {
-        return isCustomizing ? null : AppRoute.characterCustomize.path;
-      }
-      */
-
-      // 로그인 페이지에 있거나, 모든 온보딩이 끝났는데 커스텀 페이지에 있는 경우 홈으로
-      // (온보딩 페이지에 있는 경우는 명시적으로 완료할 때까지 유지하도록 isOnboarding 제외)
       if (isLoggingIn) {
         return AppRoute.home.path;
       }
 
       return null;
     },
-    refreshListenable: userAsync.when(
-      data: (user) => ValueNotifier<AppUser?>(user),
-      error: (_, __) => ValueNotifier<AppUser?>(null),
-      loading: () => ValueNotifier<AppUser?>(null),
-    ),
+    refreshListenable: notifier,
     observers: [routeObserver],
     routes: [
       StatefulShellRoute.indexedStack(

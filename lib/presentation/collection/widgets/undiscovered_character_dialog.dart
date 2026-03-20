@@ -1,21 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
 /// 미획득 캐릭터를 탭했을 때 표시되는 팝업 다이얼로그
 class UndiscoveredCharacterDialog extends StatelessWidget {
+  final SoopkomonTemplate template;
   final List<String> availableParks;
 
-  const UndiscoveredCharacterDialog({super.key, required this.availableParks});
+  const UndiscoveredCharacterDialog({
+    super.key,
+    required this.template,
+    required this.availableParks,
+  });
 
   /// 팝업을 간편하게 호출하기 위한 정적 메서드
   static Future<void> show(
     BuildContext context, {
+    required SoopkomonTemplate template,
     required List<String> availableParks,
   }) {
     return showDialog(
       context: context,
       barrierColor: Colors.black54,
-      builder: (context) =>
-          UndiscoveredCharacterDialog(availableParks: availableParks),
+      builder: (context) => UndiscoveredCharacterDialog(
+        template: template,
+        availableParks: availableParks,
+      ),
     );
   }
 
@@ -41,13 +52,22 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // 캐릭터 실루엣 이미지
+            // 캐릭터 실루엣 이미지 (동적 연동)
             SizedBox(
               width: 120,
               height: 120,
-              child: Image.asset(
-                'assets/images/character_silhouette.png',
+              child: SoopkomonImage(
+                assetPath: template.actualImagePath,
+                remoteUrl: template.remoteImagePath,
                 fit: BoxFit.contain,
+                color: Colors.black.withValues(alpha: 0.7),
+                colorBlendMode: BlendMode.srcIn,
+                errorWidget: Image.asset(
+                  'assets/images/character_silhouette.png',
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 
@@ -70,22 +90,28 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: AppColors.primary50, // 연두색 배경
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 children: [
                   const Text(
                     '발견 가능한 공원',
-                    style: TextStyle(fontSize: 12, color: Colors.black45),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.black45,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    availableParks.join(', '),
+                    availableParks.isEmpty
+                        ? '정보 없음'
+                        : availableParks.join(', '),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),

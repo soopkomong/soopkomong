@@ -32,8 +32,40 @@ class Soopkomon {
   });
 
   // 3. 실시간 계산 필드 (Getter)
-  // 발견 이후 함께한 걸음수 = (현재 총 걸음수 - 발견 당시 걸음수)
   int get traveledSteps => currentTotalSteps - stepsAtDiscovery;
+
+  /// Firestore 데이터에서 객체 생성
+  factory Soopkomon.fromMap(Map<String, dynamic> map, String id) {
+    return Soopkomon(
+      instanceId: id,
+      templateId: map['templateId'] ?? '',
+      name: map['name'] ?? '',
+      discoveredSpotId: map['discoveredSpotId'] ?? '',
+      discoveredSpotName: map['discoveredSpotName'] ?? '',
+      discoveredAddr: map['discoveredAddr'] ?? '',
+      discoveredAt: map['discoveredAt'] != null
+          ? (map['discoveredAt'] as dynamic).toDate()
+          : DateTime.now(),
+      stepsAtDiscovery: map['stepsAtDiscovery'] ?? 0,
+      currentTotalSteps: map['currentTotalSteps'] ?? 0,
+      isHatched: map['isHatched'] ?? false,
+    );
+  }
+
+  /// Firestore 저장을 위한 Map 변환
+  Map<String, dynamic> toMap() {
+    return {
+      'templateId': templateId,
+      'name': name,
+      'discoveredSpotId': discoveredSpotId,
+      'discoveredSpotName': discoveredSpotName,
+      'discoveredAddr': discoveredAddr,
+      'discoveredAt': discoveredAt, // Firestore Timestamp 자동 변환됨
+      'stepsAtDiscovery': stepsAtDiscovery,
+      'currentTotalSteps': currentTotalSteps,
+      'isHatched': isHatched,
+    };
+  }
 
   /// 상태 업데이트를 위한 copyWith
   Soopkomon copyWith({

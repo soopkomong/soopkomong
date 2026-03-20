@@ -4,6 +4,7 @@ import 'package:soopkomong/data/models/location_model.dart';
 
 /// [Data Layer] - Remote DataSource Interface
 abstract class RemoteLocationDataSource {
+  FirebaseFirestore get firestore; // Firestore 인스턴스 노출
   Future<List<LocationModel>> getRemoteLocations({AppLocale locale = AppLocale.ko});
   Stream<List<LocationModel>> watchRemoteLocations({AppLocale locale = AppLocale.ko});
   Future<void> saveLocation(LocationModel location, {AppLocale locale = AppLocale.ko});
@@ -18,6 +19,9 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
   String _getCollectionName(AppLocale locale) {
     return locale == AppLocale.en ? 'locations_en' : 'locations';
   }
+
+  @override
+  FirebaseFirestore get firestore => _firestore;
 
   @override
   Future<List<LocationModel>> getRemoteLocations({AppLocale locale = AppLocale.ko}) async {
@@ -60,7 +64,7 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
       },
       'isVisited': location.isVisited,
     };
-    
+
     await _firestore.collection(_getCollectionName(locale)).doc(location.id.toString()).set(data);
   }
 }

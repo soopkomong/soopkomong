@@ -15,14 +15,12 @@ import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 
 /// [Presentation Layer] - View
-/// 사용자에게 직접 보여지는 화면을 구성하는 위젯입니다.
-/// flutter_riverpod의 [ConsumerStatefulWidget]을 사용하여 ViewModel의 상태를 구독하며,
-/// 비즈니스 로직과 상태 관리는 [HomeViewModel]에 모두 위임하고 렌더링에만 집중합니다.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -43,13 +41,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // 첫 프레임 렌더링 후 비동기로 데이터 로드 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeViewModelProvider.notifier).loadData();
       ref.read(homeViewModelProvider.notifier).startTracking();
     });
 
-    // 1분(60초)마다 현재 시간 확인하여 테마 갱신
     _themeTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mapboxMap != null) {
         _applyDayNightTheme(mapboxMap!);
@@ -71,117 +67,111 @@ class _HomePageState extends ConsumerState<HomePage> {
     _isAddingMarkers = true;
 
     try {
-      // 매니저 초기화 및 기존 마커 제거
-    if (polygonAnnotationManager == null) {
-      polygonAnnotationManager = await mapboxMap!.annotations.createPolygonAnnotationManager();
-    } else {
-      await polygonAnnotationManager?.deleteAll();
-    }
+      if (polygonAnnotationManager == null) {
+        polygonAnnotationManager = await mapboxMap!.annotations.createPolygonAnnotationManager();
+      } else {
+        await polygonAnnotationManager?.deleteAll();
+      }
 
-    if (pointAnnotationManager == null) {
-      pointAnnotationManager = await mapboxMap!.annotations.createPointAnnotationManager();
-    } else {
-      await pointAnnotationManager?.deleteAll();
-    }
+      if (pointAnnotationManager == null) {
+        pointAnnotationManager = await mapboxMap!.annotations.createPointAnnotationManager();
+      } else {
+        await pointAnnotationManager?.deleteAll();
+      }
 
-    // 탭 이벤트 등록 (매번 호출하여 최신 locations, templates 캡처)
-    pointAnnotationManager?.tapEvents(
-      onTap: (PointAnnotation annotation) {
-        final index = _markerIndexMap[annotation.id];
-        if (index != null) {
-          _showLocationDetails(index);
+      pointAnnotationManager?.tapEvents(
+        onTap: (PointAnnotation annotation) {
+          final index = _markerIndexMap[annotation.id];
+          if (index != null) {
+            _showLocationDetails(index);
+          }
+        },
+      );
+
+      List<PointAnnotationOptions> options = [];
+
+      String getEggTypeLabel(Location loc) {
+        if (loc.petIds.isEmpty) return '기본';
+        try {
+          final template = templates.firstWhere(
+            (t) => t.templateId == loc.petIds.first,
+          );
+          return template.eggType.label;
+        } catch (_) {
+          return '기본';
         }
-      },
-    );
-
-    List<PointAnnotationOptions> options = [];
-
-    // 템플릿의 eggType 라벨을 가져오는 헬퍼 로직
-    String getEggTypeLabel(Location loc) {
-      if (loc.petIds.isEmpty) return '기본';
-      try {
-        final template = templates.firstWhere(
-          (t) => t.templateId == loc.petIds.first,
-        );
-        return template.eggType.label;
-      } catch (_) {
-        return '기본';
       }
-    }
 
-    // 커스텀 마커 생성 및 등록
-    final Set<String> uniqueTypes = locations
-        .map((loc) => getEggTypeLabel(loc))
-        .toSet();
-    final Map<String, String> typeToImageId = {};
+      final Set<String> uniqueTypes = locations
+          .map((loc) => getEggTypeLabel(loc))
+          .toSet();
+      final Map<String, String> typeToImageId = {};
 
-    for (var type in uniqueTypes) {
-      final String imageId =
-          'icon_marker_${type}_${DateTime.now().millisecondsSinceEpoch}';
-      final Uint8List markerBytes = await createIconMarkerBitmap(
-        Icons.location_pin,
-        _getPetTypeColor(type),
-        size: 150.0,
-      );
-
-      try {
-        await mapboxMap!.style.addStyleImage(
-          imageId,
-          3.0,
-          MbxImage(width: 150, height: 150, data: markerBytes),
-          false,
-          [],
-          [],
-          null,
+      for (var type in uniqueTypes) {
+        final String imageId =
+            'icon_marker_${type}_${DateTime.now().millisecondsSinceEpoch}';
+        final Uint8List markerBytes = await createIconMarkerBitmap(
+          Icons.location_pin,
+          _getPetTypeColor(type),
+          size: 150.0,
         );
-      } catch (_) {}
-      typeToImageId[type] = imageId;
-    }
 
-    for (var loc in locations) {
-      final point = Point(coordinates: Position(loc.lng, loc.lat));
-      final eggTypeLabel = getEggTypeLabel(loc);
-
-      options.add(
-        PointAnnotationOptions(
-          geometry: point,
-          iconImage: typeToImageId[eggTypeLabel],
-          iconSize: 1.0,
-        ),
-      );
-    }
-
-    final annotations = await pointAnnotationManager?.createMulti(options) ?? [];
-
-    // 마커 ID와 인덱스 매핑 저장 (최신 데이터 기준으로 갱신)
-    _markerIndexMap.clear();
-    for (int i = 0; i < annotations.length; i++) {
-      final id = annotations[i]?.id;
-      if (id != null) {
-        _markerIndexMap[id] = i;
+        try {
+          await mapboxMap!.style.addStyleImage(
+            imageId,
+            3.0,
+            MbxImage(width: 150, height: 150, data: markerBytes),
+            false,
+            [],
+            [],
+            null,
+          );
+        } catch (_) {}
+        typeToImageId[type] = imageId;
       }
-    }
 
-    // 공원 주변 반경 폴리곤 생성
-    List<PolygonAnnotationOptions> polygonOptions = [];
+      for (var loc in locations) {
+        final point = Point(coordinates: Position(loc.lng, loc.lat));
+        final eggTypeLabel = getEggTypeLabel(loc);
 
-    for (var loc in locations) {
-      final center = Position(loc.lng, loc.lat);
-      final circleCoordinates = createCircleCoordinates(center, loc.radius);
+        options.add(
+          PointAnnotationOptions(
+            geometry: point,
+            iconImage: typeToImageId[eggTypeLabel],
+            iconSize: 1.0,
+          ),
+        );
+      }
 
-      final bool isNight = _isNight();
-      final Color polygonColor = isNight ? Colors.pinkAccent : Colors.blue;
-      final double fillOpacity = isNight ? 0.3 : 0.2;
+      final annotations = await pointAnnotationManager?.createMulti(options) ?? [];
 
-      polygonOptions.add(
-        PolygonAnnotationOptions(
-          geometry: Polygon(coordinates: [circleCoordinates]),
-          fillColor: polygonColor.withValues(alpha: fillOpacity).toARGB32(),
-          fillOutlineColor: polygonColor.toARGB32(),
-        ),
-      );
-    }
-    await polygonAnnotationManager?.createMulti(polygonOptions);
+      _markerIndexMap.clear();
+      for (int i = 0; i < annotations.length; i++) {
+        final id = annotations[i]?.id;
+        if (id != null) {
+          _markerIndexMap[id] = i;
+        }
+      }
+
+      List<PolygonAnnotationOptions> polygonOptions = [];
+
+      for (var loc in locations) {
+        final center = Position(loc.lng, loc.lat);
+        final circleCoordinates = createCircleCoordinates(center, loc.radius);
+
+        final bool isNight = _isNight();
+        final Color polygonColor = isNight ? Colors.pinkAccent : Colors.blue;
+        final double fillOpacity = isNight ? 0.3 : 0.2;
+
+        polygonOptions.add(
+          PolygonAnnotationOptions(
+            geometry: Polygon(coordinates: [circleCoordinates]),
+            fillColor: polygonColor.withValues(alpha: fillOpacity).toARGB32(),
+            fillOutlineColor: polygonColor.toARGB32(),
+          ),
+        );
+      }
+      await polygonAnnotationManager?.createMulti(polygonOptions);
     } finally {
       _isAddingMarkers = false;
     }
@@ -289,7 +279,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               const SizedBox(height: 16),
               Text(
-                isEn 
+                isEn
                     ? 'A Soopkomon egg has appeared in $parkName!\nPlease walk together so it can hatch!'
                     : '$parkName에 숲코몽 알이 나타났어요!\n숲코몽이 태어날 수 있도록 같이 걸어주세요!',
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
@@ -334,10 +324,15 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(imagePath, width: 120, height: 120),
+              SoopkomonImage(
+                assetPath: imagePath,
+                remoteUrl: 'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${imagePath.split('/').last.split('_').first}_big.png?alt=media',
+                width: 120,
+                height: 120,
+              ),
               const SizedBox(height: 24),
               Text(
-                isEn ? '$parkName $petName' : '$parkName $petName',
+                '$parkName $petName',
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
@@ -374,7 +369,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  /// 마커 탭 시 ParkDetailSheet를 바텀시트로 표시합니다.
   void _showLocationDetails(int index) {
     final state = ref.read(homeViewModelProvider);
     final locations = state.locations;
@@ -439,7 +433,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final friendRequestsAsync = ref.watch(friendRequestProvider);
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
-    
+
     final friendRequests = friendRequestsAsync.value ?? [];
     final pendingRequests = friendRequests.where((req) => req.status == FriendRequestStatus.pending).toList();
 
@@ -464,7 +458,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     });
 
-    ref.listen(mapZoomResetProvider, (_, __) => _moveToCurrentLocation(forceDefaultZoom: true));
+    ref.listen(mapZoomResetProvider, (_, _) => _moveToCurrentLocation(forceDefaultZoom: true));
 
     ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (prev, next) {
       if (next != null && mapboxMap != null) {
@@ -485,7 +479,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         _showPetHatchedDialog(next, currentState.lastHatchedParkName ?? '', currentState.lastHatchedPetImagePath ?? 'assets/images/characters/007_big.png');
       }
     });
-
 
     return Scaffold(
       extendBodyBehindAppBar: true,

@@ -1,14 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:pedometer/pedometer.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
 /// Home State
 class HomeState {
@@ -102,8 +101,8 @@ class HomeNotifier extends Notifier<HomeState> {
     final locationsAsync = ref.watch(locationsProvider);
 
     ref.onDispose(() {
-      _stepSubscription?.cancel();
       _positionSubscription?.cancel();
+      _stepSubscription?.cancel();
     });
 
     return HomeState(
@@ -124,11 +123,13 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> startTracking() async {
-    await startPedometer();
-    await _startLocationTracking();
+    // 위치 추적과 걸음 수 추적을 병렬로 시작하여 초기화 지연 방지
+    _startLocationTracking();
+    _startPedometerTracking();
   }
 
   Future<void> _startLocationTracking() async {
+    debugPrint('[디버그] _startLocationTracking 시작');
     bool serviceEnabled;
     geo.LocationPermission permission;
 
@@ -152,19 +153,24 @@ class HomeNotifier extends Notifier<HomeState> {
       return;
     }
 
+    debugPrint('[디버그] 현재 위치 가져오기 시도 중...');
     final initialPosition = await geo.Geolocator.getCurrentPosition();
+    debugPrint(
+      '[디버그] 초기 위치 획득: ${initialPosition.latitude}, ${initialPosition.longitude}',
+    );
     state = state.copyWith(currentPosition: initialPosition);
     _checkParkProximity(initialPosition);
 
-    _positionSubscription = geo.Geolocator.getPositionStream(
-      locationSettings: const geo.LocationSettings(
-        accuracy: geo.LocationAccuracy.high,
-        distanceFilter: 5,
-      ),
-    ).listen((geo.Position position) {
-      state = state.copyWith(currentPosition: position);
-      _checkParkProximity(position);
-    });
+    _positionSubscription =
+        geo.Geolocator.getPositionStream(
+          locationSettings: const geo.LocationSettings(
+            accuracy: geo.LocationAccuracy.high,
+            distanceFilter: 5,
+          ),
+        ).listen((geo.Position position) {
+          state = state.copyWith(currentPosition: position);
+          _checkParkProximity(position);
+        });
   }
 
   void _checkParkProximity(geo.Position position) {
@@ -181,13 +187,35 @@ class HomeNotifier extends Notifier<HomeState> {
 
       if (distance <= loc.radius) {
         detectedParkId = loc.id;
+        debugPrint(
+          '[디버그] 공원 범위 내 감지: ${loc.name} (거리: ${distance.toStringAsFixed(1)}m, 반경: ${loc.radius}m)',
+        );
         break;
       }
     }
 
+    if (detectedParkId == null && state.locations.isNotEmpty) {
+      double minDistance = double.infinity;
+      String nearestPark = '';
+      for (final loc in state.locations) {
+        final d = geo.Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          loc.lat,
+          loc.lng,
+        );
+        if (d < minDistance) {
+          minDistance = d;
+          nearestPark = loc.name;
+        }
+      }
+      debugPrint(
+        '[디버그] 현재 공원이 감지되지 않음. 가장 가까운 공원: $nearestPark (거리: ${minDistance.toStringAsFixed(1)}m)',
+      );
+    }
+
     if (detectedParkId != state.currentParkId) {
       if (detectedParkId != null) {
-        // 새로운 공원 진입
         state = state.copyWith(
           currentParkId: detectedParkId,
           stepsAtParkEntry: state.stepCount,
@@ -195,7 +223,6 @@ class HomeNotifier extends Notifier<HomeState> {
         );
         debugPrint('공원 진입: $detectedParkId, 진입 시 걸음수: ${state.stepCount}');
       } else {
-        // 공원에서 벗어남
         state = state.copyWith(
           currentParkId: null,
           stepsAtParkEntry: null,
@@ -206,58 +233,57 @@ class HomeNotifier extends Notifier<HomeState> {
     }
   }
 
-  Future<void> startPedometer() async {
-    // 권한 요청
-    final status = Platform.isIOS
-        ? await Permission.sensors.request()
-        : await Permission.activityRecognition.request();
+  void _startPedometerTracking() {
+    _stepSubscription?.cancel();
+    _stepSubscription = Pedometer.stepCountStream.listen(
+      (StepCount event) {
+        _processNewStepCount(event.steps);
+      },
+      onError: (error) {
+        debugPrint('[디버그] 걸음 수 스트림 에러: $error');
+      },
+    );
+  }
 
-    if (status.isGranted) {
-      _stepSubscription = Pedometer.stepCountStream.listen(
-        (StepCount event) {
-          final newStepCount = event.steps;
-          state = state.copyWith(stepCount: newStepCount);
+  void _processNewStepCount(int newStepCount) {
+    if (newStepCount == state.stepCount) return;
 
-          // 펫 획득 조건 체크 (공원 내 100걸음)
-          if (state.currentParkId != null &&
-              !state.isPetAcquiredInCurrentPark &&
-              state.stepsAtParkEntry != null) {
-            final stepsInPark = newStepCount - state.stepsAtParkEntry!;
-            if (stepsInPark >= 100) {
-              _acquirePet(state.currentParkId!);
-            }
-          }
+    state = state.copyWith(stepCount: newStepCount);
 
-          // 부화 조건 체크 (모든 보유 펫 대상)
-          _checkHatchingCondition(newStepCount);
-        },
-        onError: (error) {
-          debugPrint('만보기 스트림 에러: $error');
-          // 에러 발생 시(특히 지원되지 않는 기기) 불필요한 반복 호출을 막기 위해 구독 취소
-          _stepSubscription?.cancel();
-          _stepSubscription = null;
-
-          if (Platform.isIOS) {
-            // iOS에서 Step Count 사용 불가 시 별도 에러 메시지 없이 무시
-            // (시뮬레이터 등 기능 미지원 환경 대응)
-          } else {
-            state = state.copyWith(errorMessage: '만보기 에러: $error');
-          }
-        },
-      );
-    } else {
-      if (!Platform.isIOS) {
-        state = state.copyWith(errorMessage: '신체 활동 권한이 거부되었습니다.');
+    if (state.currentParkId != null &&
+        !state.isPetAcquiredInCurrentPark &&
+        state.stepsAtParkEntry != null) {
+      final stepsInPark = newStepCount - state.stepsAtParkEntry!;
+      if (stepsInPark >= 100) {
+        _acquirePet(state.currentParkId!);
       }
     }
+
+    _checkHatchingCondition(newStepCount);
   }
 
   Future<void> _acquirePet(int parkId) async {
+    debugPrint('[디버그] _acquirePet 시도 - parkId: $parkId');
     final park = state.locations.firstWhere((loc) => loc.id == parkId);
-    if (park.petIds.isEmpty) return;
+    if (park.petIds.isEmpty) {
+      debugPrint('[디버그] _acquirePet 중단: 해당 공원에 설정된 petIds가 없음');
+      return;
+    }
+
+    // 이미 해당 templateId 보유 중이면 스킵
+    final userPets = ref.read(userSoopkomonProvider).value ?? [];
+    final alreadyHas = userPets.any((p) => p.templateId == park.petIds.first);
+    if (alreadyHas) {
+      debugPrint('[디버그] _acquirePet 중단: 이미 보유한 숲코몽');
+      state = state.copyWith(isPetAcquiredInCurrentPark: true);
+      return;
+    }
 
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
-    if (!templatesAsync.hasValue) return;
+    if (!templatesAsync.hasValue) {
+      debugPrint('[디버그] _acquirePet 중단: templatesAsync 데이터가 아직 로드되지 않음');
+      return;
+    }
 
     final template = templatesAsync.value!.firstWhere(
       (t) => t.templateId == park.petIds.first,
@@ -276,62 +302,63 @@ class HomeNotifier extends Notifier<HomeState> {
       currentTotalSteps: state.stepCount,
     );
 
-    ref.read(userSoopkomonProvider.notifier).add(newPet);
+    ref
+        .read(soopkomonRepositoryProvider)
+        .addSoopkomon(ref.read(userProvider).value!.id, newPet);
+    debugPrint(
+      '[디버그] 상태 업데이트 직전: lastAcquiredPetName=${state.lastAcquiredPetName}',
+    );
     state = state.copyWith(
       isPetAcquiredInCurrentPark: true,
       lastAcquiredPetName: template.name,
       lastAcquiredParkName: park.name,
       lastAcquiredPetEggPath: template.eggImagePath,
     );
+    debugPrint(
+      '[디버그] 상태 업데이트 완료: lastAcquiredPetName=${state.lastAcquiredPetName}',
+    );
     debugPrint('펫 획득 성공: ${template.name} at ${park.name}');
   }
 
+  /// 획득 팝업 확인 후 상태 초기화
+  void clearAcquiredPet() {
+    debugPrint('[디버그] clearAcquiredPet() 호출');
+    state = state.copyWith(
+      lastAcquiredPetName: null,
+      lastAcquiredParkName: null,
+      lastAcquiredPetEggPath: null,
+    );
+  }
+
   void updateStepCount(int count) {
-    state = state.copyWith(stepCount: count);
-
-    // 보유 펫 걸음 수 동기화
-    ref.read(userSoopkomonProvider.notifier).updateAllSteps(count);
-
-    // 수동 업데이트 시에도 펫 획득 조건 체크
-    if (state.currentParkId != null &&
-        !state.isPetAcquiredInCurrentPark &&
-        state.stepsAtParkEntry != null) {
-      final stepsInPark = count - state.stepsAtParkEntry!;
-      if (stepsInPark >= 100) {
-        _acquirePet(state.currentParkId!);
-      }
-    }
-
-    // 부화 조건 체크
-    _checkHatchingCondition(count);
+    _processNewStepCount(count);
   }
 
   void _checkHatchingCondition(int newStepCount) {
-    final userPets = ref.read(userSoopkomonProvider);
-    for (final pet in userPets) {
-      if (!pet.isHatched && (newStepCount - pet.stepsAtDiscovery) >= 1000) {
-        _hatchPet(pet);
-        break; // 한 번에 하나의 부화만 처리 (다이얼로그 겹침 방지)
+    final userPetsAsync = ref.read(userSoopkomonProvider);
+    userPetsAsync.whenData((pets) {
+      for (final pet in pets) {
+        if (!pet.isHatched && (newStepCount - pet.stepsAtDiscovery) >= 1000) {
+          _hatchPet(pet);
+          break;
+        }
       }
-    }
+    });
   }
 
   void _hatchPet(Soopkomon pet) {
-    ref.read(userSoopkomonProvider.notifier).markAsHatched(pet.instanceId);
+    final user = ref.read(userProvider).value;
+    if (user != null) {
+      ref
+          .read(soopkomonRepositoryProvider)
+          .markSoopkomonAsHatched(user.id, pet.instanceId);
+    }
     state = state.copyWith(
       lastHatchedPetName: pet.name,
       lastHatchedParkName: pet.discoveredSpotName,
       lastHatchedPetImagePath: pet.imagePath,
     );
     debugPrint('펫 부화 성공: ${pet.name} from ${pet.discoveredSpotName}');
-  }
-
-  void clearAcquiredPet() {
-    state = state.copyWith(
-      lastAcquiredPetName: null,
-      lastAcquiredParkName: null,
-      lastAcquiredPetEggPath: null,
-    );
   }
 
   void clearHatchedPet() {
