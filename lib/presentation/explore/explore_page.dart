@@ -5,6 +5,8 @@ import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dar
 import 'package:soopkomong/presentation/explore/widgets/explore_park_card.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class ExplorePage extends ConsumerStatefulWidget {
   const ExplorePage({super.key});
@@ -25,6 +27,8 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
     final locationsAsync = ref.watch(locationsProvider);
 
     return Scaffold(
@@ -45,9 +49,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                       height: 64,
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      '생태 공원',
-                      style: TextStyle(
+                    Text(
+                      isEn ? 'Eco Parks' : '생태 공원',
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -71,14 +75,14 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                         _searchQuery = value;
                       });
                     },
-                    decoration: const InputDecoration(
-                      hintText: '검색어를 입력해주세요',
-                      hintStyle: TextStyle(
+                    decoration: InputDecoration(
+                      hintText: isEn ? 'Search parks...' : '검색어를 입력해주세요',
+                      hintStyle: const TextStyle(
                         color: Color(0xFFAAAAAA),
                         fontSize: 14,
                         height: 1.2,
                       ),
-                      prefixIcon: Padding(
+                      prefixIcon: const Padding(
                         padding: EdgeInsets.only(left: 20, right: 8),
                         child: Icon(
                           Icons.search,
@@ -86,13 +90,13 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                           size: 22,
                         ),
                       ),
-                      prefixIconConstraints: BoxConstraints(
+                      prefixIconConstraints: const BoxConstraints(
                         minWidth: 52,
                         minHeight: 48,
                       ),
                       border: InputBorder.none,
                       isDense: true,
-                      contentPadding: EdgeInsets.only(right: 16),
+                      contentPadding: const EdgeInsets.only(right: 16),
                     ),
                   ),
                 ),
@@ -105,7 +109,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
               // 공원 리스트
               locationsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text('에러 발생: $err')),
+                error: (err, stack) => Center(child: Text(isEn ? 'An error occurred: $err' : '에러 발생: $err')),
                 data: (allLocations) {
                   final filteredLocations = allLocations.where((loc) {
                     final matchesRegion = loc.region == _selectedRegion.label;
@@ -122,7 +126,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     itemBuilder: (context, index) {
                       final location = filteredLocations[index];
                       return ExploreParkCard(
-                        region: location.region,
+                        region: Region.fromValue(location.region).getLabel(isEn),
                         name: location.name,
                         description: location.summary,
                         imageUrl: location.imageUrl,

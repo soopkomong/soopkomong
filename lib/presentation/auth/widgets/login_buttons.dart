@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 /// 로그인 버튼 위젯 (카카오, 구글, 애플)
 class LoginButtons extends ConsumerWidget {
@@ -8,6 +10,8 @@ class LoginButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
     return Column(
       children: [
         // 카카오 로그인 버튼
@@ -34,9 +38,9 @@ class LoginButtons extends ConsumerWidget {
                   color: Color(0xFF191919),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '카카오로 시작하기',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                Text(
+                  isEn ? 'Continue with Kakao' : '카카오로 시작하기',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -85,9 +89,9 @@ class LoginButtons extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '구글로 시작하기',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                Text(
+                  isEn ? 'Continue with Google' : '구글로 시작하기',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -110,14 +114,14 @@ class LoginButtons extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.apple, size: 22),
-                SizedBox(width: 8),
+                const Icon(Icons.apple, size: 22),
+                const SizedBox(width: 8),
                 Text(
-                  '애플로 시작하기',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  isEn ? 'Continue with Apple' : '애플로 시작하기',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -129,39 +133,42 @@ class LoginButtons extends ConsumerWidget {
 
   /// 구글 로그인 처리
   Future<void> _signInWithGoogle(BuildContext context, WidgetRef ref) async {
+    final isEn = ref.read(localeProvider) == AppLocale.en;
     try {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('구글 로그인 실패: $e')));
+        ).showSnackBar(SnackBar(content: Text(isEn ? 'Google login failed: $e' : '구글 로그인 실패: $e')));
       }
     }
   }
 
   /// 카카오 로그인 처리
   Future<void> _signInWithKakao(BuildContext context, WidgetRef ref) async {
+    final isEn = ref.read(localeProvider) == AppLocale.en;
     try {
       await ref.read(authRepositoryProvider).signInWithKakao();
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('카카오 로그인 실패: $e')));
+        ).showSnackBar(SnackBar(content: Text(isEn ? 'Kakao login failed: $e' : '카카오 로그인 실패: $e')));
       }
     }
   }
 
   /// 애플 로그인 처리
   Future<void> _signInWithApple(BuildContext context, WidgetRef ref) async {
+    final isEn = ref.read(localeProvider) == AppLocale.en;
     try {
       await ref.read(authRepositoryProvider).signInWithApple();
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('애플 로그인 실패: $e')));
+        ).showSnackBar(SnackBar(content: Text(isEn ? 'Apple login failed: $e' : '애플 로그인 실패: $e')));
       }
     }
   }

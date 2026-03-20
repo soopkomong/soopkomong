@@ -4,21 +4,25 @@ import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
     final friendRequestsAsync = ref.watch(friendRequestHistoryProvider);
     final requests = friendRequestsAsync.value ?? [];
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          '알림',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        title: Text(
+          isEn ? 'Notifications' : '알림',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -26,10 +30,10 @@ class NotificationsPage extends ConsumerWidget {
         centerTitle: true,
       ),
       body: requests.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                '새로운 알림이 없습니다.',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+                isEn ? 'No new notifications.' : '새로운 알림이 없습니다.',
+                style: const TextStyle(color: Colors.grey, fontSize: 16),
               ),
             )
           : ListView.separated(
@@ -46,12 +50,12 @@ class NotificationsPage extends ConsumerWidget {
                       'assets/images/characters/${req.senderTemplateId}_big.png',
                     ),
                   ),
-                  title: const Text(
-                    '친구 신청',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  title: Text(
+                    isEn ? 'Friend Request' : '친구 신청',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    '${req.senderName}님이 친구 신청을 보냈습니다.',
+                    isEn ? '${req.senderName} sent you a friend request.' : '${req.senderName}님이 친구 신청을 보냈습니다.',
                     style: const TextStyle(fontSize: 13, color: Colors.black87),
                   ),
                   trailing: Row(
@@ -69,7 +73,7 @@ class NotificationsPage extends ConsumerWidget {
                                 .read(friendsViewModelProvider.notifier)
                                 .acceptFriendRequest(req);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('친구 신청을 수락했습니다.')),
+                              SnackBar(content: Text(isEn ? 'Friend request accepted.' : '친구 신청을 수락했습니다.')),
                             );
                           },
                           style: TextButton.styleFrom(
@@ -77,8 +81,8 @@ class NotificationsPage extends ConsumerWidget {
                               minimumSize: Size.zero,
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          child: const Text('수락',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(isEn ? 'Accept' : '수락',
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         TextButton(
                           onPressed: () {
@@ -86,7 +90,7 @@ class NotificationsPage extends ConsumerWidget {
                                 .read(friendsViewModelProvider.notifier)
                                 .declineFriendRequest(req.id);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('친구 신청을 거절했습니다.')),
+                              SnackBar(content: Text(isEn ? 'Friend request declined.' : '친구 신청을 거절했습니다.')),
                             );
                           },
                           style: TextButton.styleFrom(
@@ -94,11 +98,13 @@ class NotificationsPage extends ConsumerWidget {
                               minimumSize: Size.zero,
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          child: const Text('거절'),
+                          child: Text(isEn ? 'Decline' : '거절'),
                         ),
                       ] else ...[
                         Text(
-                          req.status == FriendRequestStatus.accepted ? '수락됨' : '거절됨',
+                          req.status == FriendRequestStatus.accepted 
+                            ? (isEn ? 'Accepted' : '수락됨') 
+                            : (isEn ? 'Declined' : '거절됨'),
                           style: TextStyle(
                             fontSize: 12,
                             color: req.status == FriendRequestStatus.accepted

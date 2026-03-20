@@ -12,6 +12,9 @@ import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
+
 class CharacterCustomizePage extends ConsumerStatefulWidget {
   const CharacterCustomizePage({super.key});
 
@@ -31,7 +34,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     super.dispose();
   }
 
-  static const _categories = ['머리', '얼굴', '옷'];
+  static const _categoriesKo = ['머리', '얼굴', '옷'];
+  static const _categoriesEn = ['Hair', 'Face', 'Clothes'];
 
   // 선택된 파츠 상태
   String _selectedHair = '01';
@@ -88,7 +92,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _categories.length, vsync: this);
+    final categories = ref.read(localeProvider) == AppLocale.en ? _categoriesEn : _categoriesKo;
+    _tabController = TabController(length: categories.length, vsync: this);
 
     // 1. 기존 캐릭터 데이터 로드
     final user = ref.read(userProvider).value;
@@ -146,6 +151,10 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+    final categories = isEn ? _categoriesEn : _categoriesKo;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -159,9 +168,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           TextButton.icon(
             onPressed: _randomizeCharacter,
             icon: const Icon(Icons.autorenew, size: 20, color: Colors.black87),
-            label: const Text(
-              '랜덤 꾸미기',
-              style: TextStyle(
+            label: Text(
+              isEn ? 'Random' : '랜덤 꾸미기',
+              style: const TextStyle(
                 color: Colors.black87,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -178,13 +187,13 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
             // 상단 캐릭터 영역
             _buildCharacterSection(),
             // 카테고리 탭바
-            _buildCategoryTabBar(),
+            _buildCategoryTabBar(categories),
             // 현재 선택된 탭의 색상 팔레트
             _buildColorPalette(),
             // 아이템 그리드
-            Expanded(child: _buildItemGrid()),
+            Expanded(child: _buildItemGrid(isEn)),
             // 하단 버튼
-            _buildBottomButtons(),
+            _buildBottomButtons(isEn),
           ],
         ),
       ),
@@ -297,7 +306,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   }
 
   /// 카테고리 탭바 (머리 / 표정 / 옷 / 신발)
-  Widget _buildCategoryTabBar() {
+  Widget _buildCategoryTabBar(List<String> categories) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -314,7 +323,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        tabs: _categories.asMap().entries.map((entry) {
+        tabs: categories.asMap().entries.map((entry) {
           final icons = [Icons.content_cut, Icons.face, Icons.checkroom];
           return Tab(
             child: Row(
@@ -332,7 +341,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   }
 
   /// 아이템 선택 그리드
-  Widget _buildItemGrid() {
+  Widget _buildItemGrid(bool isEn) {
     return TabBarView(
       controller: _tabController,
       children: [
@@ -351,19 +360,19 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           (id) => setState(() => _selectedFace = id),
         ),
         // 2. 옷 & 신발 탭
-        _buildClothesAndShoesTab(),
+        _buildClothesAndShoesTab(isEn),
       ],
     );
   }
 
   /// 옷과 신발을 함께 보여주는 탭 빌더
-  Widget _buildClothesAndShoesTab() {
+  Widget _buildClothesAndShoesTab(bool isEn) {
     return Container(
       color: Colors.white,
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _buildSectionTitle('의상'),
+          _buildSectionTitle(isEn ? 'Clothes' : '의상'),
           _buildCompactGrid(
             'clothes',
             _clothes,
@@ -375,7 +384,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
             deselectId: '01',
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle('신발'),
+          _buildSectionTitle(isEn ? 'Shoes' : '신발'),
           _buildCompactGrid(
             'shoes',
             _shoes,
@@ -511,8 +520,10 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
     try {
       final user = ref.read(userProvider).value;
+      final isEn = ref.read(localeProvider) == AppLocale.en;
+
       if (user == null) {
-        throw Exception('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+        throw Exception(isEn ? 'User info not found. Please log in again.' : '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
       }
 
       // UI 스레드가 로딩 상태를 그릴 시간을 줌
@@ -591,8 +602,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       }
     } catch (e) {
       if (mounted) {
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
+          SnackBar(content: Text(isEn ? 'Save failed: $e' : '저장 실패: $e')),
         );
       }
     } finally {
@@ -603,7 +615,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   }
 
   /// 하단 뒤로가기 + 다음 버튼
-  Widget _buildBottomButtons() {
+  Widget _buildBottomButtons(bool isEn) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       color: Colors.white,
@@ -643,9 +655,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
-                        '저장하기',
-                        style: TextStyle(
+                    : Text(
+                        isEn ? 'Save' : '저장하기',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,

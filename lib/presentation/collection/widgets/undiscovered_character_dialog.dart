@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
 /// 미획득 캐릭터를 탭했을 때 표시되는 팝업 다이얼로그
-class UndiscoveredCharacterDialog extends StatelessWidget {
+class UndiscoveredCharacterDialog extends ConsumerWidget {
   final SoopkomonTemplate template;
   final List<String> availableParks;
 
@@ -31,7 +34,10 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -74,9 +80,9 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
             const SizedBox(height: 20),
 
             // 메시지
-            const Text(
-              '아직 만나지 못했어요',
-              style: TextStyle(
+            Text(
+              isEn ? 'Not discovered yet' : '아직 만나지 못했어요',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
@@ -95,9 +101,9 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    '발견 가능한 공원',
-                    style: TextStyle(
+                  Text(
+                    isEn ? 'Available Parks' : '발견 가능한 공원',
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.black45,
                       fontWeight: FontWeight.w500,
@@ -106,7 +112,7 @@ class UndiscoveredCharacterDialog extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     availableParks.isEmpty
-                        ? '정보 없음'
+                        ? (isEn ? 'No info' : '정보 없음')
                         : availableParks.join(', '),
                     textAlign: TextAlign.center,
                     style: const TextStyle(

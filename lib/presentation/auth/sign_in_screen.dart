@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/presentation/auth/widgets/login_buttons.dart';
 import 'package:soopkomong/presentation/auth/widgets/policy_links.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class SignInScreen extends ConsumerWidget {
   const SignInScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -38,9 +42,9 @@ class SignInScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // 앱 이름
-              const Text(
-                '숲코몽',
-                style: TextStyle(
+              Text(
+                isEn ? 'Soopkomong' : '숲코몽',
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF1A1A1A),
@@ -51,9 +55,9 @@ class SignInScreen extends ConsumerWidget {
               const SizedBox(height: 8),
 
               // 부제목
-              const Text(
-                '발걸음이 모이면 모험이 돼요',
-                style: TextStyle(
+              Text(
+                isEn ? 'Every step turns into an adventure' : '발걸음이 모이면 모험이 돼요',
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
                   color: Color(0xFF888888),

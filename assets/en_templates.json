@@ -1,0 +1,345 @@
+[
+  {
+    "templateId": "001",
+    "name": "Mole",
+    "description": "It is a mole.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "002",
+    "name": "Turtle",
+    "description": "It is a turtle.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "003",
+    "name": "Eagle",
+    "description": "It is an eagle.",
+    "eggType": "flying",
+    "region": "capital"
+  },
+  {
+    "templateId": "004",
+    "name": "Great Spotted Woodpecker",
+    "description": "It is a great spotted woodpecker.",
+    "eggType": "grass",
+    "region": "capital"
+  },
+  {
+    "templateId": "005",
+    "name": "Grey Heron",
+    "description": "It is a grey heron.",
+    "eggType": "water",
+    "region": "capital"
+  },
+  {
+    "templateId": "006",
+    "name": "Mandarin Duck",
+    "description": "It is a mandarin duck.",
+    "eggType": "water",
+    "region": "capital"
+  },
+  {
+    "templateId": "007",
+    "name": "Mudskipper",
+    "description": "It is a mudskipper.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "008",
+    "name": "Tree Frog",
+    "description": "It is a tree frog.",
+    "eggType": "grass",
+    "region": "capital"
+  },
+  {
+    "templateId": "009",
+    "name": "Otter",
+    "description": "It is an otter.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "010",
+    "name": "Black-faced Spoonbill",
+    "description": "It is a black-faced spoonbill.",
+    "eggType": "water",
+    "region": "capital"
+  },
+  {
+    "templateId": "011",
+    "name": "Kingfisher",
+    "description": "It is a kingfisher.",
+    "eggType": "water",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "012",
+    "name": "Mountain Goat",
+    "description": "It is a mountain goat.",
+    "eggType": "ground",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "013",
+    "name": "Sturgeon",
+    "description": "It is a sturgeon.",
+    "eggType": "water",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "014",
+    "name": "Salamander",
+    "description": "It is a salamander.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "015",
+    "name": "Leopard Cat",
+    "description": "It is a leopard cat.",
+    "eggType": "grass",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "016",
+    "name": "Marten",
+    "description": "It is a marten.",
+    "eggType": "grass",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "017",
+    "name": "Cormorant",
+    "description": "It is a cormorant.",
+    "eggType": "water",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "018",
+    "name": "Crane",
+    "description": "It is a crane.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "019",
+    "name": "Golden Bat",
+    "description": "It is a golden bat.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "020",
+    "name": "Firefly",
+    "description": "It is a firefly.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "021",
+    "name": "Swallowtail Butterfly",
+    "description": "It is a swallowtail butterfly.",
+    "eggType": "grass",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "022",
+    "name": "Stalactite Spirit",
+    "description": "It is a stalactite spirit.",
+    "eggType": "mystic",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "023",
+    "name": "Dung Beetle",
+    "description": "It is a dung beetle.",
+    "eggType": "grass",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "024",
+    "name": "Eagle Owl",
+    "description": "It is an eagle owl.",
+    "eggType": "flying",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "025",
+    "name": "Baikal Teal",
+    "description": "It is a baikal teal.",
+    "eggType": "flying",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "026",
+    "name": "Ruddy Kingfisher",
+    "description": "It is a ruddy kingfisher.",
+    "eggType": "grass",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "027",
+    "name": "Flying Squirrel",
+    "description": "It is a flying squirrel.",
+    "eggType": "flying",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "028",
+    "name": "Hooded Crane",
+    "description": "It is a hooded crane.",
+    "eggType": "flying",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "029",
+    "name": "Rhinoceros Beetle",
+    "description": "It is a rhinoceros beetle.",
+    "eggType": "grass",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "030",
+    "name": "Tiger",
+    "description": "It is a tiger.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "031",
+    "name": "Asiatic Black Bear",
+    "description": "It is an asiatic black bear.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "032",
+    "name": "Fiddler Crab",
+    "description": "It is a fiddler crab.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "033",
+    "name": "Chinese Egret",
+    "description": "It is a chinese egret.",
+    "eggType": "flying",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "034",
+    "name": "Cockle",
+    "description": "It is a cockle.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "035",
+    "name": "Phoenix",
+    "description": "It is a phoenix.",
+    "eggType": "mystic",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "036",
+    "name": "Fox",
+    "description": "It is a fox.",
+    "eggType": "mystic",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "037",
+    "name": "Rock Spirit",
+    "description": "It is a rock spirit.",
+    "eggType": "mystic",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "038",
+    "name": "Owl",
+    "description": "It is an owl.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "039",
+    "name": "Rook",
+    "description": "It is a rook.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "040",
+    "name": "Matsutake Mushroom",
+    "description": "It is a matsutake mushroom.",
+    "eggType": "grass",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "041",
+    "name": "Squirrel",
+    "description": "It is a squirrel.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "042",
+    "name": "Soft-shelled Turtle",
+    "description": "It is a soft-shelled turtle.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "043",
+    "name": "Dolphin",
+    "description": "It is a dolphin.",
+    "eggType": "water",
+    "region": "jeju"
+  },
+  {
+    "templateId": "044",
+    "name": "Jeju Roe Deer",
+    "description": "It is a jeju roe deer.",
+    "eggType": "grass",
+    "region": "jeju"
+  },
+  {
+    "templateId": "045",
+    "name": "Giant Mottled Eel",
+    "description": "It is a giant mottled eel.",
+    "eggType": "water",
+    "region": "jeju"
+  },
+  {
+    "templateId": "046",
+    "name": "Korean Fir Spirit",
+    "description": "It is a korean fir spirit.",
+    "eggType": "mystic",
+    "region": "jeju"
+  },
+  {
+    "templateId": "047",
+    "name": "Whooper Swan",
+    "description": "It is a whooper swan.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "048",
+    "name": "Camellia Spirit",
+    "description": "It is a camellia spirit.",
+    "eggType": "grass",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "049",
+    "name": "Boreal Digging Frog",
+    "description": "It is a boreal digging frog.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  }
+]

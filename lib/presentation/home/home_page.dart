@@ -11,6 +11,7 @@ import 'package:soopkomong/core/router/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -90,29 +91,24 @@ class _HomePageState extends ConsumerState<HomePage> {
 
       List<PointAnnotationOptions> options = [];
 
-      String getEggTypeLabel(Location loc) {
-        if (loc.petIds.isEmpty) return '기본';
+      SoopkomonEggType getEggType(Location loc) {
+        if (loc.petIds.isEmpty) return SoopkomonEggType.mystic;
         try {
-          final template = templates.firstWhere(
-            (t) => t.templateId == loc.petIds.first,
-          );
-          return template.eggType.label;
+          return templates.firstWhere((t) => t.templateId == loc.petIds.first).eggType;
         } catch (_) {
-          return '기본';
+          return SoopkomonEggType.mystic;
         }
       }
 
-      final Set<String> uniqueTypes = locations
-          .map((loc) => getEggTypeLabel(loc))
-          .toSet();
-      final Map<String, String> typeToImageId = {};
+      final Set<SoopkomonEggType> uniqueTypes = locations.map((loc) => getEggType(loc)).toSet();
+      final Map<SoopkomonEggType, String> typeToImageId = {};
 
       for (var type in uniqueTypes) {
         final String imageId =
-            'icon_marker_${type}_${DateTime.now().millisecondsSinceEpoch}';
+            'icon_marker_${type.name}_${DateTime.now().millisecondsSinceEpoch}';
         final Uint8List markerBytes = await createIconMarkerBitmap(
           Icons.location_pin,
-          _getPetTypeColor(type),
+          type.color,
           size: 150.0,
         );
 
@@ -132,25 +128,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
       for (var loc in locations) {
         final point = Point(coordinates: Position(loc.lng, loc.lat));
-        final eggTypeLabel = getEggTypeLabel(loc);
+        final eggType = getEggType(loc);
 
         options.add(
           PointAnnotationOptions(
             geometry: point,
-            iconImage: typeToImageId[eggTypeLabel],
+            iconImage: typeToImageId[eggType],
             iconSize: 1.0,
           ),
         );
-      }
-
-      final annotations = await pointAnnotationManager?.createMulti(options) ?? [];
-
-      _markerIndexMap.clear();
-      for (int i = 0; i < annotations.length; i++) {
-        final id = annotations[i]?.id;
-        if (id != null) {
-          _markerIndexMap[id] = i;
-        }
       }
 
       List<PolygonAnnotationOptions> polygonOptions = [];
@@ -171,7 +157,18 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         );
       }
+
+      // Ensure polygons are added before points so points are on top
       await polygonAnnotationManager?.createMulti(polygonOptions);
+      final annotations = await pointAnnotationManager?.createMulti(options) ?? [];
+
+      _markerIndexMap.clear();
+      for (int i = 0; i < annotations.length; i++) {
+        final id = annotations[i]?.id;
+        if (id != null) {
+          _markerIndexMap[id] = i;
+        }
+      }
     } finally {
       _isAddingMarkers = false;
     }
@@ -403,28 +400,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       },
     );
-  }
-
-  Color _getPetTypeColor(String type) {
-    switch (type) {
-      case '물':
-      case 'Water':
-        return Colors.blue;
-      case '땅':
-      case 'Earth':
-        return Colors.brown;
-      case '풀':
-      case 'Grass':
-        return Colors.green;
-      case '비행':
-      case 'Flying':
-        return Colors.lightBlueAccent;
-      case '신비':
-      case 'Mystery':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
   }
 
   @override

@@ -7,6 +7,8 @@ import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/user_provider.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({super.key});
@@ -26,6 +28,8 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
     final friendsAsync = ref.watch(friendsViewModelProvider);
     final friendRequestsAsync = ref.watch(friendRequestProvider);
 
@@ -40,9 +44,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
           children: [
             const Icon(Icons.people, color: AppColors.black),
             const SizedBox(width: 8),
-            const Text(
-              '친구목록',
-              style: TextStyle(
+            Text(
+              isEn ? 'Friends' : '친구목록',
+              style: const TextStyle(
                 color: AppColors.black,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -82,7 +86,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                         fontWeight: FontWeight.w500,
                       ),
                       children: [
-                        const TextSpan(text: '내 코드 : '),
+                        TextSpan(text: isEn ? 'My Code : ' : '내 코드 : '),
                         TextSpan(
                           text: (ref.watch(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'] ?? '-',
                           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -105,17 +109,17 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                             borderRadius: BorderRadius.circular(15),
                           ),
                           actionsAlignment: MainAxisAlignment.center,
-                          content: const Text(
-                            '코드가 클립보드에 복사되었습니다.',
+                          content: Text(
+                            isEn ? 'Code copied to clipboard.' : '코드가 클립보드에 복사되었습니다.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.w500),
+                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                '확인',
-                                style: TextStyle(color: AppColors.primary700),
+                              child: Text(
+                                isEn ? 'OK' : '확인',
+                                style: const TextStyle(color: AppColors.primary700),
                               ),
                             ),
                           ],
@@ -143,9 +147,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '친구 요청 보내기',
-                    style: TextStyle(
+                  Text(
+                    isEn ? 'Send Friend Request' : '친구 요청 보내기',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppColors.black,
@@ -163,7 +167,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                           child: TextField(
                             controller: _idController,
                             decoration: InputDecoration(
-                              hintText: '친구 코드를 입력해주세요',
+                              hintText: isEn ? 'Enter friend code...' : '친구 코드를 입력해주세요',
                               hintStyle: const TextStyle(
                                 color: AppColors.gray400,
                                 fontSize: 13,
@@ -206,17 +210,17 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(15),
                                         ),
-                                        content: const Text(
-                                          '친구 요청을 보냈습니다.',
+                                        content: Text(
+                                          isEn ? 'Friend request sent.' : '친구 요청을 보냈습니다.',
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(fontWeight: FontWeight.w500),
+                                          style: const TextStyle(fontWeight: FontWeight.w500),
                                         ),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(context),
-                                            child: const Text(
-                                              '확인',
-                                              style: TextStyle(
+                                            child: Text(
+                                              isEn ? 'OK' : '확인',
+                                              style: const TextStyle(
                                                 color: AppColors.primary700,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -236,16 +240,18 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                           borderRadius: BorderRadius.circular(15),
                                         ),
                                         content: Text(
-                                          e.toString().replaceAll('Exception: ', ''),
+                                          isEn 
+                                            ? e.toString().contains('already') ? 'Wait for response or check your friend list.' : 'Invalid code or error occurred.'
+                                            : e.toString().replaceAll('Exception: ', ''),
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(fontWeight: FontWeight.w500),
                                         ),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(context),
-                                            child: const Text(
-                                              '확인',
-                                              style: TextStyle(
+                                            child: Text(
+                                              isEn ? 'OK' : '확인',
+                                              style: const TextStyle(
                                                 color: AppColors.primary700,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -272,9 +278,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
-                              '보내기',
-                              style: TextStyle(
+                            child: Text(
+                              isEn ? 'Send' : '보내기',
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -303,7 +309,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '친구 신청 목록 : ${requests.length}명',
+                          isEn ? 'Friend Requests : ${requests.length}' : '친구 신청 목록 : ${requests.length}명',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -363,9 +369,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                               borderRadius:
                                                   BorderRadius.circular(15),
                                             ),
-                                            child: const Text(
-                                              '승인',
-                                              style: TextStyle(
+                                            child: Text(
+                                              isEn ? 'Accept' : '승인',
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 color: AppColors.white,
                                                 fontWeight: FontWeight.bold,
@@ -388,9 +394,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                               borderRadius:
                                                   BorderRadius.circular(15),
                                             ),
-                                            child: const Text(
-                                              '거절',
-                                              style: TextStyle(
+                                            child: Text(
+                                              isEn ? 'Decline' : '거절',
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 color: AppColors.gray600,
                                                 fontWeight: FontWeight.bold,
@@ -421,7 +427,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
               ),
               error: (e, st) => Center(
                 child: Text(
-                  '친구 신청 로드 오류: $e',
+                  isEn ? 'Error loading requests: $e' : '친구 신청 로드 오류: $e',
                   style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
@@ -436,7 +442,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '내 친구 : ${friendsAsync.value?.length ?? 0}명',
+                  isEn ? 'My Friends : ${friendsAsync.value?.length ?? 0}' : '내 친구 : ${friendsAsync.value?.length ?? 0}명',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -533,7 +539,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
               // 2. 데이터 불러오는 중일때
               loading: () => const Center(child: CircularProgressIndicator()),
               // 3. 오류 발생시
-              error: (e, _) => Center(child: Text('오류 발생: $e')),
+              error: (e, _) => Center(child: Text(isEn ? 'Error occurred: $e' : '오류 발생: $e')),
             ),
             const SizedBox(height: 20),
           ],
