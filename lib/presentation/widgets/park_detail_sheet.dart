@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/utils/kakao_navi_service.dart';
 import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -328,6 +330,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.4,
@@ -385,7 +390,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InfoCard(
                   leading: const Icon(Icons.description_outlined),
-                  title: '공원 소개',
+                  title: isEn ? 'About' : '공원 소개',
                   child: ExpandableText(
                     text: widget.description,
                     style: const TextStyle(fontSize: 13, height: 1.5),
@@ -407,7 +412,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: InfoCard(
                         leading: const Icon(Icons.info_outline, size: 24, color: Colors.grey),
-                        title: '이용안내',
+                        title: isEn ? 'Guide' : '이용안내',
                         child: SizedBox(
                           width: double.infinity,
                           child: Column(
@@ -418,9 +423,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      '문의',
-                                      style: TextStyle(
+                                    Text(
+                                      isEn ? 'Inquiry' : '문의',
+                                      style: const TextStyle(
                                         fontSize: 13,
                                         color: Colors.grey,
                                         height: 1.5,
@@ -431,7 +436,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: allTels.map((t) => GestureDetector(
-                                          onTap: () => _showPhonePopup([t]),
+                                          onTap: () => _showPhonePopup([t], isEn),
                                           child: Text(
                                             t,
                                             style: const TextStyle(
@@ -472,7 +477,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                     'assets/images/character_silhouette.png',
                     width: 24,
                   ),
-                  title: '얻을 수 있는 캐릭터',
+                  title: isEn ? 'Obtainable Characters' : '얻을 수 있는 캐릭터',
                   child: Column(
                     children: [
                       const SizedBox(height: 12),
@@ -488,9 +493,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                           return Row(
                             children: widget.petIds.isEmpty
                                 ? [
-                                    const Text(
-                                      '얻을 수 있는 숲코몽이 없습니다.',
-                                      style: TextStyle(
+                                    Text(
+                                      isEn ? 'No characters available.' : '얻을 수 있는 숲코몽이 없습니다.',
+                                      style: const TextStyle(
                                         fontSize: 13,
                                         color: Colors.grey,
                                       ),
@@ -687,7 +692,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
     );
   }
 
-  void _showPhonePopup(List<String> tels) {
+  void _showPhonePopup(List<String> tels, bool isEn) {
     showDialog(
       context: context,
       builder: (context) {
@@ -720,7 +725,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                             ),
                           ),
                           child: Text(
-                            '$t에 통화 연결',
+                            isEn ? 'Call $t' : '$t에 통화 연결',
                             style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w600),
                           ),
@@ -740,10 +745,10 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
-                      '취소하기',
+                    child: Text(
+                      isEn ? 'Cancel' : '취소하기',
                       style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),

@@ -44,4 +44,48 @@ class Location {
     this.naviLng,
     this.isVisited = false,
   });
+
+  Location copyWith({
+    int? id,
+    String? region,
+    String? name,
+    double? lat,
+    double? lng,
+    List<String>? petIds,
+    double? radius,
+    String? imageUrl,
+    List<String>? imageUrls,
+    String? address,
+    String? summary,
+    String? information,
+    String? tel,
+    String? tel1,
+    String? tel2,
+    String? naviLoc,
+    double? naviLat,
+    double? naviLng,
+    bool? isVisited,
+  }) {
+    return Location(
+      id: id ?? this.id,
+      region: region ?? this.region,
+      name: name ?? this.name,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      petIds: petIds ?? this.petIds,
+      radius: radius ?? this.radius,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
+      address: address ?? this.address,
+      summary: summary ?? this.summary,
+      information: information ?? this.information,
+      tel: tel ?? this.tel,
+      tel1: tel1 ?? this.tel1,
+      tel2: tel2 ?? this.tel2,
+      naviLoc: naviLoc ?? this.naviLoc,
+      naviLat: naviLat ?? this.naviLat,
+      naviLng: naviLng ?? this.naviLng,
+      isVisited: isVisited ?? this.isVisited,
+    );
+  }
 }
