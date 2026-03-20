@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/data/models/location_model.dart';
 
 /// [Data Layer] - Remote DataSource Interface
-/// Firebase Firestore 등 외부 서버로부터 데이터를 가져오는 규격을 정의합니다.
 abstract class RemoteLocationDataSource {
-  Future<List<LocationModel>> getRemoteLocations();
-  Stream<List<LocationModel>> watchRemoteLocations();
-  Future<void> saveLocation(LocationModel location);
+  FirebaseFirestore get firestore; // Firestore 인스턴스 노출
+  Future<List<LocationModel>> getRemoteLocations({AppLocale locale = AppLocale.ko});
+  Stream<List<LocationModel>> watchRemoteLocations({AppLocale locale = AppLocale.ko});
+  Future<void> saveLocation(LocationModel location, {AppLocale locale = AppLocale.ko});
 }
 
 class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
@@ -15,17 +16,24 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
   RemoteLocationDataSourceImpl({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
+  String _getCollectionName(AppLocale locale) {
+    return locale == AppLocale.en ? 'locations_en' : 'locations';
+  }
+
   @override
-  Future<List<LocationModel>> getRemoteLocations() async {
-    final snapshot = await _firestore.collection('locations').get();
+  FirebaseFirestore get firestore => _firestore;
+
+  @override
+  Future<List<LocationModel>> getRemoteLocations({AppLocale locale = AppLocale.ko}) async {
+    final snapshot = await _firestore.collection(_getCollectionName(locale)).get();
     return snapshot.docs
         .map((doc) => LocationModel.fromJson({...doc.data(), 'id': doc.id}))
         .toList();
   }
 
   @override
-  Stream<List<LocationModel>> watchRemoteLocations() {
-    return _firestore.collection('locations').snapshots().map((snapshot) {
+  Stream<List<LocationModel>> watchRemoteLocations({AppLocale locale = AppLocale.ko}) {
+    return _firestore.collection(_getCollectionName(locale)).snapshots().map((snapshot) {
       return snapshot.docs
           .map((doc) => LocationModel.fromJson({...doc.data(), 'id': doc.id}))
           .toList();
@@ -33,8 +41,7 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
   }
 
   @override
-  Future<void> saveLocation(LocationModel location) async {
-    // Firestore 전용 데이터 맵 생성 (객체 구조에 따라 조정 필요)
+  Future<void> saveLocation(LocationModel location, {AppLocale locale = AppLocale.ko}) async {
     final data = {
       'contentId': location.id.toString(),
       'region': location.region,
@@ -57,7 +64,7 @@ class RemoteLocationDataSourceImpl implements RemoteLocationDataSource {
       },
       'isVisited': location.isVisited,
     };
-    
-    await _firestore.collection('locations').doc(location.id.toString()).set(data);
+
+    await _firestore.collection(_getCollectionName(locale)).doc(location.id.toString()).set(data);
   }
 }

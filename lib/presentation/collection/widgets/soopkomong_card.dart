@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_sheet.dart';
+import 'package:soopkomong/presentation/collection/widgets/undiscovered_character_dialog.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
-class SoopkomongCard extends StatelessWidget {
+class SoopkomongCard extends ConsumerStatefulWidget {
   const SoopkomongCard({
     super.key,
     required this.template,
@@ -15,109 +21,153 @@ class SoopkomongCard extends StatelessWidget {
   final Soopkomon? userCharacter;
   final VoidCallback? onTap;
 
-  bool get isDiscovered => userCharacter != null;
+  @override
+  ConsumerState<SoopkomongCard> createState() => _SoopkomongCardState();
+}
+
+class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
+  bool _imageLoaded = false;
+
+  bool get isDiscovered => widget.userCharacter != null;
+  bool get isHatched => widget.userCharacter?.isHatched ?? false;
 
   @override
   Widget build(BuildContext context) {
+    final String displayAssetPath = isHatched
+        ? widget.template.actualImagePath
+        : (isDiscovered ? widget.template.eggImagePath : widget.template.actualImagePath);
+
+    final displayRemoteUrl = widget.template.remoteImagePath;
+
     return GestureDetector(
       onTap:
-          onTap ??
-          () {
+          widget.onTap ??
+          () async {
+            if (!isDiscovered) {
+              final parkTitles = await ref
+                  .read(soopkomonRepositoryProvider)
+                  .getParkTitlesByPetId(widget.template.templateId);
+
+              if (context.mounted) {
+                UndiscoveredCharacterDialog.show(
+                  context,
+                  template: widget.template,
+                  availableParks: parkTitles,
+                );
+              }
+              return;
+            }
+
             showModalBottomSheet(
               context: context,
               useRootNavigator: true,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (context) => SoopkomongDetailSheet(
-                template: template,
-                soopkomon: userCharacter,
-                isRegionVisited: true, // TODO: 실제 데이터 연동
-                currentSteps: userCharacter?.currentTotalSteps ?? 0,
+                template: widget.template,
+                soopkomon: widget.userCharacter,
+                isRegionVisited: true,
+                currentSteps: widget.userCharacter?.currentTotalSteps ?? 0,
               ),
             );
           },
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: const Color(0xFFD9D9D9),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                color: const Color(0xFFEBEBEB),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Image.asset(
-                          template.actualImagePath,
-                          fit: BoxFit.contain,
-                          color: isDiscovered
-                              ? null
-                              : Colors.black.withValues(alpha: 0.7),
-                          colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset(
-                                'assets/images/character_silhouette.png',
-                                width: 40,
-                                height: 40,
-                                fit: BoxFit.contain,
-                              ),
-                        ),
-                      ),
-                    ),
-                    if (isDiscovered)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFAFAFAF),
-                            shape: BoxShape.circle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 1.0,
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F2F2),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: SoopkomonImage(
+                            assetPath: displayAssetPath,
+                            remoteUrl: displayRemoteUrl,
+                            fit: BoxFit.contain,
+                            color: isHatched || !isDiscovered
+                                ? (isDiscovered
+                                    ? null
+                                    : Colors.black.withValues(alpha: 0.7))
+                                : null,
+                            colorBlendMode:
+                                isHatched || !isDiscovered
+                                    ? (isDiscovered ? null : BlendMode.srcIn)
+                                    : null,
+                            errorWidget: Image.asset(
+                              'assets/images/character_silhouette.png',
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.contain,
+                            ),
+                            onLoaded: () {
+                              if (!_imageLoaded && mounted) {
+                                setState(() => _imageLoaded = true);
+                              }
+                            },
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    template.templateId,
-                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                      if (isDiscovered)
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFAFAFAF),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  if (isDiscovered) ...[
-                    Text(
-                      template.name,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        height: 1.1,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                ),
+                if (!_imageLoaded)
+                  Positioned.fill(
+                    child: ShimmerLoading(
+                      width: double.infinity,
+                      height: double.infinity,
+                      borderRadius: 24,
                     ),
-                  ] else ...[
-                    // 미발견 시 빈 공간을 채워 높이 유지
-                    const SizedBox(height: 16), // name 영역 placeholder
-                  ],
-                ],
-              ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _imageLoaded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.template.templateId, style: AppTextStyles.label),
+                      Text(
+                        isHatched ? widget.template.name : '????',
+                        style: AppTextStyles.subTitleL,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  )
+                : const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShimmerLoading(width: 40, height: 14),
+                      SizedBox(height: 4),
+                      ShimmerLoading(width: 80, height: 20),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }

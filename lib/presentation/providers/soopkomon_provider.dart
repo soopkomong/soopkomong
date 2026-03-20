@@ -1,11 +1,16 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
+import 'package:soopkomong/data/models/soopkomon_template_model.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
 import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
 /// 1-1. 데이터 소스 프로바이더
 final remoteLocationDataSourceProvider = Provider<RemoteLocationDataSource>((ref) {
@@ -23,20 +28,26 @@ final soopkomonRepositoryProvider = Provider<SoopkomonRepository>((ref) {
 final soopkomonTemplatesProvider = FutureProvider<List<SoopkomonTemplate>>((
   ref,
 ) async {
-  final repository = ref.watch(soopkomonRepositoryProvider);
-  return repository.getSoopkomonTemplates();
+  final jsonString = await rootBundle
+      .loadString('assets/templates.json')
+      .timeout(const Duration(seconds: 10));
+  final List<dynamic> templatesJson = json.decode(jsonString) as List<dynamic>;
+  return templatesJson
+      .map((e) => SoopkomonTemplateModel.fromJson(e as Map<String, dynamic>).toEntity())
+      .toList();
 });
 
 /// 3. 모든 공원 위치 데이터 프로바이더 (Async)
 final locationsProvider = FutureProvider<List<Location>>((ref) async {
   final repository = ref.watch(soopkomonRepositoryProvider);
-  return repository.getLocations();
+  final locale = ref.watch(localeProvider); // 언어 변경 감시
+  return repository.getLocations(locale: locale);
 });
 
 /// 4. 선택된 지역 상태 관리
 class SelectedRegion extends Notifier<Region> {
   @override
-  Region build() => Region.capital;
+  Region build() => Region.all;
 
   void update(Region region) => state = region;
 }
@@ -45,60 +56,20 @@ final selectedRegionProvider = NotifierProvider<SelectedRegion, Region>(
   SelectedRegion.new,
 );
 
-/// 5. 유저가 획득한 캐릭터 리스트 관리
-// TODO: 실제 값 연결해야함
-class UserSoopkomon extends Notifier<List<Soopkomon>> {
-  @override
-  List<Soopkomon> build() {
-    return [
-      Soopkomon(
-        instanceId: 'test-1',
-        templateId: '007',
-        name: '다람이',
-        discoveredSpotId: '12345',
-        discoveredSpotName: '서울숲',
-        discoveredAddr: '서울특별시 성동구',
-        discoveredAt: DateTime.now().subtract(const Duration(days: 2)),
-        stepsAtDiscovery: 10000,
-        currentTotalSteps: 15000,
-      ),
-      Soopkomon(
-        instanceId: 'test-2',
-        templateId: '008',
-        name: '토끼',
-        discoveredSpotId: '54321',
-        discoveredSpotName: '남산공원',
-        discoveredAddr: '서울특별시 중구',
-        discoveredAt: DateTime.now().subtract(const Duration(days: 1)),
-        stepsAtDiscovery: 20000,
-        currentTotalSteps: 22000,
-      ),
-    ];
-  }
+/// 5. 유저가 획득한 캐릭터 리스트 관리 (실시간 Firestore 연동)
+final userSoopkomonProvider = StreamProvider<List<Soopkomon>>((ref) {
+  final userAsync = ref.watch(userProvider);
+  final repository = ref.watch(soopkomonRepositoryProvider);
 
-  void add(Soopkomon character) {
-    state = [...state, character];
-  }
-
-  /// 모든 캐릭터의 실시간 누적 걸음수를 업데이트합니다.
-  void updateAllSteps(int totalSteps) {
-    state = [
-      for (final pet in state) pet.copyWith(currentTotalSteps: totalSteps),
-    ];
-  }
-
-  /// 특정 캐릭터를 부화 상태로 변경합니다.
-  void markAsHatched(String instanceId) {
-    state = [
-      for (final pet in state)
-        if (pet.instanceId == instanceId) pet.copyWith(isHatched: true) else pet,
-    ];
-  }
-}
-
-final userSoopkomonProvider = NotifierProvider<UserSoopkomon, List<Soopkomon>>(
-  UserSoopkomon.new,
-);
+  return userAsync.when(
+    data: (user) {
+      if (user == null) return Stream.value([]);
+      return repository.getUserSoopkomons(user.id);
+    },
+    loading: () => Stream.value([]),
+    error: (err, stack) => Stream.value([]),
+  );
+});
 
 /// 6. 필터링된 공원 리스트 (조합 프로바이더)
 final filteredLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
@@ -106,7 +77,16 @@ final filteredLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
   final selectedRegion = ref.watch(selectedRegionProvider);
 
   return locationsAsync.whenData((locations) {
-    return locations
+    // 1. 고유 ID(contentId) 기준 중복 제거 (방어적 코드)
+    final uniqueMap = <int, Location>{};
+    for (var loc in locations) {
+      uniqueMap[loc.id] = loc;
+    }
+    final deduplicated = uniqueMap.values.toList();
+
+    // 2. 지역 필터 적용
+    if (selectedRegion == Region.all) return deduplicated;
+    return deduplicated
         .where((loc) => loc.region == selectedRegion.label)
         .toList();
   });
@@ -119,7 +99,16 @@ final filteredTemplatesProvider = Provider<AsyncValue<List<SoopkomonTemplate>>>(
     final selectedRegion = ref.watch(selectedRegionProvider);
 
     return templatesAsync.whenData((templates) {
-      return templates.where((t) => t.region == selectedRegion).toList();
+      // 1. 고유 ID(templateId) 기준 중복 제거 (방어적 코드)
+      final uniqueMap = <String, SoopkomonTemplate>{};
+      for (var t in templates) {
+        uniqueMap[t.templateId] = t;
+      }
+      final deduplicated = uniqueMap.values.toList();
+
+      // 2. 지역 필터 적용
+      if (selectedRegion == Region.all) return deduplicated;
+      return deduplicated.where((t) => t.region == selectedRegion).toList();
     });
   },
 );

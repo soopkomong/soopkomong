@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/app_bottom_nav_bar.dart';
 
 class MainPage extends ConsumerStatefulWidget {
@@ -70,7 +71,11 @@ class _MainPageState extends ConsumerState<MainPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 탭 진입 전 미리 로드 (collection 탭 shimmer 방지)
+    ref.watch(locationsProvider);
+    ref.watch(soopkomonTemplatesProvider);
+
     // 실시간 친구 요청 리스닝
     ref.listen(friendRequestProvider, (previous, next) {
       if (next is AsyncData && next.value!.isNotEmpty) {

@@ -12,15 +12,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
+import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 
 /// [Presentation Layer] - View
-/// 사용자에게 직접 보여지는 화면을 구성하는 위젯입니다.
-/// flutter_riverpod의 [ConsumerStatefulWidget]을 사용하여 ViewModel의 상태를 구독하며,
-/// 비즈니스 로직과 상태 관리는 [HomeViewModel]에 모두 위임하고 렌더링에만 집중합니다.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -34,20 +34,18 @@ class _HomePageState extends ConsumerState<HomePage> {
   MapboxMap? mapboxMap;
   PointAnnotationManager? pointAnnotationManager;
   PolygonAnnotationManager? polygonAnnotationManager;
-  bool _markersAdded = false;
-  final Map<String, int> _markerIndexMap = {};
   Timer? _themeTimer;
+  final Map<String, int> _markerIndexMap = {};
+  bool _isAddingMarkers = false;
 
   @override
   void initState() {
     super.initState();
-    // 첫 프레임 렌더링 후 비동기로 데이터 로드 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeViewModelProvider.notifier).loadData();
       ref.read(homeViewModelProvider.notifier).startTracking();
     });
 
-    // 1분(60초)마다 현재 시간 확인하여 테마 갱신
     _themeTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (mapboxMap != null) {
         _applyDayNightTheme(mapboxMap!);
@@ -65,137 +63,132 @@ class _HomePageState extends ConsumerState<HomePage> {
     List<Location> locations,
     List<SoopkomonTemplate> templates,
   ) async {
-    if (mapboxMap == null || locations.isEmpty || _markersAdded) return;
-    _markersAdded = true;
+    if (mapboxMap == null || locations.isEmpty || _isAddingMarkers) return;
+    _isAddingMarkers = true;
 
-    // annotation manager 생성
-    pointAnnotationManager = await mapboxMap!.annotations
-        .createPointAnnotationManager();
-
-    List<PointAnnotationOptions> options = [];
-
-    // 템플릿의 eggType 라벨을 가져오는 헬퍼 로직
-    String getEggTypeLabel(Location loc) {
-      if (loc.petIds.isEmpty) return '기본';
-      try {
-        final template = templates.firstWhere(
-          (t) => t.templateId == loc.petIds.first,
-        );
-        return template.eggType.label;
-      } catch (_) {
-        return '기본';
+    try {
+      if (polygonAnnotationManager == null) {
+        polygonAnnotationManager = await mapboxMap!.annotations.createPolygonAnnotationManager();
+      } else {
+        await polygonAnnotationManager?.deleteAll();
       }
-    }
 
-    // 커스텀 마커 생성 및 등록 (타입별로 다른 색상의 마커 이미지 등록)
-    final Set<String> uniqueTypes = locations
-        .map((loc) => getEggTypeLabel(loc))
-        .toSet();
-    final Map<String, String> typeToImageId = {};
+      if (pointAnnotationManager == null) {
+        pointAnnotationManager = await mapboxMap!.annotations.createPointAnnotationManager();
+      } else {
+        await pointAnnotationManager?.deleteAll();
+      }
 
-    for (var type in uniqueTypes) {
-      final String imageId =
-          'icon_marker_${type}_${DateTime.now().millisecondsSinceEpoch}';
-      final Uint8List markerBytes = await createIconMarkerBitmap(
-        Icons.location_pin,
-        _getPetTypeColor(type),
-        size: 150.0,
+      pointAnnotationManager?.tapEvents(
+        onTap: (PointAnnotation annotation) {
+          final index = _markerIndexMap[annotation.id];
+          if (index != null) {
+            _showLocationDetails(index);
+          }
+        },
       );
 
-      try {
-        await mapboxMap!.style.addStyleImage(
-          imageId,
-          3.0,
-          MbxImage(width: 150, height: 150, data: markerBytes),
-          false,
-          [],
-          [],
-          null,
-        );
-      } catch (_) {
-        debugPrint("이미지 등록 실패 (무시됨)");
-      }
-      typeToImageId[type] = imageId;
-    }
+      List<PointAnnotationOptions> options = [];
 
-    for (var loc in locations) {
-      // Point 구조: Point(coordinates: Position(lng, lat))
-      final point = Point(coordinates: Position(loc.lng, loc.lat));
-      final eggTypeLabel = getEggTypeLabel(loc);
-
-      options.add(
-        PointAnnotationOptions(
-          geometry: point,
-          iconImage: typeToImageId[eggTypeLabel],
-          iconSize: 1.0,
-        ),
-      );
-    }
-
-    final annotations =
-        await pointAnnotationManager?.createMulti(options) ?? [];
-
-    // 마커 ID와 인덱스 매핑 저장
-    _markerIndexMap.clear();
-    for (int i = 0; i < annotations.length; i++) {
-      final id = annotations[i]?.id;
-      if (id != null) {
-        _markerIndexMap[id] = i;
-      }
-    }
-
-    // 마커 탭 이벤트 리스너 등록
-    pointAnnotationManager?.tapEvents(
-      onTap: (PointAnnotation annotation) {
-        final index = _markerIndexMap[annotation.id];
-        if (index != null) {
-          _showLocationDetails(index, locations, templates);
+      String getEggTypeLabel(Location loc) {
+        if (loc.petIds.isEmpty) return '기본';
+        try {
+          final template = templates.firstWhere(
+            (t) => t.templateId == loc.petIds.first,
+          );
+          return template.eggType.label;
+        } catch (_) {
+          return '기본';
         }
-      },
-    );
+      }
 
-    // 공원 주변 500m 반경 폴리곤 생성
-    polygonAnnotationManager = await mapboxMap!.annotations
-        .createPolygonAnnotationManager();
-    List<PolygonAnnotationOptions> polygonOptions = [];
+      final Set<String> uniqueTypes = locations
+          .map((loc) => getEggTypeLabel(loc))
+          .toSet();
+      final Map<String, String> typeToImageId = {};
 
-    for (var loc in locations) {
-      final center = Position(loc.lng, loc.lat);
-      // turf_helper를 사용하여 radius 반경의 원 형태 폴리곤 생성
-      final circleCoordinates = createCircleCoordinates(center, loc.radius);
+      for (var type in uniqueTypes) {
+        final String imageId =
+            'icon_marker_${type}_${DateTime.now().millisecondsSinceEpoch}';
+        final Uint8List markerBytes = await createIconMarkerBitmap(
+          Icons.location_pin,
+          _getPetTypeColor(type),
+          size: 150.0,
+        );
 
-      final bool isNight = _isNight();
-      final Color polygonColor = isNight ? Colors.pinkAccent : Colors.blue;
-      final double fillOpacity = isNight ? 0.3 : 0.2;
+        try {
+          await mapboxMap!.style.addStyleImage(
+            imageId,
+            3.0,
+            MbxImage(width: 150, height: 150, data: markerBytes),
+            false,
+            [],
+            [],
+            null,
+          );
+        } catch (_) {}
+        typeToImageId[type] = imageId;
+      }
 
-      polygonOptions.add(
-        PolygonAnnotationOptions(
-          geometry: Polygon(coordinates: [circleCoordinates]),
-          fillColor: polygonColor.withValues(alpha: fillOpacity).toARGB32(),
-          fillOutlineColor: polygonColor.toARGB32(),
-        ),
-      );
+      for (var loc in locations) {
+        final point = Point(coordinates: Position(loc.lng, loc.lat));
+        final eggTypeLabel = getEggTypeLabel(loc);
+
+        options.add(
+          PointAnnotationOptions(
+            geometry: point,
+            iconImage: typeToImageId[eggTypeLabel],
+            iconSize: 1.0,
+          ),
+        );
+      }
+
+      final annotations = await pointAnnotationManager?.createMulti(options) ?? [];
+
+      _markerIndexMap.clear();
+      for (int i = 0; i < annotations.length; i++) {
+        final id = annotations[i]?.id;
+        if (id != null) {
+          _markerIndexMap[id] = i;
+        }
+      }
+
+      List<PolygonAnnotationOptions> polygonOptions = [];
+
+      for (var loc in locations) {
+        final center = Position(loc.lng, loc.lat);
+        final circleCoordinates = createCircleCoordinates(center, loc.radius);
+
+        final bool isNight = _isNight();
+        final Color polygonColor = isNight ? Colors.pinkAccent : Colors.blue;
+        final double fillOpacity = isNight ? 0.3 : 0.2;
+
+        polygonOptions.add(
+          PolygonAnnotationOptions(
+            geometry: Polygon(coordinates: [circleCoordinates]),
+            fillColor: polygonColor.withValues(alpha: fillOpacity).toARGB32(),
+            fillOutlineColor: polygonColor.toARGB32(),
+          ),
+        );
+      }
+      await polygonAnnotationManager?.createMulti(polygonOptions);
+    } finally {
+      _isAddingMarkers = false;
     }
-    await polygonAnnotationManager?.createMulti(polygonOptions);
   }
 
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
 
-    // UI 컨트롤 숨기기 (나침반, 로고, 속성 ⓘ 아이콘, 스케일바)
     await mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
     await mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
-    await mapboxMap.attribution.updateSettings(
-      AttributionSettings(enabled: false),
-    );
+    await mapboxMap.attribution.updateSettings(AttributionSettings(enabled: false));
     await mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
 
-    // 내 위치 파란색 점(Puck) 표시 활성화
     await mapboxMap.location.updateSettings(
       LocationComponentSettings(enabled: true, puckBearingEnabled: true),
     );
 
-    // 카메라 줌아웃 한계(minZoom) 설정 - 가장 멀리보는 최대 반경 14.5
     await mapboxMap.setBounds(
       CameraBoundsOptions(
         bounds: CoordinateBounds(
@@ -210,47 +203,32 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (!mounted) return;
 
-    // MediaQuery.of(context).size 대신 sizeOf를 사용하여 불필요한 리빌드 방지 및 
-    // 마이크로태스크나 프레임 지연을 통해 레이아웃이 확정된 후 실행되도록 함.
     Future.microtask(() async {
       if (!mounted) return;
       final size = MediaQuery.sizeOf(context);
 
-      // 화면 이동(스크롤) 제스처 비활성화하여 내 위치 중심 고정
-      // 핀치(확대/축소) 및 회전 시에도 화면 중앙 좌표를 축으로 사용하여 이탈 방지
       await mapboxMap.gestures.updateSettings(
         GesturesSettings(
           scrollEnabled: false,
           pinchPanEnabled: false,
-          focalPoint:
-              ScreenCoordinate(x: size.width / 2.0, y: size.height / 2.0),
+          focalPoint: ScreenCoordinate(x: size.width / 2.0, y: size.height / 2.0),
         ),
       );
     });
 
-    // ViewModel의 현재 상태를 가져와 마커 추가 시도
     final state = ref.read(homeViewModelProvider);
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
-    if (!state.isLoading &&
-        state.locations.isNotEmpty &&
-        templatesAsync.hasValue) {
+    if (!state.isLoading && state.locations.isNotEmpty && templatesAsync.hasValue) {
       _addMarkers(state.locations, templatesAsync.value!);
     }
 
-    // 초기 테마(낮/밤) 적용
     await _applyDayNightTheme(mapboxMap);
   }
 
   Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
     final String timePreset = _isNight() ? "night" : "day";
-
-    // Mapbox Standard 스타일에 timePreset 적용
     try {
-      await mapbox.style.setStyleImportConfigProperty(
-        "basemap",
-        "lightPreset",
-        timePreset,
-      );
+      await mapbox.style.setStyleImportConfigProperty("basemap", "lightPreset", timePreset);
     } catch (e) {
       debugPrint("테마 갱신 에러: $e");
     }
@@ -268,14 +246,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (mapboxMap != null) {
       final currentCamera = await mapboxMap!.getCameraState();
-      final targetZoom = forceDefaultZoom
-          ? _defaultZoomLevel
-          : currentCamera.zoom;
+      final targetZoom = forceDefaultZoom ? _defaultZoomLevel : currentCamera.zoom;
       mapboxMap?.setCamera(
         CameraOptions(
-          center: Point(
-            coordinates: Position(position.longitude, position.latitude),
-          ),
+          center: Point(coordinates: Position(position.longitude, position.latitude)),
           zoom: targetZoom,
         ),
       );
@@ -283,6 +257,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showPetAcquiredDialog(String petName, String parkName, String eggPath) {
+    final locale = ref.read(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -296,14 +273,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               Image.asset(eggPath, width: 120, height: 120),
               const SizedBox(height: 24),
               Text(
-                '$parkName 숲코몽 알',
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                isEn ? '$parkName Soopkomon Egg' : '$parkName 숲코몽 알',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
-                '$parkName에 숲코몽 알이 나타났어요!\n숲코몽이 태어날 수 있도록 같이 걸어주세요!',
+                isEn
+                    ? 'A Soopkomon egg has appeared in $parkName!\nPlease walk together so it can hatch!'
+                    : '$parkName에 숲코몽 알이 나타났어요!\n숲코몽이 태어날 수 있도록 같이 걸어주세요!',
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
                 textAlign: TextAlign.center,
               ),
@@ -319,13 +297,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     backgroundColor: const Color(0xFF48B200),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('획득하기',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(isEn ? 'Acquire' : '획득하기',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -336,6 +311,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showPetHatchedDialog(String petName, String parkName, String imagePath) {
+    final locale = ref.read(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -346,17 +324,23 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(imagePath, width: 120, height: 120),
+              SoopkomonImage(
+                assetPath: imagePath,
+                remoteUrl: 'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${imagePath.split('/').last.split('_').first}_big.png?alt=media',
+                width: 120,
+                height: 120,
+              ),
               const SizedBox(height: 24),
               Text(
                 '$parkName $petName',
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
-                '$parkName에 $petName 숲코몽이 태어났어요!\n도감에서 자세한 정보를 확인하세요!',
+                isEn
+                    ? 'A $petName Soopkomon was born in $parkName!\nCheck more details in the collection!'
+                    : '$parkName에 $petName 숲코몽이 태어났어요!\n도감에서 자세한 정보를 확인하세요!',
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
                 textAlign: TextAlign.center,
               ),
@@ -372,13 +356,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     backgroundColor: const Color(0xFF48B200),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('획득하기',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(isEn ? 'Confirm' : '획득하기',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -388,26 +369,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  /// 마커 탭 시 ParkDetailSheet를 바텀시트로 표시합니다.
-  void _showLocationDetails(
-    int index,
-    List<Location> locations,
-    List<SoopkomonTemplate> templates,
-  ) {
+  void _showLocationDetails(int index) {
+    final state = ref.read(homeViewModelProvider);
+    final locations = state.locations;
     if (index < 0 || index >= locations.length) return;
-
     final loc = locations[index];
-
-    SoopkomonTemplate? primaryTemplate;
-    if (loc.petIds.isNotEmpty) {
-      try {
-        primaryTemplate = templates.firstWhere(
-          (t) => t.templateId == loc.petIds.first,
-        );
-      } catch (_) {}
-    }
-    final petName = primaryTemplate?.name ?? '알 수 없음';
-    final petType = primaryTemplate?.eggType.label ?? '기본';
 
     showModalBottomSheet(
       context: context,
@@ -442,88 +408,77 @@ class _HomePageState extends ConsumerState<HomePage> {
   Color _getPetTypeColor(String type) {
     switch (type) {
       case '물':
+      case 'Water':
         return Colors.blue;
       case '땅':
+      case 'Earth':
         return Colors.brown;
       case '풀':
+      case 'Grass':
         return Colors.green;
       case '비행':
+      case 'Flying':
         return Colors.lightBlueAccent;
       case '신비':
+      case 'Mystery':
         return Colors.purple;
       default:
         return Colors.grey;
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
-    final templatesAsync = ref.watch(soopkomonTemplatesProvider);
     final friendRequestsAsync = ref.watch(friendRequestProvider);
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+
     final friendRequests = friendRequestsAsync.value ?? [];
-    
-    // 배지 아이콘은 '대기 중(pending)'인 알림 개수만 표시합니다.
-    final pendingRequests = friendRequests.where(
-        (req) => req.status == FriendRequestStatus.pending).toList();
+    final pendingRequests = friendRequests.where((req) => req.status == FriendRequestStatus.pending).toList();
 
-    // 다른 탭이나 페이지(도감 등)에서 복귀 시 줌 16.5 초기화 이벤트를 수신합니다.
-    ref.listen(mapZoomResetProvider, (_, __) {
-      _moveToCurrentLocation(forceDefaultZoom: true);
+    // 언어 변경 시 마커 갱신 트리거
+    ref.listen(localeProvider, (prev, next) {
+      if (prev != next && mapboxMap != null) {
+        final currentState = ref.read(homeViewModelProvider);
+        final templates = ref.read(soopkomonTemplatesProvider).value;
+        if (!currentState.isLoading && currentState.locations.isNotEmpty && templates != null) {
+          _addMarkers(currentState.locations, templates);
+        }
+      }
     });
 
-    // 실시간 위치 변화에 따른 카메라 이동 처리
-    ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (
-      prev,
-      next,
-    ) {
+    // 데이터 로드 완료 및 변경 시 마커 갱신
+    ref.listen(homeViewModelProvider.select((s) => s.locations), (prev, next) {
+      if (next.isNotEmpty && mapboxMap != null) {
+        final templates = ref.read(soopkomonTemplatesProvider).value;
+        if (templates != null) {
+          _addMarkers(next, templates);
+        }
+      }
+    });
+
+    ref.listen(mapZoomResetProvider, (_, _) => _moveToCurrentLocation(forceDefaultZoom: true));
+
+    ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (prev, next) {
       if (next != null && mapboxMap != null) {
-        mapboxMap?.setCamera(
-          CameraOptions(
-            center: Point(coordinates: Position(next.longitude, next.latitude)),
-          ),
-        );
+        mapboxMap?.setCamera(CameraOptions(center: Point(coordinates: Position(next.longitude, next.latitude))));
       }
     });
 
-    // 펫 획득 알림 처리
-    ref.listen(homeViewModelProvider.select((s) => s.lastAcquiredPetName), (
-      prev,
-      next,
-    ) {
+    ref.listen(homeViewModelProvider.select((s) => s.lastAcquiredPetName), (prev, next) {
       if (next != null) {
         final currentState = ref.read(homeViewModelProvider);
-        _showPetAcquiredDialog(
-          next,
-          currentState.lastAcquiredParkName ?? '',
-          currentState.lastAcquiredPetEggPath ??
-              'assets/images/characters/egg_mystery.png',
-        );
+        _showPetAcquiredDialog(next, currentState.lastAcquiredParkName ?? '', currentState.lastAcquiredPetEggPath ?? 'assets/images/characters/egg_mystery.png');
       }
     });
 
-    // 펫 부화 알림 처리
-    ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (
-      prev,
-      next,
-    ) {
+    ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (prev, next) {
       if (next != null) {
         final currentState = ref.read(homeViewModelProvider);
-        _showPetHatchedDialog(
-          next,
-          currentState.lastHatchedParkName ?? '',
-          currentState.lastHatchedPetImagePath ??
-              'assets/images/characters/007_big.png',
-        );
+        _showPetHatchedDialog(next, currentState.lastHatchedParkName ?? '', currentState.lastHatchedPetImagePath ?? 'assets/images/characters/007_big.png');
       }
     });
-
-    // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
-    if (!state.isLoading &&
-        state.locations.isNotEmpty &&
-        mapboxMap != null &&
-        templatesAsync.hasValue) {
-      _addMarkers(state.locations, templatesAsync.value!);
-    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -534,28 +489,15 @@ class _HomePageState extends ConsumerState<HomePage> {
           alignment: Alignment.centerLeft,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("오늘 걸음 수", style: TextStyle(fontSize: 12)),
+                Text(isEn ? "Today's Steps" : "오늘 걸음 수", style: const TextStyle(fontSize: 12)),
                 const SizedBox(width: 8),
-                Image.asset(
-                  "assets/images/footprints.png",
-                  width: 20,
-                  height: 20,
-                ),
+                Image.asset("assets/images/footprints.png", width: 20, height: 20),
                 const SizedBox(width: 8),
-                Text(
-                  state.stepCount.toString(), // 실시간 만보기 값
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(state.stepCount.toString(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -566,16 +508,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               isLabelVisible: pendingRequests.isNotEmpty,
               backgroundColor: Colors.red,
               textColor: Colors.white,
-              label: Text(
-                '${pendingRequests.length}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              label: Text('${pendingRequests.length}', style: const TextStyle(fontWeight: FontWeight.bold)),
               child: const Icon(Icons.notifications),
             ),
-            onPressed: () async {
-              // 아이콘 클릭 시 알림 숫자에 관계없이 알림 페이지로 이동시킵니다
-              context.pushNamed(AppRoute.notifications.name);
-            },
+            onPressed: () => context.pushNamed(AppRoute.notifications.name),
             style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
           IconButton(
@@ -586,56 +522,34 @@ class _HomePageState extends ConsumerState<HomePage> {
             },
             style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
         ],
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.black,
       ),
-
       body: Stack(
         children: [
           MapWidget(
             key: const ValueKey("mapWidget"),
-            // _applyDayNightTheme가 정상적으로 먹게 하려면 Mapbox Standard 스타일을 베이스로 사용합니다
             styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
             onMapCreated: _onMapCreated,
-            // 줌/내비게이션 시에도 완벽하게 내 위치가 가운데 고정되도록 Viewport 사용
-            viewport: FollowPuckViewportState(
-              zoom: _defaultZoomLevel,
-              pitch: 0.0,
-            ),
+            viewport: FollowPuckViewportState(zoom: _defaultZoomLevel, pitch: 0.0),
             cameraOptions: CameraOptions(
               center: Point(coordinates: Position(127.7669, 35.9078)),
               zoom: _defaultZoomLevel,
-              pitch: 0.0, // 3D 건물이 눕지 않게 완벽한 2D 평면
-              bearing: 0.0, // 북쪽 고정
+              pitch: 0.0,
+              bearing: 0.0,
             ),
           ),
-          // 로딩 및 에러 UI 임시 주석
-          // if (state.isLoading) const Center(child: CircularProgressIndicator()),
-          // if (state.errorMessage != null)
-          //   Center(
-          //     child: Container(
-          //       padding: const EdgeInsets.all(16),
-          //       color: Colors.white.withValues(alpha: 0.8),
-          //       child: Text(
-          //         state.errorMessage!,
-          //         style: const TextStyle(color: Colors.red),
-          //       ),
-          //     ),
-          //   ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.white,
         child: const Icon(Icons.add_location_alt, color: Colors.green),
         onPressed: () {
-          // 현재 걸음 수에서 100걸음을 더하여 펫 획득 및 부화 조건을 쉽게 테스트함
           final currentSteps = ref.read(homeViewModelProvider).stepCount;
-          ref
-              .read(homeViewModelProvider.notifier)
-              .updateStepCount(currentSteps + 100);
+          ref.read(homeViewModelProvider.notifier).updateStepCount(currentSteps + 100);
         },
       ),
     );

@@ -1,4 +1,5 @@
 enum Region {
+  all('전체'),
   capital('수도권'),
   gangwon('강원권'),
   chungcheong('충청권'),
@@ -12,7 +13,7 @@ enum Region {
   factory Region.fromValue(String value) {
     return Region.values.firstWhere(
       (e) => e.name == value || e.label == value,
-      orElse: () => Region.capital,
+      orElse: () => Region.all,
     );
   }
 }

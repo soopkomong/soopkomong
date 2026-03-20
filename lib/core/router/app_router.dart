@@ -30,6 +30,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen(userProvider, (previous, next) {
     refreshNotifier.value = !refreshNotifier.value;
   });
+  final notifier = ValueNotifier<AppUser?>(ref.read(userProvider).value);
+  ref.listen<AsyncValue<AppUser?>>(userProvider, (_, next) {
+    notifier.value = next.value;
+  });
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -44,6 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final user = userAsync.value;
+      final user = notifier.value;
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
       // 2. 사용자가 없고 로그인 중이 아니라면 로그인 페이지로
@@ -59,6 +65,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     refreshListenable: refreshNotifier,
+    refreshListenable: notifier,
     observers: [routeObserver],
     routes: [
       StatefulShellRoute.indexedStack(

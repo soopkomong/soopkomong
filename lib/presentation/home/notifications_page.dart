@@ -33,7 +33,7 @@ class NotificationsPage extends ConsumerWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(16.0),
               itemCount: requests.length,
-              separatorBuilder: (_, __) => const Divider(),
+              separatorBuilder: (_, _) => const Divider(),
               itemBuilder: (context, index) {
                 final req = requests[index];
                 return ListTile(

@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -40,7 +42,11 @@ class MyPage extends ConsumerWidget {
                     const SizedBox(height: 28),
                     const SoundSection(),
                     const SizedBox(height: 16),
-                    const SettingTile(title: '언어', trailing: '한국어'),
+                    SettingTile(
+                      title: '언어',
+                      trailing: ref.watch(localeProvider).label,
+                      onTap: () => _showLanguageDialog(context, ref),
+                    ),
                     const SizedBox(height: 16),
                     const SettingTile(title: '개인정보 처리 방침'),
                     const SizedBox(height: 16),
@@ -54,6 +60,51 @@ class MyPage extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  '언어 선택 / Select Language',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ListTile(
+                title: const Text('한국어'),
+                trailing: ref.watch(localeProvider) == AppLocale.ko
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : null,
+                onTap: () {
+                  ref.read(localeProvider.notifier).setLocale(AppLocale.ko);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: const Text('English'),
+                trailing: ref.watch(localeProvider) == AppLocale.en
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : null,
+                onTap: () {
+                  ref.read(localeProvider.notifier).setLocale(AppLocale.en);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -199,7 +250,7 @@ class _StatsSection extends ConsumerWidget {
               );
             },
             title: '내가 모은 캐릭터',
-            value: userCharacters.length.toString(),
+            value: (userCharacters.value?.length ?? 0).toString(),
             image: 'assets/images/character_silhouette.png',
           ),
         ),
@@ -302,12 +353,14 @@ class SwitchTile extends StatelessWidget {
 class SettingTile extends StatelessWidget {
   final String title;
   final String? trailing;
+  final VoidCallback? onTap;
 
-  const SettingTile({super.key, required this.title, this.trailing});
+  const SettingTile({super.key, required this.title, this.trailing, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      onTap: onTap,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
