@@ -13,7 +13,6 @@ import 'package:soopkomong/presentation/friends/friends_page.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
-import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
 
 export 'app_route.dart';
@@ -23,41 +22,43 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final userAsync = ref.watch(userProvider);
+  // authStateChangesProvider 및 userProvider를 리스닝하여 상태가 바뀔 때마다 라우터 새로고침 트리거
+  final refreshNotifier = ValueNotifier<bool>(false);
+  ref.listen(authStateChangesProvider, (previous, next) {
+    refreshNotifier.value = !refreshNotifier.value;
+  });
+  ref.listen(userProvider, (previous, next) {
+    refreshNotifier.value = !refreshNotifier.value;
+  });
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
+      // 1. 현재 사용자 데이터를 비동기 데이터의 현재 값으로 가져옴
+      final userAsync = ref.read(userProvider);
+      
+      // 초기 로딩 중이거나 새로고침 중이면서 데이터가 아직 없는 경우 리다이렉트 보류
+      if (userAsync.isLoading && userAsync.value == null) {
+        return null;
+      }
+
       final user = userAsync.value;
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
+      // 2. 사용자가 없고 로그인 중이 아니라면 로그인 페이지로
       if (user == null) {
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
-
-      // TODO: 임시로 캐릭터 생성 화면 우회 (홈으로 바로 이동)
-      /*
-      if (!user.hasCharacter) {
-        return isCustomizing ? null : AppRoute.characterCustomize.path;
-      }
-      */
-
-      // 로그인 페이지에 있거나, 모든 온보딩이 끝났는데 커스텀 페이지에 있는 경우 홈으로
-      // (온보딩 페이지에 있는 경우는 명시적으로 완료할 때까지 유지하도록 isOnboarding 제외)
+      // 3. 사용자가 있고 로그인 페이지에 있다면 홈으로
       if (isLoggingIn) {
         return AppRoute.home.path;
       }
 
       return null;
     },
-    refreshListenable: userAsync.when(
-      data: (user) => ValueNotifier<AppUser?>(user),
-      error: (_, __) => ValueNotifier<AppUser?>(null),
-      loading: () => ValueNotifier<AppUser?>(null),
-    ),
+    refreshListenable: refreshNotifier,
     observers: [routeObserver],
     routes: [
       StatefulShellRoute.indexedStack(

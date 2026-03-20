@@ -29,7 +29,7 @@ class FriendModel {
     return FriendModel(
       id: doc.id,
       name: data['displayName'] ?? '이름 없음',
-      characterTemplateId: data['templateId'] ?? '001',
+      characterTemplateId: data['templateId'] ?? '007',
       leafProgress: data['leafProgress'] ?? 0,
       leafMax: data['leafMax'] ?? 50,
       pawProgress: data['pawProgress'] ?? 0,
@@ -54,16 +54,21 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
 
         if (friendIds.isEmpty) return [];
 
+        // Firestore whereIn은 최대 30개까지 지원. 만약 30명이 넘어가면 나눠서 조회 필요.
+        // 여기서는 일단 기본 로직으로 구현하되 30개 단위 분절 처리 로직 추가
         final List<FriendModel> friends = [];
-        for (var friendId in friendIds) {
-          final friendDoc = await FirebaseFirestore.instance
+        
+        for (var i = 0; i < friendIds.length; i += 30) {
+          final chunk = friendIds.sublist(i, i + 30 > friendIds.length ? friendIds.length : i + 30);
+          final querySnapshot = await FirebaseFirestore.instance
               .collection('users')
-              .doc(friendId)
+              .where(FieldPath.documentId, whereIn: chunk)
               .get();
-          if (friendDoc.exists) {
-            friends.add(FriendModel.fromFirestore(friendDoc));
-          }
+          
+          friends.addAll(querySnapshot.docs.map((doc) => FriendModel.fromFirestore(doc)));
         }
+        
+        // 데이터 정렬 (필요시)
         return friends;
       },
       loading: () => state.value ?? [],
@@ -131,7 +136,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .collection('users')
           .doc(currentUser.id)
           .get();
-      final myTemplateId = myDoc.data()?['templateId'] ?? '001';
+      final myTemplateId = myDoc.data()?['templateId'] ?? '007';
 
       // 친구 요청 문서 생성
       final request = FriendRequest(
@@ -154,6 +159,15 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
 
   // 친구 요청 수락
   Future<void> acceptFriendRequest(FriendRequest request) async {
+    final currentUser = ref.read(authRepositoryProvider).currentUser;
+    if (currentUser == null) return;
+
+    // 본인에게 온 요청인지 확인 (ID 불일치 방지)
+    if (request.receiverId != currentUser.id) {
+      throw Exception('본인에게 온 친구 요청만 수락할 수 있습니다.');
+    }
+
+    state = const AsyncValue.loading();
     try {
       final batch = FirebaseFirestore.instance.batch();
 
@@ -166,7 +180,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
       // 2. 내 친구 목록에 추가
       final myRef = FirebaseFirestore.instance
           .collection('users')
-          .doc(request.receiverId);
+          .doc(currentUser.id);
       batch.update(myRef, {
         'friends': FieldValue.arrayUnion([request.senderId])
       });
@@ -176,12 +190,16 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .collection('users')
           .doc(request.senderId);
       batch.update(senderRef, {
-        'friends': FieldValue.arrayUnion([request.receiverId])
+        'friends': FieldValue.arrayUnion([currentUser.id])
       });
 
       await batch.commit();
+      
+      // Firestore 변경 후 Notifier의 상태를 강제로 새로고침하여 
+      // 로딩 상태를 해제하고 최신 친구 목록을 가져옵니다.
       ref.invalidateSelf();
-    } catch (e) {
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
       rethrow;
     }
   }

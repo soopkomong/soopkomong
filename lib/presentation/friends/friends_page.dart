@@ -332,6 +332,14 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                   backgroundImage: AssetImage(
                                     'assets/images/characters/${request.senderTemplateId}_big.png',
                                   ),
+                                  onBackgroundImageError: (exception, stackTrace) {
+                                    // 이미지 로드 실패 시 로그 출력 방지 및 배경 유지
+                                  },
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: AppColors.gray300,
+                                    size: 30,
+                                  ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
@@ -350,16 +358,35 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                                    Row(
                                       children: [
                                         GestureDetector(
-                                          onTap: () => ref
-                                              .read(friendsViewModelProvider.notifier)
-                                              .acceptFriendRequest(request),
+                                          onTap: friendsAsync.isLoading 
+                                            ? null 
+                                            : () async {
+                                              try {
+                                                await ref
+                                                    .read(friendsViewModelProvider.notifier)
+                                                    .acceptFriendRequest(request);
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('친구 요청을 수락했습니다.')),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('수락 실패: $e')),
+                                                  );
+                                                }
+                                              }
+                                            },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
                                               vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: AppColors.primary700,
+                                              color: friendsAsync.isLoading 
+                                                ? AppColors.gray300 
+                                                : AppColors.primary700,
                                               borderRadius:
                                                   BorderRadius.circular(15),
                                             ),
@@ -375,9 +402,26 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                         ),
                                         const SizedBox(width: 8),
                                         GestureDetector(
-                                          onTap: () => ref
-                                              .read(friendsViewModelProvider.notifier)
-                                              .declineFriendRequest(request.id),
+                                          onTap: friendsAsync.isLoading 
+                                            ? null 
+                                            : () async {
+                                              try {
+                                                await ref
+                                                    .read(friendsViewModelProvider.notifier)
+                                                    .declineFriendRequest(request.id);
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('친구 요청을 거절했습니다.')),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('거절 실패: $e')),
+                                                  );
+                                                }
+                                              }
+                                            },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
@@ -388,11 +432,13 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                               borderRadius:
                                                   BorderRadius.circular(15),
                                             ),
-                                            child: const Text(
+                                            child: Text(
                                               '거절',
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: AppColors.gray600,
+                                                color: friendsAsync.isLoading 
+                                                  ? AppColors.gray300 
+                                                  : AppColors.gray600,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -474,9 +520,14 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                             backgroundImage: AssetImage(
                               'assets/images/characters/${friend.characterTemplateId}_big.png',
                             ),
-                            onBackgroundImageError: (_, __) {
-                              // 이미지 없을 때 폴백 처리는 생략 (기본 배경 유지)
+                            onBackgroundImageError: (exception, stackTrace) {
+                              // 이미지 로드 실패 시 폴백 처리는 생략 (기본 배경 유지)
                             },
+                            child: const Icon(
+                              Icons.person,
+                              color: AppColors.gray300,
+                              size: 30,
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Column(
