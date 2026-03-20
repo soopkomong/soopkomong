@@ -23,65 +23,68 @@ class ParkCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8,
         children: [
-          Container(
-            width: double.infinity,
-            height: 117,
-            clipBehavior: Clip.antiAlias,
-            decoration: ShapeDecoration(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          AspectRatio(
+            aspectRatio: 1.4,
+            child: Container(
+              width: double.infinity,
+              clipBehavior: Clip.antiAlias,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: imageUrl.startsWith('http')
-                      ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
-                                colorFilter: isVisited
-                                    ? null
-                                    : const ColorFilter.mode(
-                                        Colors.grey,
-                                        BlendMode.saturation,
-                                      ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: imageUrl.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.cover,
+                                  colorFilter: isVisited
+                                      ? null
+                                      : const ColorFilter.mode(
+                                          Colors.grey,
+                                          BlendMode.saturation,
+                                        ),
+                                ),
                               ),
                             ),
+                            fadeOutDuration: Duration.zero,
+                            placeholderFadeInDuration: Duration.zero,
+                            placeholder: (context, url) => const ShimmerLoading(
+                              width: double.infinity,
+                              height: double.infinity,
+                              borderRadius: 0,
+                            ),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.image, color: AppColors.gray300),
+                          )
+                        : Image.asset(
+                            imageUrl.isEmpty
+                                ? 'assets/images/placeholder.png'
+                                : imageUrl,
+                            fit: BoxFit.cover,
+                            color: isVisited ? null : Colors.grey,
+                            colorBlendMode:
+                                isVisited ? null : BlendMode.saturation,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.image, color: AppColors.gray300),
                           ),
-                          fadeOutDuration: Duration.zero,
-                          placeholderFadeInDuration: Duration.zero,
-                          placeholder: (context, url) => const ShimmerLoading(
-                            width: double.infinity,
-                            height: double.infinity,
-                            borderRadius: 0,
-                          ),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.image, color: AppColors.gray300),
-                        )
-                      : Image.asset(
-                          imageUrl.isEmpty
-                              ? 'assets/images/placeholder.png'
-                              : imageUrl,
-                          fit: BoxFit.cover,
-                          color: isVisited ? null : Colors.grey,
-                          colorBlendMode: isVisited ? null : BlendMode.saturation,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.image, color: AppColors.gray300),
-                        ),
-                ),
-                if (!isVisited)
-                  Container(color: AppColors.black.withValues(alpha: 0.35)),
-                if (!isVisited)
-                  const Center(
-                    child: Icon(Icons.lock, color: Colors.white, size: 32),
                   ),
-              ],
+                  if (!isVisited)
+                    Container(color: AppColors.black.withValues(alpha: 0.35)),
+                  if (!isVisited)
+                    const Center(
+                      child: Icon(Icons.lock, color: Colors.white, size: 32),
+                    ),
+                ],
+              ),
             ),
           ),
           Container(

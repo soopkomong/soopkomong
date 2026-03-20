@@ -66,7 +66,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     List<Location> locations,
     List<SoopkomonTemplate> templates,
   ) async {
-    if (mapboxMap == null || locations.isEmpty || _markersAdded) return;
+    if (mapboxMap == null || locations.isEmpty) return;
+    
+    // 이미 마커가 추가되었고 데이터가 동일하다면 추가 작업을 하지 않음
+    // (여기서는 간단히 _markersAdded 플래그만 쓰지만, 실제로는 데이터 변경 여부 체크가 좋음)
+    if (_markersAdded) return;
     _markersAdded = true;
 
     // annotation manager 생성
@@ -113,8 +117,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           [],
           null,
         );
-      } catch (_) {
-        debugPrint("이미지 등록 실패 (무시됨)");
+      } catch (e) {
+        debugPrint("이미지 등록 실패 ($type): $e");
       }
       typeToImageId[type] = imageId;
     }
@@ -406,16 +410,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     final loc = locations[index];
 
-    SoopkomonTemplate? primaryTemplate;
-    if (loc.petIds.isNotEmpty) {
-      try {
-        primaryTemplate = templates.firstWhere(
-          (t) => t.templateId == loc.petIds.first,
-        );
-      } catch (_) {}
-    }
-    final petName = primaryTemplate?.name ?? '알 수 없음';
-    final petType = primaryTemplate?.eggType.label ?? '기본';
+
 
     showModalBottomSheet(
       context: context,
@@ -466,7 +461,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
-    final templatesAsync = ref.watch(soopkomonTemplatesProvider);
     final friendRequestsAsync = ref.watch(friendRequestProvider);
     final friendRequests = friendRequestsAsync.value ?? [];
     
@@ -475,7 +469,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         (req) => req.status == FriendRequestStatus.pending).toList();
 
     // 다른 탭이나 페이지(도감 등)에서 복귀 시 줌 16.5 초기화 이벤트를 수신합니다.
-    ref.listen(mapZoomResetProvider, (_, __) {
+    ref.listen(mapZoomResetProvider, (_, _) {
       _moveToCurrentLocation(forceDefaultZoom: true);
     });
 
@@ -525,13 +519,24 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     });
 
-    // 데이터가 로드되면 마커 추가 (mapbox 맵 객체가 있을 때만)
-    if (!state.isLoading &&
-        state.locations.isNotEmpty &&
-        mapboxMap != null &&
-        templatesAsync.hasValue) {
-      _addMarkers(state.locations, templatesAsync.value!);
-    }
+    // 데이터가 로드되거나 템플릿이 로드되면 마커 추가 처리 (ref.listen으로 위임)
+    ref.listen(homeViewModelProvider.select((s) => s.locations), (prev, next) {
+      if (next.isNotEmpty && mapboxMap != null) {
+        final templates = ref.read(soopkomonTemplatesProvider);
+        if (templates.hasValue) {
+          _addMarkers(next, templates.value!);
+        }
+      }
+    });
+
+    ref.listen(soopkomonTemplatesProvider, (prev, next) {
+      if (next.hasValue && mapboxMap != null) {
+        final state = ref.read(homeViewModelProvider);
+        if (state.locations.isNotEmpty) {
+          _addMarkers(state.locations, next.value!);
+        }
+      }
+    });
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -621,18 +626,18 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
           // 로딩 및 에러 UI 임시 주석
-          // if (state.isLoading) const Center(child: CircularProgressIndicator()),
-          // if (state.errorMessage != null)
-          //   Center(
-          //     child: Container(
-          //       padding: const EdgeInsets.all(16),
-          //       color: Colors.white.withValues(alpha: 0.8),
-          //       child: Text(
-          //         state.errorMessage!,
-          //         style: const TextStyle(color: Colors.red),
-          //       ),
-          //     ),
-          //   ),
+          if (state.isLoading) const Center(child: CircularProgressIndicator()),
+          if (state.errorMessage != null)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.white.withValues(alpha: 0.8),
+                child: Text(
+                  state.errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
