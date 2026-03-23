@@ -12,6 +12,9 @@ import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:soopkomong/presentation/providers/character_parts_provider.dart';
 
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -52,12 +55,6 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   Color _selectedHairColor = Colors.white;
   Color _selectedClothesColor = Colors.white;
   Color _selectedShoesColor = Colors.white;
-
-  // 더미 데이터 (실제 데이터에 맞게 확장 가능)
-  final List<String> _hairs = ['01', '02', '03'];
-  final List<String> _faces = ['smile', 'smile_girl', 'smile2', 'smile_girl2'];
-  final List<String> _clothes = ['02', '03']; // '01'은 기본 옷이므로 선택지에서 제외
-  final List<String> _shoes = ['01']; // 신발 아이템 리 목록
 
   final List<Color> _palette = [
     const Color(0xFF1A1A1A), // 1. 모던 블랙
@@ -129,14 +126,20 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     });
   }
 
-  void _randomizeCharacter() {
+  void _randomizeCharacter(Map<String, List<String>> parts) {
     setState(() {
-      _selectedHair = (_hairs.toList()..shuffle()).first;
-      _selectedClothes = (_clothes.toList()..shuffle()).first;
-      _selectedShoes = (_shoes.toList()..shuffle()).first; // 신발도 랜덤 포함
+      final hairs = parts['hairs'] ?? ['01'];
+      final clothes = parts['clothes'] ?? ['01'];
+      final shoes = parts['shoes'] ?? [];
+      
+      _selectedHair = (hairs.toList()..shuffle()).first;
+      _selectedClothes = (clothes.toList()..shuffle()).first;
+      // 신발 리스트가 비어있지 않을 때만 랜덤 선택
+      if (shoes.isNotEmpty) {
+        _selectedShoes = (shoes.toList()..shuffle()).first;
+      }
       _selectedHairColor = (_palette.toList()..shuffle()).first;
-      _selectedSkinColor =
-          (_skinPalette.toList()..shuffle()).first; // 피부색도 취향껏 랜덤
+      _selectedSkinColor = (_skinPalette.toList()..shuffle()).first;
     });
   }
 
@@ -158,6 +161,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
     final categories = isEn ? _categoriesEn : _categoriesKo;
+    final partsAsync = ref.watch(characterPartsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -169,17 +173,21 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          TextButton.icon(
-            onPressed: _randomizeCharacter,
-            icon: const Icon(Icons.autorenew, size: 20, color: Colors.black87),
-            label: Text(
-              isEn ? 'Random' : '랜덤 꾸미기',
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+          partsAsync.when(
+            data: (parts) => TextButton.icon(
+              onPressed: () => _randomizeCharacter(parts),
+              icon: const Icon(Icons.autorenew, size: 20, color: Colors.black87),
+              label: Text(
+                isEn ? 'Random' : '랜덤 꾸미기',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
+            loading: () => const SizedBox.shrink(),
+            error: (err, stack) => const SizedBox.shrink(),
           ),
           const SizedBox(width: 8),
         ],
@@ -197,7 +205,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               child: Column(
                 children: [
                   _buildCategoryTabBar(categories),
-                  Expanded(child: _buildItemGrid(isEn)),
+                  Expanded(child: _buildItemGrid(isEn, partsAsync)),
                 ],
               ),
             ),
@@ -220,23 +228,23 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           RepaintBoundary(
             key: _globalKey,
             child: CharacterAvatar(
-              baseImagePath: 'assets/images/parts/body_base.png',
-              bodyShadowImagePath: 'assets/images/parts/body_shadow.png',
+              baseImagePath: 'body_base.png',
+              bodyShadowImagePath: 'body_shadow.png',
               baseColor: _selectedSkinColor,
-              hairImagePath: 'assets/images/parts/hair_$_selectedHair.png',
+              hairImagePath: 'hair_$_selectedHair.png',
               hairHighlightImagePath:
-                  'assets/images/parts/hair_${_selectedHair}_highlight.png',
+                  'hair_${_selectedHair}_highlight.png',
               hairShadowImagePath:
-                  'assets/images/parts/hair_${_selectedHair}_shadow.png',
+                  'hair_${_selectedHair}_shadow.png',
               hairSubShadowImagePath:
-                  'assets/images/parts/hair_${_selectedHair}_sub_shadow.png',
+                  'hair_${_selectedHair}_sub_shadow.png',
               hairColor: _selectedHairColor,
-              faceImagePath: 'assets/images/parts/face_$_selectedFace.png',
+              faceImagePath: 'face_$_selectedFace.png',
               clothesImagePath:
-                  'assets/images/parts/clothes_$_selectedClothes.png',
+                  'clothes_$_selectedClothes.png',
               clothesColor: _selectedClothesColor,
               shoesImagePath: _selectedShoes != null
-                  ? 'assets/images/parts/shoes_$_selectedShoes.png'
+                  ? 'shoes_$_selectedShoes.png'
                   : null,
               shoesColor: _selectedShoesColor,
               size: 280,
@@ -383,84 +391,90 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   }
 
   /// 아이템 선택 그리드 (각 탭별로 팔레트와 그리드를 포함)
-  Widget _buildItemGrid(bool isEn) {
-    return Container(
-      color: Colors.white,
-      child: TabBarView(
-        controller: _tabController,
-        children: [
-          // 0. 머리 탭
-          Column(
+  Widget _buildItemGrid(bool isEn, AsyncValue<Map<String, List<String>>> partsAsync) {
+    return partsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
+      data: (parts) {
+        final hairs = parts['hairs'] ?? [];
+        final faces = parts['faces'] ?? [];
+        final clothes = parts['clothes'] ?? [];
+        final shoes = parts['shoes'] ?? [];
+
+        return Container(
+          color: Colors.white,
+          child: TabBarView(
+            controller: _tabController,
             children: [
-              _buildColorPalette(0),
-              const SizedBox(height: 4), // 16에서 4로 줄여서 위쪽과 밀착 시킴
-              Expanded(
-                child: _buildGridForCategory(
-                  'hair',
-                  _hairs,
-                  _selectedHair,
-                  (id) => setState(() => _selectedHair = id),
-                ),
-              ),
-            ],
-          ),
-          // 1. 얼굴 탭
-          Column(
-            children: [
-              _buildColorPalette(1),
-              const SizedBox(height: 4), // 동일하게 축소
-              Expanded(
-                child: _buildGridForCategory(
-                  'face',
-                  _faces,
-                  _selectedFace,
-                  (id) => setState(() => _selectedFace = id),
-                ),
-              ),
-            ],
-          ),
-          // 2. 옷 & 신발 탭
-          Column(
-            children: [
-              Expanded(
-                child: Container(
-                  color: Colors.white,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      20,
-                      12,
-                      20,
-                      20,
-                    ), // 상단 24에서 12로 축소
-                    children: [
-                      _buildSectionTitle(isEn ? 'Clothes' : '의상'),
-                      _buildCompactGrid(
-                        'clothes',
-                        _clothes,
-                        _selectedClothes,
-                        (id) {
-                          if (id != null) setState(() => _selectedClothes = id);
-                        },
-                        allowDeselect: true,
-                        deselectId: '01',
-                      ),
-                      const SizedBox(height: 24), // 섹션 간 여백 확보
-                      _buildSectionTitle(isEn ? 'Shoes' : '신발'),
-                      _buildCompactGrid(
-                        'shoes',
-                        _shoes,
-                        _selectedShoes,
-                        (id) => setState(() => _selectedShoes = id),
-                        allowDeselect: true,
-                      ),
-                    ],
+              // 0. 머리 탭
+              Column(
+                children: [
+                  _buildColorPalette(0),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: _buildGridForCategory(
+                      'hair',
+                      hairs,
+                      _selectedHair,
+                      (id) => setState(() => _selectedHair = id),
+                    ),
                   ),
-                ),
+                ],
+              ),
+              // 1. 얼굴 탭
+              Column(
+                children: [
+                  _buildColorPalette(1),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: _buildGridForCategory(
+                      'face',
+                      faces,
+                      _selectedFace,
+                      (id) => setState(() => _selectedFace = id),
+                    ),
+                  ),
+                ],
+              ),
+              // 2. 옷 & 신발 탭
+              Column(
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: Colors.white,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        children: [
+                          _buildSectionTitle(isEn ? 'Clothes' : '의상'),
+                          _buildCompactGrid(
+                            'clothes',
+                            clothes,
+                            _selectedClothes,
+                            (id) {
+                              if (id != null) setState(() => _selectedClothes = id);
+                            },
+                            allowDeselect: true,
+                            deselectId: '01',
+                          ),
+                          const SizedBox(height: 24),
+                          _buildSectionTitle(isEn ? 'Shoes' : '신발'),
+                          _buildCompactGrid(
+                            'shoes',
+                            shoes,
+                            _selectedShoes,
+                            (id) => setState(() => _selectedShoes = id),
+                            allowDeselect: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -530,8 +544,6 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       itemBuilder: (context, index) {
         final itemId = items[index];
         final isSelected = itemId == selectedId;
-        String imagePath = 'assets/images/parts/${type}_$itemId.png';
-
         return GestureDetector(
           onTap: () {
             if (isSelected && allowDeselect) {
@@ -540,30 +552,25 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               onSelect(itemId);
             }
           },
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected ? Colors.black : Colors.transparent,
-                width: 2,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? Colors.black : Colors.transparent,
+                  width: 2,
+                ),
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0), // 패딩 추가
-                child: Image.asset(
-                  'assets/images/parts/thumbnails/${type}_$itemId.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    // 썸네일이 없으면 원본 이미지 표시
-                    return Image.asset(imagePath, fit: BoxFit.contain);
-                  },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: _buildNetworkImage(
+                    _getPartUrl(type, itemId, isThumbnail: true),
+                  ),
                 ),
               ),
             ),
-          ),
         );
       },
     );
@@ -586,21 +593,18 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           mainAxisSpacing: 16,
         ),
         itemBuilder: (context, index) {
-          final itemId = items[index];
-          final isSelected = itemId == selectedId;
+        final itemId = items[index];
+        final isSelected = itemId == selectedId;
 
-          // 미리보기 이미지 경로 (썸네일용)
-          String imagePath = 'assets/images/parts/${type}_$itemId.png';
-
-          return GestureDetector(
-            onTap: () {
-              // 옷 탭에서 이미 입고 있는 옷을 다시 터치하면 기본 옷(01)으로 원복
-              if (isSelected && type == 'clothes') {
-                onSelect('01');
-              } else {
-                onSelect(itemId);
-              }
-            },
+        return GestureDetector(
+          onTap: () {
+            // 옷 탭에서 이미 입고 있는 옷을 다시 터치하면 기본 옷(01)으로 원복
+            if (isSelected && type == 'clothes') {
+              onSelect('01');
+            } else {
+              onSelect(itemId);
+            }
+          },
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFF5F5F5),
@@ -613,14 +617,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0), // 패딩 추가
-                  child: Image.asset(
-                    'assets/images/parts/thumbnails/${type}_$itemId.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      // 썸네일이 없으면 원본 이미지 표시
-                      return Image.asset(imagePath, fit: BoxFit.contain);
-                    },
+                  padding: const EdgeInsets.all(8.0),
+                  child: _buildNetworkImage(
+                    _getPartUrl(type, itemId, isThumbnail: true),
                   ),
                 ),
               ),
@@ -826,6 +825,34 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           ),
         ),
       ),
+    );
+  }
+
+  // Firebase Storage 다운로드 URL 조성을 위한 기본 URL
+  static const _storageBaseUrl =
+      'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/';
+
+  /// 에셋 경로를 Firebase Storage URL로 변환
+  String _getPartUrl(String type, String itemId, {bool isThumbnail = false}) {
+    if (isThumbnail) {
+      return '${_storageBaseUrl}parts%2Fthumbnails%2F${type}_$itemId.png?alt=media';
+    }
+    return '${_storageBaseUrl}parts%2F${type}_$itemId.png?alt=media';
+  }
+
+  Widget _buildNetworkImage(String url, {double? width, double? height}) {
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: width,
+      height: height,
+      fit: BoxFit.contain,
+      placeholder: (context, url) => Shimmer.fromColors(
+        baseColor: Colors.grey[200]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(color: Colors.white),
+      ),
+      errorWidget: (context, url, error) =>
+          const Icon(Icons.error_outline, size: 20),
     );
   }
 }

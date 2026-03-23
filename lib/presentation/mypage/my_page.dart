@@ -10,7 +10,6 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -83,7 +82,10 @@ class MyPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(20),
                 child: Text(
                   isEn ? 'Select Language' : '언어 선택',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ListTile(
@@ -485,8 +487,8 @@ class _BottomActions extends StatelessWidget {
               builder: (context) => AlertDialog(
                 title: Text(isEn ? 'Delete Account' : '회원 탈퇴'),
                 content: Text(
-                  isEn 
-                      ? 'Are you sure you want to delete your account? All data will be permanently deleted.' 
+                  isEn
+                      ? 'Are you sure you want to delete your account? All data will be permanently deleted.'
                       : '정말로 탈퇴하시겠습니까? 모든 데이터가 영구적으로 삭제됩니다.',
                 ),
                 actions: [
