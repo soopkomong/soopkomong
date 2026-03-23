@@ -6,6 +6,14 @@ class Soopkomon {
 
   // 0. 이미지 경로 (템플릿 ID 기반 자동 완성)
   String get imagePath => 'assets/images/characters/${templateId}_big.png';
+  /* 튜토리얼 구현 시 부화 여부에 따른 이미지 처리 예정
+  String get imagePath {
+    if (!isHatched) {
+      return 'assets/images/characters/egg_big.png';
+    }
+    return 'assets/images/characters/${templateId}_big.png';
+  }
+  */
 
   // 1. 발견 정보
   final String discoveredSpotId; // 발견된 장소의 고유 ID (contentId)
@@ -33,6 +41,24 @@ class Soopkomon {
 
   // 3. 실시간 계산 필드 (Getter)
   int get traveledSteps => currentTotalSteps - stepsAtDiscovery;
+
+  /* 튜토리얼 구현 시 사용할 초기 알 객체
+  /// 신규 유저를 위한 초기 '알' 객체 생성 (튜토리얼용 000번)
+  factory Soopkomon.tutorialEgg() {
+    return Soopkomon(
+      instanceId: 'tutorial_egg_${DateTime.now().millisecondsSinceEpoch}',
+      templateId: '000',
+      name: '신비한 알',
+      discoveredSpotId: 'tutorial_start',
+      discoveredSpotName: '숲코몽 세계의 입구',
+      discoveredAddr: '미지의 숲',
+      discoveredAt: DateTime.now(),
+      stepsAtDiscovery: 0,
+      currentTotalSteps: 0,
+      isHatched: false,
+    );
+  }
+  */
 
   /// Firestore 데이터에서 객체 생성
   factory Soopkomon.fromMap(Map<String, dynamic> map, String id) {

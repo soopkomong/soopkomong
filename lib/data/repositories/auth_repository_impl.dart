@@ -236,6 +236,20 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> updateDisplayName(String name) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('로그인이 필요합니다.');
+
+    // 1. Firebase Auth 프로필 업데이트 (필요한 경우)
+    await user.updateDisplayName(name);
+
+    // 2. Firestore 유저 문서 업데이트
+    await _firestore.collection('users').doc(user.uid).update({
+      'displayName': name,
+    });
+  }
+
+  @override
   Future<void> signOut() async {
     // 카카오 로그아웃 시도 (카카오로 로그인하지 않았을 경우 무시)
     try {

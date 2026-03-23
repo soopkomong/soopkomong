@@ -9,11 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/presentation/mypage/character_page/widgets/character_create_popup.dart';
 import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+// import 'package:soopkomong/domain/entities/soopkomon.dart'; // 튜토리얼 구현 시 활성화
 
 class CharacterCustomizePage extends ConsumerStatefulWidget {
   const CharacterCustomizePage({super.key});
@@ -35,8 +37,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     super.dispose();
   }
 
-  static const _categoriesKo = ['머리', '얼굴', '옷'];
-  static const _categoriesEn = ['Hair', 'Face', 'Clothes'];
+  static const List<String> _categoriesKo = ['머리', '얼굴', '옷'];
+  static const List<String> _categoriesEn = ['Hair', 'Face', 'Clothes'];
 
   // 선택된 파츠 상태
   String _selectedHair = '01';
@@ -53,8 +55,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
   // 더미 데이터 (실제 데이터에 맞게 확장 가능)
   final List<String> _hairs = ['01', '02', '03'];
-  final List<String> _faces = ['smile'];
-  final List<String> _clothes = ['02']; // '01'은 기본 옷이므로 선택지에서 제외
+  final List<String> _faces = ['smile', 'smile_girl', 'smile2', 'smile_girl2'];
+  final List<String> _clothes = ['02', '03']; // '01'은 기본 옷이므로 선택지에서 제외
   final List<String> _shoes = ['01']; // 신발 아이템 리 목록
 
   final List<Color> _palette = [
@@ -93,7 +95,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   @override
   void initState() {
     super.initState();
-    final categories = ref.read(localeProvider) == AppLocale.en ? _categoriesEn : _categoriesKo;
+    final categories = ref.read(localeProvider) == AppLocale.en
+        ? _categoriesEn
+        : _categoriesKo;
     _tabController = TabController(length: categories.length, vsync: this);
 
     // 1. 기존 캐릭터 데이터 로드
@@ -131,7 +135,6 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       _selectedClothes = (_clothes.toList()..shuffle()).first;
       _selectedShoes = (_shoes.toList()..shuffle()).first; // 신발도 랜덤 포함
       _selectedHairColor = (_palette.toList()..shuffle()).first;
-      _selectedClothesColor = (_palette.toList()..shuffle()).first;
       _selectedSkinColor =
           (_skinPalette.toList()..shuffle()).first; // 피부색도 취향껏 랜덤
     });
@@ -182,22 +185,26 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
         ],
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 상단 캐릭터 영역
-            _buildCharacterSection(),
-            // 카테고리 탭바
-            _buildCategoryTabBar(categories),
-            // 현재 선택된 탭의 색상 팔레트
-            _buildColorPalette(),
-            // 아이템 그리드
-            Expanded(child: _buildItemGrid(isEn)),
-            // 하단 버튼
-            _buildBottomButtons(isEn),
-          ],
-        ),
+      body: Column(
+        children: [
+          // 상단 캐릭터 영역 (SafeArea 밖에서 배경색이 상단까지 차도록 함)
+          _buildCharacterSection(),
+          // 카테고리 탭바 & 아이템 그리드
+          Expanded(
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: Column(
+                children: [
+                  _buildCategoryTabBar(categories),
+                  Expanded(child: _buildItemGrid(isEn)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
+      bottomNavigationBar: _buildBottomButtons(isEn),
     );
   }
 
@@ -241,42 +248,46 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   }
 
   /// 색상 팔레트 영역
-  Widget _buildColorPalette() {
-    Color selectedColor;
+  Widget _buildColorPalette(int index) {
     List<Color> currentPalette;
+    Color selectedColor;
+    Function(Color) onColorSelected;
 
-    if (_tabController.index == 0) {
+    if (index == 0) {
+      // 머리 탭
       selectedColor = _selectedHairColor;
       currentPalette = _palette; // 머리색은 일반 팔레트
-    } else if (_tabController.index == 1) {
+      onColorSelected = (color) => _selectedHairColor = color;
+    } else if (index == 1) {
+      // 얼굴(피부) 탭
       selectedColor = _selectedSkinColor;
       currentPalette = _skinPalette; // 얼굴(피부)은 피부색 팔레트
+      onColorSelected = (color) => _selectedSkinColor = color;
+    } else if (index == 2) {
+      // 옷 & 신발 탭
+      selectedColor = _selectedClothesColor;
+      currentPalette = _palette; // 옷 색상은 일반 팔레트
+      onColorSelected = (color) => _selectedClothesColor = color;
     } else {
-      // 옷/신발 탭일 때는 팔레트를 보여주지 않음
+      // 해당 탭에 팔레트가 없는 경우
       return const SizedBox.shrink();
     }
 
     return Container(
-      height: 60,
+      height: 70,
       color: Colors.white,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         itemCount: currentPalette.length,
         separatorBuilder: (context, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final color = currentPalette[index];
+        itemBuilder: (context, idx) {
+          final color = currentPalette[idx];
           final isSelected = color == selectedColor;
           return GestureDetector(
             onTap: () {
               setState(() {
-                if (_tabController.index == 0) {
-                  _selectedHairColor = color;
-                } else if (_tabController.index == 1) {
-                  _selectedSkinColor = color;
-                } else if (_tabController.index == 2) {
-                  _selectedClothesColor = color;
-                }
+                onColorSelected(color);
               });
             },
             child: Container(
@@ -315,25 +326,55 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       ),
       child: TabBar(
         controller: _tabController,
+        dividerColor: Colors.transparent, // 기본 가로 실선 제거
         labelColor: Colors.black,
         unselectedLabelColor: Colors.grey,
-        indicatorColor: Colors.black,
-        indicatorWeight: 2,
-        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        indicatorColor: Colors.green, // 녹색으로 변경
+        indicatorWeight: 3, // 두께 증가
+        indicatorSize: TabBarIndicatorSize.tab, // 탭 전체 너비로 확장
+        labelStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+        ), // 글자 크기 및 굵기 강조
         unselectedLabelStyle: const TextStyle(
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w400,
         ),
         tabs: categories.asMap().entries.map((entry) {
-          final icons = [Icons.content_cut, Icons.face, Icons.checkroom];
+          final svgIcons = [
+            'assets/images/scissors.svg',
+            'assets/images/smiley.svg',
+            'assets/images/t-shirt.svg',
+          ];
           return Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icons[entry.key], size: 14),
-                const SizedBox(width: 4),
-                Text(entry.value),
-              ],
+            child: AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) {
+                double offset = (_tabController.animation!.value - entry.key)
+                    .abs();
+                double t = (1.0 - offset).clamp(0.0, 1.0);
+                final color = Color.lerp(Colors.grey, Colors.black, t)!;
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SvgPicture.asset(
+                      svgIcons[entry.key],
+                      width: 16,
+                      height: 16,
+                      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      entry.value,
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: t > 0.5 ? FontWeight.bold : FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           );
         }).toList(),
@@ -341,62 +382,119 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     );
   }
 
-  /// 아이템 선택 그리드
+  /// 아이템 선택 그리드 (각 탭별로 팔레트와 그리드를 포함)
   Widget _buildItemGrid(bool isEn) {
-    return TabBarView(
-      controller: _tabController,
-      children: [
-        // 0. 머리 탭
-        _buildGridForCategory(
-          'hair',
-          _hairs,
-          _selectedHair,
-          (id) => setState(() => _selectedHair = id),
-        ),
-        // 1. 얼굴 탭 (표정 선택 + 피부색상 상단표시)
-        _buildGridForCategory(
-          'face',
-          _faces,
-          _selectedFace,
-          (id) => setState(() => _selectedFace = id),
-        ),
-        // 2. 옷 & 신발 탭
-        _buildClothesAndShoesTab(isEn),
-      ],
-    );
-  }
-
-  /// 옷과 신발을 함께 보여주는 탭 빌더
-  Widget _buildClothesAndShoesTab(bool isEn) {
     return Container(
       color: Colors.white,
-      child: ListView(
-        padding: const EdgeInsets.all(20),
+      child: TabBarView(
+        controller: _tabController,
         children: [
-          _buildSectionTitle(isEn ? 'Clothes' : '의상'),
-          _buildCompactGrid(
-            'clothes',
-            _clothes,
-            _selectedClothes,
-            (id) {
-              if (id != null) setState(() => _selectedClothes = id);
-            },
-            allowDeselect: true,
-            deselectId: '01',
+          // 0. 머리 탭
+          Column(
+            children: [
+              _buildColorPalette(0),
+              const SizedBox(height: 4), // 16에서 4로 줄여서 위쪽과 밀착 시킴
+              Expanded(
+                child: _buildGridForCategory(
+                  'hair',
+                  _hairs,
+                  _selectedHair,
+                  (id) => setState(() => _selectedHair = id),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 32),
-          _buildSectionTitle(isEn ? 'Shoes' : '신발'),
-          _buildCompactGrid(
-            'shoes',
-            _shoes,
-            _selectedShoes,
-            (id) => setState(() => _selectedShoes = id),
-            allowDeselect: true,
+          // 1. 얼굴 탭
+          Column(
+            children: [
+              _buildColorPalette(1),
+              const SizedBox(height: 4), // 동일하게 축소
+              Expanded(
+                child: _buildGridForCategory(
+                  'face',
+                  _faces,
+                  _selectedFace,
+                  (id) => setState(() => _selectedFace = id),
+                ),
+              ),
+            ],
+          ),
+          // 2. 옷 & 신발 탭
+          Column(
+            children: [
+              Expanded(
+                child: Container(
+                  color: Colors.white,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      20,
+                      12,
+                      20,
+                      20,
+                    ), // 상단 24에서 12로 축소
+                    children: [
+                      _buildSectionTitle(isEn ? 'Clothes' : '의상'),
+                      _buildCompactGrid(
+                        'clothes',
+                        _clothes,
+                        _selectedClothes,
+                        (id) {
+                          if (id != null) setState(() => _selectedClothes = id);
+                        },
+                        allowDeselect: true,
+                        deselectId: '01',
+                      ),
+                      const SizedBox(height: 24), // 섹션 간 여백 확보
+                      _buildSectionTitle(isEn ? 'Shoes' : '신발'),
+                      _buildCompactGrid(
+                        'shoes',
+                        _shoes,
+                        _selectedShoes,
+                        (id) => setState(() => _selectedShoes = id),
+                        allowDeselect: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+
+  /// 옷과 신발을 함께 보여주는 탭 빌더 (이제 사용되지 않음)
+  // Widget _buildClothesAndShoesTab(bool isEn) {
+  //   return Container(
+  //     color: Colors.white,
+  //     child: ListView(
+  //       padding: const EdgeInsets.all(20),
+  //       children: [
+  //         _buildSectionTitle(isEn ? 'Clothes' : '의상'),
+  //         _buildCompactGrid(
+  //           'clothes',
+  //           _clothes,
+  //           _selectedClothes,
+  //           (id) {
+  //             if (id != null) setState(() => _selectedClothes = id);
+  //           },
+  //           allowDeselect: true,
+  //           deselectId: '01',
+  //         ),
+  //         const SizedBox(height: 32),
+  //         _buildSectionTitle(isEn ? 'Shoes' : '신발'),
+  //         _buildCompactGrid(
+  //           'shoes',
+  //           _shoes,
+  //           _selectedShoes,
+  //           (id) => setState(() => _selectedShoes = id),
+  //           allowDeselect: true,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
@@ -453,7 +551,17 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.asset(imagePath, fit: BoxFit.contain),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0), // 패딩 추가
+                child: Image.asset(
+                  'assets/images/parts/thumbnails/${type}_$itemId.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    // 썸네일이 없으면 원본 이미지 표시
+                    return Image.asset(imagePath, fit: BoxFit.contain);
+                  },
+                ),
+              ),
             ),
           ),
         );
@@ -469,7 +577,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   ) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20), // 상단 패딩 20에서 10으로 축소
       child: GridView.builder(
         itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -504,7 +612,17 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.asset(imagePath, fit: BoxFit.contain),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0), // 패딩 추가
+                  child: Image.asset(
+                    'assets/images/parts/thumbnails/${type}_$itemId.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // 썸네일이 없으면 원본 이미지 표시
+                      return Image.asset(imagePath, fit: BoxFit.contain);
+                    },
+                  ),
+                ),
               ),
             ),
           );
@@ -524,7 +642,11 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       final isEn = ref.read(localeProvider) == AppLocale.en;
 
       if (user == null) {
-        throw Exception(isEn ? 'User info not found. Please log in again.' : '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+        throw Exception(
+          isEn
+              ? 'User info not found. Please log in again.'
+              : '사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.',
+        );
       }
 
       // UI 스레드가 로딩 상태를 그릴 시간을 줌
@@ -599,21 +721,39 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
         'shoesColor': _selectedShoesColor.toARGB32(),
       };
 
-      await FirebaseFirestore.instance.collection('users').doc(user.id).set({
+      final updateData = {
         'has_character': true,
         'photoUrl': photoUrl,
         'character_settings': characterSettings,
-      }, SetOptions(merge: true));
+      };
+
+      // 5. 처음 생성하는 경우 알(000) 하나 지급 (튜토리얼 구현 시 활성화 예정)
+      /*
+      if (!user.hasCharacter) {
+        updateData['acquiredCharacters'] = FieldValue.arrayUnion([
+          Soopkomon.tutorialEgg().toMap(),
+        ]);
+      }
+      */
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.id)
+          .set(updateData, SetOptions(merge: true));
 
       if (mounted) {
-        // 성공 시 페이지 이동 (라우터 리프레시 유도)
-        context.goNamed(AppRoute.home.name);
+        // 성공 시 마이페이지로 이동 (앱 라우터의 AppRoute 사용)
+        context.goNamed(AppRoute.mypage.name);
       }
     } catch (e) {
       if (mounted) {
         final isEn = ref.read(localeProvider) == AppLocale.en;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isEn ? 'Save failed: $e' : '저장 실패: $e')),
+          SnackBar(
+            content: Text(isEn ? 'Save failed: $e' : '저장 실패: $e'),
+            behavior: SnackBarBehavior.floating,
+            elevation: 4,
+          ),
         );
       }
     } finally {
@@ -626,56 +766,65 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   /// 하단 뒤로가기 + 다음 버튼
   Widget _buildBottomButtons(bool isEn) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       color: Colors.white,
-      child: Row(
-        children: [
-          // 초기화 버튼 (Undo 아이콘)
-          GestureDetector(
-            onTap: _isSaving ? null : _resetCharacter,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFBDBDBD),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.refresh, color: Colors.white, size: 24),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // 완료 버튼
-          Expanded(
-            child: GestureDetector(
-              onTap: _isSaving ? null : _saveCharacter,
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _isSaving ? Colors.grey : Colors.black87,
-                  borderRadius: BorderRadius.circular(12),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            children: [
+              // 초기화 버튼 (Undo 아이콘)
+              GestureDetector(
+                onTap: _isSaving ? null : _resetCharacter,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFBDBDBD),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.refresh,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        isEn ? 'Save' : '저장하기',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // 완료 버튼
+              Expanded(
+                child: GestureDetector(
+                  onTap: _isSaving ? null : _saveCharacter,
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _isSaving ? Colors.grey : const Color(0xFF4CAF50),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            isEn ? 'Save' : '저장하기',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
