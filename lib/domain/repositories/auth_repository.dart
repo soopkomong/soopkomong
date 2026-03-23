@@ -7,5 +7,6 @@ abstract class AuthRepository {
   Future<AppUser?> signInWithKakao();
   Future<AppUser?> signInWithApple();
   Future<void> signOut();
+  Future<void> updateDisplayName(String name);
   AppUser? get currentUser;
 }
