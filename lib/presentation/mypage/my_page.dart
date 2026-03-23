@@ -10,6 +10,8 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/mypage/widgets/withdraw_dialog.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -481,33 +483,7 @@ class _BottomActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         GestureDetector(
-          onTap: () async {
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text(isEn ? 'Delete Account' : '회원 탈퇴'),
-                content: Text(
-                  isEn
-                      ? 'Are you sure you want to delete your account? All data will be permanently deleted.'
-                      : '정말로 탈퇴하시겠습니까? 모든 데이터가 영구적으로 삭제됩니다.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text(isEn ? 'Cancel' : '취소'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
-                    child: Text(isEn ? 'Delete' : '탈퇴'),
-                  ),
-                ],
-              ),
-            );
-            if (confirmed == true) {
-              // TODO: 회원 탈퇴 로직 구현
-            }
-          },
+          onTap: () => WithdrawDialog.show(context),
           child: Text(
             isEn ? 'Delete Account' : '회원탈퇴',
             style: const TextStyle(fontSize: 13, color: Colors.grey),

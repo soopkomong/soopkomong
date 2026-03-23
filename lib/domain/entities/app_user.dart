@@ -20,6 +20,7 @@ class AppUser {
   final bool hasCharacter; // 캐릭터 생성 여부
   final Map<String, dynamic>? characterSettings; // 캐릭터 파츠 설정 (머리, 얼굴, 옷 등)
   final DateTime? createdAt; // 가입일
+  final DateTime? deletedAt; // 탈퇴 신청일
 
   AppUser({
     required this.id,
@@ -32,6 +33,7 @@ class AppUser {
     this.totalSteps = 0,
     this.lastStepUpdateAt,
     this.createdAt,
+    this.deletedAt,
     this.acquiredCharacters = const [],
     this.friends = const [],
   });
