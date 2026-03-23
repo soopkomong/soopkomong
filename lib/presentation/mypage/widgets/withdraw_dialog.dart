@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
@@ -29,6 +30,7 @@ class WithdrawDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
+          style: TextButton.styleFrom(foregroundColor: AppColors.gray900),
           child: Text(isEn ? 'Cancel' : '취소'),
         ),
         TextButton(
@@ -45,10 +47,7 @@ class WithdrawDialog extends ConsumerWidget {
     WidgetRef ref,
     bool isEn,
   ) async {
-    // 1. 첫 번째 확인 팝업 닫기 (true 반환하여 진행 의사 표시)
-    Navigator.of(context).pop(true);
-
-    // 2. 본인 재확인을 위한 소셜 로그인 팝업
+    // 1. 본인 재확인을 위한 소셜 로그인 팝업
     final reAuthenticated = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -56,23 +55,45 @@ class WithdrawDialog extends ConsumerWidget {
     );
 
     if (reAuthenticated == true) {
+      if (!context.mounted) return;
+
+      // 원본 WithdrawDialog를 먼저 닫아서 나중에 발생할 수 있는 충돌을 방지합니다.
+      Navigator.of(context).pop();
+
+      // 로딩 표시 (rootNavigator 사용)
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        useRootNavigator: true,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
       try {
         await ref.read(authRepositoryProvider).withdraw();
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isEn
-                  ? 'Your account withdrawal request has been submitted.'
-                  : '회원 탈퇴 요청이 완료되었습니다.',
+
+        // 성공 시: AppRouter에서 authStateChanges를 리스닝하여 자동으로 리다이렉트됩니다.
+        // GoRouter.go()에 의해 전체 페이지 스택(다이얼로그 포함)이 초기화되고 /signIn으로 이동하므로
+        // 여기서 명시적으로 pop()을 다시 호출하면 안 됩니다. (호출 시 새로 뜬 로그인 페이지가 닫혀 블랙스크린 발생)
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isEn
+                    ? 'Your account withdrawal request has been submitted.'
+                    : '회원 탈퇴 요청이 완료되었습니다.',
+              ),
             ),
-          ),
-        );
+          );
+        }
       } catch (e) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Withdrawal failed: $e')),
-        );
+        if (context.mounted) {
+          // 에러 발생 시 로딩 팝업 제거
+          Navigator.of(context, rootNavigator: true).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Withdrawal failed: $e')),
+          );
+        }
       }
     }
   }
@@ -84,6 +105,9 @@ class _ReAuthDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.read(authRepositoryProvider).currentUser;
+    final providerId = user?.providerId;
+
     return AlertDialog(
       title: Text(isEn ? 'Re-authentication' : '본인 재확인'),
       content: Text(
@@ -95,50 +119,78 @@ class _ReAuthDialog extends ConsumerWidget {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _SocialAuthButton(
-              icon: Icons.login,
-              label: 'Google',
-              onPressed: () async {
-                try {
-                  await ref.read(authRepositoryProvider).signInWithGoogle();
-                  Navigator.pop(context, true);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              },
-            ),
-            _SocialAuthButton(
-              icon: Icons.login,
-              label: 'Kakao',
-              onPressed: () async {
-                try {
-                  await ref.read(authRepositoryProvider).signInWithKakao();
-                  Navigator.pop(context, true);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              },
-            ),
-            _SocialAuthButton(
-              icon: Icons.apple,
-              label: 'Apple',
-              onPressed: () async {
-                try {
-                  await ref.read(authRepositoryProvider).signInWithApple();
-                  Navigator.pop(context, true);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              },
-            ),
+            if (providerId == 'google.com' || providerId == null)
+              _SocialAuthButton(
+                icon: Icons.login,
+                label: 'Google',
+                onPressed: () async {
+                  try {
+                    await ref.read(authRepositoryProvider).signInWithGoogle();
+                    if (context.mounted) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (context.mounted) {
+                          Navigator.of(context, rootNavigator: true).pop(true);
+                        }
+                      });
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
+              ),
+            if (providerId == 'oidc.kakao' || providerId == null)
+              _SocialAuthButton(
+                icon: Icons.login,
+                label: 'Kakao',
+                onPressed: () async {
+                  try {
+                    await ref.read(authRepositoryProvider).signInWithKakao();
+                    if (context.mounted) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (context.mounted) {
+                          Navigator.of(context, rootNavigator: true).pop(true);
+                        }
+                      });
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
+              ),
+            if (providerId == 'apple.com' || providerId == null)
+              _SocialAuthButton(
+                icon: Icons.apple,
+                label: 'Apple',
+                onPressed: () async {
+                  try {
+                    await ref.read(authRepositoryProvider).signInWithApple();
+                    if (context.mounted) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (context.mounted) {
+                          Navigator.of(context, rootNavigator: true).pop(true);
+                        }
+                      });
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
+              ),
             TextButton(
               onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: AppColors.gray900),
               child: Text(isEn ? 'Close' : '닫기'),
             ),
           ],
@@ -167,6 +219,10 @@ class _SocialAuthButton extends StatelessWidget {
         icon: Icon(icon),
         label: Text(label),
         onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.gray900,
+          side: const BorderSide(color: AppColors.gray300),
+        ),
       ),
     );
   }
