@@ -50,7 +50,10 @@ class AuthRepositoryImpl implements AuthRepository {
     Map<String, dynamic>? data = doc?.data() as Map<String, dynamic>?;
     
     // 탈퇴한 유저인 경우 null 반환
-    if (data?['isDeleted'] == true) return null;
+    if (data?['isDeleted'] == true) {
+      log('User ${user.uid} is marked as deleted in Firestore. Returning null.');
+      return null;
+    }
 
     return AppUser(
       id: user.uid,
@@ -71,6 +74,7 @@ class AuthRepositoryImpl implements AuthRepository {
           ? (data?['deletedAt'] as Timestamp).toDate()
           : null,
       friends: List<String>.from(data?['friends'] ?? []),
+      providerId: user.providerData.isNotEmpty ? user.providerData[0].providerId : null,
     );
   }
 
@@ -109,6 +113,8 @@ class AuthRepositoryImpl implements AuthRepository {
       // 기존 유저 로그인 시각 및 토큰 업데이트
       final Map<String, dynamic> updates = {
         'lastLoginAt': FieldValue.serverTimestamp(),
+        'isDeleted': false, // 로그인 시 탈퇴 대기 상태 해제
+        'deletedAt': null,   // 탈퇴 일시 초기화
       };
       
       try {
@@ -121,7 +127,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       await userRef.update(updates);
-      return userDoc;
+      return await userRef.get();
     }
   }
 

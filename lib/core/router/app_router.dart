@@ -43,24 +43,31 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
-      // 1. 현재 사용자 데이터를 비동기 데이터의 현재 값으로 가져옴
+      // 1. 사용자 데이터 및 인증 상태 가져오기
       final userAsync = ref.read(userProvider);
+      final authState = ref.read(authStateChangesProvider);
       
-      // 초기 로딩 중이거나 새로고침 중이면서 데이터가 아직 없는 경우 리다이렉트 보류
+      final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
+
+      // 초기 로딩 중이면서 데이터가 아직 없는 경우
       if (userAsync.isLoading && userAsync.value == null) {
+        // 이미 Auth 단계에서 로그아웃임이 확인되었다면 즉시 로그인으로
+        if (authState.hasValue && authState.value == null) {
+          return isLoggingIn ? null : AppRoute.signIn.path;
+        }
+        // 그 외엔 현재 상태 유지 (스플래시 혹은 이전 화면)
         return null;
       }
 
       final user = userAsync.value;
-      final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
-
-      // 2. 사용자가 없고 로그인 중이 아니라면 로그인 페이지로
+      // 2. 사용자가 없거나 탈퇴된 상태라면 로그인 페이지로
       if (user == null) {
+        // 단, 이미 로그인 페이지라면 무한 리다이렉트 방지를 위해 null 반환
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // 3. 사용자가 있고 로그인 페이지에 있다면 홈으로
+      // 3. 사용자가 있고 로그인 페이지에 있다면 홈으로 (정상 로그인 완료)
       if (isLoggingIn) {
         return AppRoute.home.path;
       }
