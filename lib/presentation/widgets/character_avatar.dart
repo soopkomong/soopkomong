@@ -22,7 +22,7 @@ class CharacterAvatar extends StatelessWidget {
     super.key,
     Map<String, dynamic>? settings,
     String? baseImagePath,
-    String? bodyShadowImagePath,
+    this.bodyShadowImagePath,
     Color? baseColor,
     String? clothesImagePath,
     Color? clothesColor,
@@ -30,17 +30,12 @@ class CharacterAvatar extends StatelessWidget {
     Color? shoesColor,
     String? faceImagePath,
     String? hairImagePath,
-    String? hairSubShadowImagePath,
-    String? hairShadowImagePath,
+    this.hairSubShadowImagePath,
+    this.hairShadowImagePath,
     String? hairHighlightImagePath,
     Color? hairColor,
     this.size = 250.0,
-  })  : baseImagePath =
-            baseImagePath ??
-            (settings != null
-                ? 'assets/images/parts/body_base.png'
-                : 'assets/images/parts/body_base.png'),
-        bodyShadowImagePath = bodyShadowImagePath,
+  })  : baseImagePath = baseImagePath ?? 'body_base.png',
         baseColor =
             baseColor ??
             (settings != null
@@ -48,48 +43,28 @@ class CharacterAvatar extends StatelessWidget {
                 : Colors.white),
         hairImagePath =
             hairImagePath ??
-            (settings != null
-                ? 'assets/images/parts/hair_${settings['hair']}.png'
-                : 'assets/images/parts/hair_01.png'),
-        hairHighlightImagePath =
-            hairHighlightImagePath ??
-            (settings != null
-                ? 'assets/images/parts/hair_${settings['hair']}_highlight.png'
-                : null),
-        hairShadowImagePath =
-            hairShadowImagePath ??
-            (settings != null
-                ? 'assets/images/parts/hair_${settings['hair']}_shadow.png'
-                : null),
-        hairSubShadowImagePath =
-            hairSubShadowImagePath ??
-            (settings != null
-                ? 'assets/images/parts/hair_${settings['hair']}_sub_shadow.png'
-                : null),
+            (settings != null ? 'hair_${settings['hair']}.png' : 'hair_01.png'),
+        hairHighlightImagePath = hairHighlightImagePath ??
+            (settings != null ? 'hair_${settings['hair']}_highlight.png' : null),
         hairColor =
             hairColor ??
             (settings != null
                 ? Color(settings['hairColor'] as int)
                 : Colors.white),
-        faceImagePath =
-            faceImagePath ??
+        faceImagePath = faceImagePath ??
+            (settings != null ? 'face_${settings['face']}.png' : 'face_smile.png'),
+        clothesImagePath = clothesImagePath ??
             (settings != null
-                ? 'assets/images/parts/face_${settings['face']}.png'
-                : 'assets/images/parts/face_smile.png'),
-        clothesImagePath =
-            clothesImagePath ??
-            (settings != null
-                ? 'assets/images/parts/clothes_${settings['clothes']}.png'
-                : 'assets/images/parts/clothes_01.png'),
+                ? 'clothes_${settings['clothes']}.png'
+                : 'clothes_01.png'),
         clothesColor =
             clothesColor ??
             (settings != null
                 ? Color(settings['clothesColor'] as int)
                 : Colors.white),
-        shoesImagePath =
-            shoesImagePath ??
+        shoesImagePath = shoesImagePath ??
             (settings != null && settings['shoes'] != null
-                ? 'assets/images/parts/shoes_${settings['shoes']}.png'
+                ? 'shoes_${settings['shoes']}.png'
                 : null),
         shoesColor =
             shoesColor ??
@@ -105,6 +80,49 @@ class CharacterAvatar extends StatelessWidget {
     return CharacterAvatar(settings: settings, size: size);
   }
 
+  // Firebase Storage 다운로드 URL 조성을 위한 기본 URL
+  static const _storageBaseUrl = 'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/';
+
+  /// 에셋 경로를 Firebase Storage URL로 변환
+  /// [fileName] 형식: body_base.png, hair_01.png 등 (parts/ 폴더 내 파일명)
+  /// [output] 형식: https://firebasestorage.googleapis.com/v0/b/.../o/parts%2Fbody_base.png?alt=media
+  String _getPartUrl(String assetPath) {
+    final fileName = assetPath.split('/').last;
+    // 썸네일 폴더에 있는 경우 처리
+    if (assetPath.contains('/thumbnails/')) {
+      return '${_storageBaseUrl}parts%2Fthumbnails%2F$fileName?alt=media';
+    }
+    return '${_storageBaseUrl}parts%2F$fileName?alt=media';
+  }
+
+  Widget _buildPartImage({
+    required String path,
+    Color? color,
+    BlendMode colorBlendMode = BlendMode.modulate,
+    double? opacity,
+  }) {
+    final imageUrl = _getPartUrl(path);
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      color: color,
+      colorBlendMode: colorBlendMode,
+      placeholder: (context, url) => Shimmer.fromColors(
+        baseColor: Colors.grey[200]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          width: size,
+          height: size,
+          color: Colors.white,
+        ),
+      ),
+      errorWidget: (context, url, error) => const SizedBox.shrink(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -114,89 +132,45 @@ class CharacterAvatar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           // 1. 몸통 (제일 아래 - 피부색 적용)
-          Image.asset(
-            baseImagePath,
-            width: size,
-            height: size,
-            color: baseColor,
-            colorBlendMode: BlendMode.modulate,
-          ),
+          _buildPartImage(path: baseImagePath, color: baseColor),
 
-          // 1.5. 몸 그림자 (피부 위 전체적인 그림자 - 탁하지 않게 따뜻한 갈색톤 그림자 사용)
+          // 1.5. 몸 그림자 (피부 위 전체적인 그림자)
           if (bodyShadowImagePath != null)
-            Image.asset(
-              bodyShadowImagePath!,
-              width: size,
-              height: size,
-              color: const Color(
-                0xFF6D4C41,
-              ).withValues(alpha: 0.3), // 농도를 낮추고 따뜻한 톤 적용
-              colorBlendMode: BlendMode.modulate,
+            _buildPartImage(
+              path: bodyShadowImagePath!,
+              color: const Color(0xFF6D4C41).withValues(alpha: 0.3),
             ),
 
           // 4. 얼굴(표정)
-          Image.asset(faceImagePath, width: size, height: size),
+          _buildPartImage(path: faceImagePath),
 
-          // 4.5. 머리 밑 그림자 (머리 본체 아래, 얼굴 위에 깔리는 그림자 - 맑은 느낌을 위해 농도 하향)
+          // 4.5. 머리 밑 그림자
           if (hairSubShadowImagePath != null)
-            Image.asset(
-              hairSubShadowImagePath!,
-              width: size,
-              height: size,
-              color: const Color(
-                0xFF6D4C41,
-              ).withOpacity(0.3), // 농도를 낮추고 따뜻한 톤 적용
-              colorBlendMode: BlendMode.modulate,
+            _buildPartImage(
+              path: hairSubShadowImagePath!,
+              color: const Color(0xFF6D4C41).withValues(alpha: 0.3),
             ),
 
-          // 5. 머리 본체 (색상 및 블렌딩 직접 적용)
-          Image.asset(
-            hairImagePath,
-            width: size,
-            height: size,
-            color: hairColor,
-            colorBlendMode: BlendMode.modulate,
-          ),
+          // 5. 머리 본체
+          _buildPartImage(path: hairImagePath, color: hairColor),
 
-          // 5.5. 머리 그림자 (배경 침범 없이 캐릭터 영역에만 곱하기 효과 적용 - 농도 조절)
+          // 5.5. 머리 그림자
           if (hairShadowImagePath != null)
-            Image.asset(
-              hairShadowImagePath!,
-              width: size,
-              height: size,
-              color: const Color(0xFF263238).withOpacity(0.25), // 농도를 낮추어 탁함 방지
-              colorBlendMode: BlendMode.modulate, // 이미지 영역 내에서만 색상 혼합
+            _buildPartImage(
+              path: hairShadowImagePath!,
+              color: const Color(0xFF263238).withValues(alpha: 0.25),
             ),
 
-          // 6. 머리 하이라이트 (존재할 경우에만 렌더링)
+          // 6. 머리 하이라이트
           if (hairHighlightImagePath != null)
-            Opacity(
-              opacity: 0.7, // 투명도 조절 (너무 강하지 않게)
-              child: Image.asset(
-                hairHighlightImagePath!,
-                width: size,
-                height: size,
-              ),
-            ),
+            _buildPartImage(path: hairHighlightImagePath!, opacity: 0.7),
 
-          // 2. 신발 (선택 사항)
+          // 2. 신발
           if (shoesImagePath != null)
-            Image.asset(
-              shoesImagePath!,
-              width: size,
-              height: size,
-              color: shoesColor,
-              colorBlendMode: BlendMode.modulate,
-            ),
+            _buildPartImage(path: shoesImagePath!, color: shoesColor),
 
           // 3. 옷
-          Image.asset(
-            clothesImagePath,
-            width: size,
-            height: size,
-            color: clothesColor,
-            colorBlendMode: BlendMode.modulate,
-          ),
+          _buildPartImage(path: clothesImagePath, color: clothesColor),
         ],
       ),
     );

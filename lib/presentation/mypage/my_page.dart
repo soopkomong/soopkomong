@@ -84,7 +84,10 @@ class MyPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(20),
                 child: Text(
                   isEn ? 'Select Language' : '언어 선택',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               ListTile(
