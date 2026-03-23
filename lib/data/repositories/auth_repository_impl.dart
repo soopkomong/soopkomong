@@ -48,6 +48,9 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null) return null;
     
     Map<String, dynamic>? data = doc?.data() as Map<String, dynamic>?;
+    
+    // 탈퇴한 유저인 경우 null 반환
+    if (data?['isDeleted'] == true) return null;
 
     return AppUser(
       id: user.uid,
@@ -63,6 +66,9 @@ class AuthRepositoryImpl implements AuthRepository {
           : null,
       createdAt: data?['createdAt'] != null
           ? (data?['createdAt'] as Timestamp).toDate()
+          : null,
+      deletedAt: data?['deletedAt'] != null
+          ? (data?['deletedAt'] as Timestamp).toDate()
           : null,
       friends: List<String>.from(data?['friends'] ?? []),
     );
@@ -245,5 +251,23 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
+  }
+
+  @override
+  Future<void> withdraw() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('No user logged in');
+
+    // Firestore에 탈퇴 정보 마킹
+    final userRef = _firestore.collection('users').doc(user.uid);
+    await userRef.update({
+      'isDeleted': true,
+      'deletedAt': FieldValue.serverTimestamp(),
+    });
+
+    // 로그아웃 처리 (실제 Auth 계정 삭제는 14일 후 백엔드에서 처리하거나, 
+    // 즉시 삭제를 원할 경우 user.delete() 호출 가능. 
+    // 여기서는 14일 보존을 위해 로그아웃만 진행)
+    await signOut();
   }
 }
