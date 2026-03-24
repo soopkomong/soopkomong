@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/auth/widgets/login_buttons.dart';
 import 'package:soopkomong/presentation/auth/widgets/policy_links.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
@@ -12,6 +13,14 @@ class SignInScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
+
+    // 회원 탈퇴 팝업 처리
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(showWithdrawalPopupProvider)) {
+        _showWithdrawalCompleteDialog(context, ref, isEn);
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -78,6 +87,47 @@ class SignInScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showWithdrawalCompleteDialog(
+    BuildContext context,
+    WidgetRef ref,
+    bool isEn,
+  ) {
+    // 팝업을 띄우기 전에 상태를 먼저 리셋하여 중복 노출 방지
+    ref.read(showWithdrawalPopupProvider.notifier).set(false);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          isEn ? 'Withdrawal Complete' : '회원 탈퇴 완료',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          isEn
+              ? 'Your account has been withdrawn. You cannot re-register for 14 days after withdrawal. Please return after 14 days.'
+              : '회원 탈퇴 처리되었습니다.\n탈퇴 후 14일 동안은 재가입이 불가능하며, 14일 이후에 다시 이용해 주시기 바랍니다.',
+          style: const TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              isEn ? 'Confirm' : '확인',
+              style: const TextStyle(
+                color: Color(0xFF1A1A1A),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

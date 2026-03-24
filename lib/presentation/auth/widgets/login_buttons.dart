@@ -12,14 +12,23 @@ class LoginButtons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
+    final isLoading = ref.watch(authLoadingProvider);
+
     return Column(
       children: [
+        if (isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5A8D6D)),
+            ),
+          ),
         // 카카오 로그인 버튼
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () => _signInWithKakao(context, ref),
+            onPressed: isLoading ? null : () => _signInWithKakao(context, ref),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFEE500),
               foregroundColor: const Color(0xFF191919),
@@ -54,7 +63,7 @@ class LoginButtons extends ConsumerWidget {
           width: double.infinity,
           height: 50,
           child: OutlinedButton(
-            onPressed: () => _signInWithGoogle(context, ref),
+            onPressed: isLoading ? null : () => _signInWithGoogle(context, ref),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF1A1A1A),
               side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
@@ -105,7 +114,7 @@ class LoginButtons extends ConsumerWidget {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () => _signInWithApple(context, ref),
+            onPressed: isLoading ? null : () => _signInWithApple(context, ref),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1A1A1A),
               foregroundColor: Colors.white,
@@ -134,6 +143,7 @@ class LoginButtons extends ConsumerWidget {
   /// 구글 로그인 처리
   Future<void> _signInWithGoogle(BuildContext context, WidgetRef ref) async {
     final isEn = ref.read(localeProvider) == AppLocale.en;
+    ref.read(authLoadingProvider.notifier).set(true);
     try {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } catch (e) {
@@ -142,12 +152,15 @@ class LoginButtons extends ConsumerWidget {
           context,
         ).showSnackBar(SnackBar(content: Text(isEn ? 'Google login failed: $e' : '구글 로그인 실패: $e')));
       }
+    } finally {
+      ref.read(authLoadingProvider.notifier).set(false);
     }
   }
 
   /// 카카오 로그인 처리
   Future<void> _signInWithKakao(BuildContext context, WidgetRef ref) async {
     final isEn = ref.read(localeProvider) == AppLocale.en;
+    ref.read(authLoadingProvider.notifier).set(true);
     try {
       await ref.read(authRepositoryProvider).signInWithKakao();
     } catch (e) {
@@ -156,12 +169,15 @@ class LoginButtons extends ConsumerWidget {
           context,
         ).showSnackBar(SnackBar(content: Text(isEn ? 'Kakao login failed: $e' : '카카오 로그인 실패: $e')));
       }
+    } finally {
+      ref.read(authLoadingProvider.notifier).set(false);
     }
   }
 
   /// 애플 로그인 처리
   Future<void> _signInWithApple(BuildContext context, WidgetRef ref) async {
     final isEn = ref.read(localeProvider) == AppLocale.en;
+    ref.read(authLoadingProvider.notifier).set(true);
     try {
       await ref.read(authRepositoryProvider).signInWithApple();
     } catch (e) {
@@ -170,6 +186,8 @@ class LoginButtons extends ConsumerWidget {
           context,
         ).showSnackBar(SnackBar(content: Text(isEn ? 'Apple login failed: $e' : '애플 로그인 실패: $e')));
       }
+    } finally {
+      ref.read(authLoadingProvider.notifier).set(false);
     }
   }
 }
