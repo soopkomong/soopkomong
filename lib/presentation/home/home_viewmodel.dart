@@ -88,16 +88,6 @@ class HomeNotifier extends Notifier<HomeState> {
 
   @override
   HomeState build() {
-    // 전역 locationsProvider를 감시하여 언어 변경 시 상태 자동 갱신
-    ref.listen(locationsProvider, (prev, next) {
-      next.whenData((locations) {
-        state = state.copyWith(
-          locations: locations,
-          isLoading: false,
-        );
-      });
-    });
-
     final locationsAsync = ref.watch(locationsProvider);
 
     ref.onDispose(() {
