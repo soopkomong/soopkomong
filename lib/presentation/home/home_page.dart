@@ -178,10 +178,17 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
 
-    await mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
-    await mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
-    await mapboxMap.attribution.updateSettings(AttributionSettings(enabled: false));
-    await mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
+    Future.microtask(() async {
+      if (!mounted) return;
+      try {
+        await mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
+        await mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
+        await mapboxMap.attribution.updateSettings(AttributionSettings(enabled: false));
+        await mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
+      } catch (e) {
+        debugPrint("Mapbox UI settings error: $e");
+      }
+    });
 
     await mapboxMap.location.updateSettings(
       LocationComponentSettings(enabled: true, puckBearingEnabled: true),
