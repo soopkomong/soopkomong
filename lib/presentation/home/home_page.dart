@@ -596,53 +596,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        titleSpacing: 12,
-        title: Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  isEn ? "Today's Steps" : "오늘 걸음 수",
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-                Image.asset(
-                  "assets/images/footprints.png",
-                  width: 20,
-                  height: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  state.stepCount.toString(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Badge(
-              isLabelVisible: pendingRequests.isNotEmpty,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              label: Text(
-                '${pendingRequests.length}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              child: const Icon(Icons.notifications),
-            ),
-            onPressed: () {
         title: null,
         actions: [
           AppBarIcon(
