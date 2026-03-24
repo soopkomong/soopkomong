@@ -12,6 +12,7 @@ class FriendRequest {
   final String id; // Firestore 문서 고유 id
   final String senderId; // 친구 요청 id
   final String senderName; // 요청보낸 사람 이름
+  final String? senderPhotoUrl; // 요청보낸 사람 사진 URL
   final String senderTemplateId; // 보낸 사람의 캐릭터 템플릿 ID
   final String receiverId; // 요청 받는 사람 id
   final FriendRequestStatus status; // 현재 상태 (대기/수락/거절)
@@ -22,6 +23,7 @@ class FriendRequest {
     required this.id,
     required this.senderId,
     required this.senderName,
+    this.senderPhotoUrl,
     required this.senderTemplateId,
     required this.receiverId,
     required this.status,
@@ -85,6 +87,7 @@ class FriendRequest {
       id: doc.id,
       senderId: data['senderId'] ?? '',
       senderName: data['senderName'] ?? '익명', // 이름이 없으면 '익명 처리' 나중에 바꾸기
+      senderPhotoUrl: data['senderPhotoUrl'],
       senderTemplateId: data['senderTemplateId'] ?? '007',
       receiverId: data['receiverId'] ?? '',
       status: _parseStatus(data['status']),
@@ -109,6 +112,7 @@ class FriendRequest {
     return {
       'senderId': senderId,
       'senderName': senderName,
+      'senderPhotoUrl': senderPhotoUrl,
       'senderTemplateId': senderTemplateId,
       'receiverId': receiverId,
       'status': status.name,

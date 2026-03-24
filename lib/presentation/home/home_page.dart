@@ -17,12 +17,16 @@ import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
-import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
+import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
+import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
+import 'package:soopkomong/presentation/home/widgets/update_notice_dialog.dart';
+import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
+import 'package:soopkomong/presentation/home/widgets/welcome_back_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
@@ -288,144 +292,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  void _showPetAcquiredDialog(String petName, String parkName, String eggPath) {
-    final locale = ref.read(localeProvider);
-    final isEn = locale == AppLocale.en;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(eggPath, width: 120, height: 120),
-              const SizedBox(height: 24),
-              Text(
-                isEn ? '$parkName Soopkomon Egg' : '$parkName 숲코몽 알',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isEn
-                    ? 'A Soopkomon egg has appeared in $parkName!\nPlease walk together so it can hatch!'
-                    : '$parkName에 숲코몽 알이 나타났어요!\n숲코몽이 태어날 수 있도록 같이 걸어주세요!',
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ref.read(homeViewModelProvider.notifier).clearAcquiredPet();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF48B200),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    isEn ? 'Acquire' : '획득하기',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPetHatchedDialog(
-    String petName,
-    String parkName,
-    String imagePath,
-  ) {
-    final locale = ref.read(localeProvider);
-    final isEn = locale == AppLocale.en;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SoopkomonImage(
-                assetPath: imagePath,
-                remoteUrl:
-                    'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${imagePath.split('/').last.split('_').first}_big.png?alt=media',
-                width: 120,
-                height: 120,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                '$parkName $petName',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isEn
-                    ? 'A $petName Soopkomon was born in $parkName!\nCheck more details in the collection!'
-                    : '$parkName에 $petName 숲코몽이 태어났어요!\n도감에서 자세한 정보를 확인하세요!',
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ref.read(homeViewModelProvider.notifier).clearHatchedPet();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF48B200),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    isEn ? 'Confirm' : '획득하기',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showLocationDetails(int index) {
     final state = ref.read(homeViewModelProvider);
     final locations = state.locations;
@@ -523,14 +389,44 @@ class _HomePageState extends ConsumerState<HomePage> {
     ) {
       if (next != null) {
         final currentState = ref.read(homeViewModelProvider);
-        _showPetAcquiredDialog(
-          next,
-          currentState.lastAcquiredParkName ?? '',
-          currentState.lastAcquiredPetEggPath ??
+        PetAcquiredDialog.show(
+          context,
+          petName: next,
+          parkName: currentState.lastAcquiredParkName ?? '',
+          eggPath:
+              currentState.lastAcquiredPetEggPath ??
               'assets/images/characters/egg_mystery.png',
+          isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }
     });
+
+    ref.listen(
+      friendRequestProvider.select(
+        (s) => s.value
+            ?.where(
+              (req) =>
+                  req.status == FriendRequestStatus.pending && !req.notified,
+            )
+            .firstOrNull,
+      ),
+      (prev, next) {
+        if (next != null) {
+          FriendRequestDialog.show(
+            context,
+            nickname: next.senderName,
+            photoUrl: next.senderPhotoUrl,
+            isEn: ref.read(localeProvider) == AppLocale.en,
+            onConfirm: () {
+              // TODO: 친구 신청 수락 액션
+            },
+            onReject: () {
+              // TODO: 친구 신청 거절 액션
+            },
+          );
+        }
+      },
+    );
 
     ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (
       prev,
@@ -538,11 +434,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     ) {
       if (next != null) {
         final currentState = ref.read(homeViewModelProvider);
-        _showPetHatchedDialog(
-          next,
-          currentState.lastHatchedParkName ?? '',
-          currentState.lastHatchedPetImagePath ??
-              'assets/images/characters/007_big.png',
+        PetHatchedDialog.show(
+          context,
+          petName: next,
+          parkName: currentState.lastHatchedParkName ?? '',
+          imagePath:
+              currentState.lastHatchedPetImagePath ??
+              'assets/images/characters/01_big.png',
+          isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }
     });
@@ -605,6 +504,65 @@ class _HomePageState extends ConsumerState<HomePage> {
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
           ),
+          // TODO: 나중에 삭제 (팝업 확인용 임시 테스트 버튼들)
+          Positioned(
+            left: 16,
+            top: 200,
+            // TODO: 나중에 삭제 (테스트용 버튼들)
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTempPopupButton(
+                  label: '알 획득 팝업',
+                  onTap: () => PetAcquiredDialog.show(
+                    context,
+                    petName: '신비로운 알',
+                    parkName: '성수동 공원',
+                    eggPath: 'assets/images/egg/egg_mystery.png',
+                    isEn: isEn,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildTempPopupButton(
+                  label: '부화 팝업',
+                  onTap: () => PetHatchedDialog.show(
+                    context,
+                    petName: '숲코몽',
+                    parkName: '성수동 공원',
+                    imagePath: 'assets/images/characters/007_big.png',
+                    isEn: isEn,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildTempPopupButton(
+                  label: '공지 팝업',
+                  onTap: () => UpdateNoticeDialog.show(context, isEn: isEn),
+                ),
+                const SizedBox(height: 8),
+                _buildTempPopupButton(
+                  label: '친구 신청 팝업',
+                  onTap: () => FriendRequestDialog.show(
+                    context,
+                    nickname: '가나다',
+                    photoUrl: 'Y7XFAkb26weAoVMnMB8uaAFYp2r2_1773648628022.png',
+                    isEn: isEn,
+                    onConfirm: () {
+                      debugPrint('Accepted');
+                    },
+                    onReject: () {
+                      debugPrint('Rejected');
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildTempPopupButton(
+                  label: '재방문 환영 팝업',
+                  onTap: () =>
+                      WelcomeBackDialog.show(context, onConfirm: () {}),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -616,6 +574,40 @@ class _HomePageState extends ConsumerState<HomePage> {
               .read(homeViewModelProvider.notifier)
               .updateStepCount(currentSteps + 100);
         },
+      ),
+    );
+  }
+
+  Widget _buildTempPopupButton({
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
       ),
     );
   }
