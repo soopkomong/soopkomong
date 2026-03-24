@@ -561,16 +561,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   .markAllPendingRequestsAsNotified();
               context.pushNamed(AppRoute.notifications.name);
             },
-            badge: pendingRequests.isNotEmpty
-                ? Badge(
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    label: Text(
-                      '${pendingRequests.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  )
-                : null,
+            badgeCount: pendingRequests.length,
           ),
           const SizedBox(width: 8),
           AppBarIcon(

@@ -4,13 +4,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 class AppBarIcon extends StatelessWidget {
   final String svgPath;
   final VoidCallback onTap;
-  final Widget? badge;
+  final int? badgeCount;
 
   const AppBarIcon({
     super.key,
     required this.svgPath,
     required this.onTap,
-    this.badge,
+    this.badgeCount,
   });
 
   @override
@@ -36,19 +36,35 @@ class AppBarIcon extends StatelessWidget {
         constraints: const BoxConstraints(),
         icon: Stack(
           alignment: Alignment.center,
+          clipBehavior: Clip.none,
           children: [
             // SVG 아이콘
             SizedBox(
-              width: 24,
-              height: 24,
+              width: 22,
+              height: 22,
               child: SvgPicture.asset(
                 svgPath,
-                width: 24,
-                height: 24,
+                width: 22,
+                height: 22,
                 fit: BoxFit.contain,
               ),
             ),
-            if (badge != null) Positioned(right: -2, top: -2, child: badge!),
+            if (badgeCount != null && badgeCount! > 0)
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Badge(
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  label: Text(
+                    '$badgeCount',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
