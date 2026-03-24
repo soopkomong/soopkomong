@@ -9,6 +9,8 @@ import 'package:soopkomong/presentation/providers/user_provider.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/domain/entities/friend_request.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({super.key});
@@ -24,6 +26,41 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
   void dispose() {
     _idController.dispose();
     super.dispose();
+  }
+
+  Future<void> _navigateToProfile(BuildContext context, WidgetRef ref, FriendRequest request) async {
+    // 로딩 다이얼로그 표시 (rootNavigator 사용하여 전역적으로 띄움)
+    showDialog(
+      context: context,
+      useRootNavigator: true, 
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary700),
+      ),
+    );
+    
+    try {
+      final friendModel = await ref
+          .read(friendsViewModelProvider.notifier)
+          .getFriendModelByUserId(request.senderId);
+      
+      if (context.mounted) {
+        // 로딩 다이얼로그 닫기 (명시적으로 rootNavigator에서 pop)
+        Navigator.of(context, rootNavigator: true).pop();
+        
+        context.pushNamed(
+          AppRoute.friendProfile.name,
+          extra: friendModel,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('프로필 로드 실패: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -329,17 +366,20 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundColor: AppColors.gray50,
-                                backgroundImage: AssetImage(
-                                  'assets/images/characters/${request.senderTemplateId}_big.png',
-                                ),
-                                onBackgroundImageError: (exception, stackTrace) {},
-                                child: const Icon(
-                                  Icons.person,
-                                  color: AppColors.gray300,
-                                  size: 30,
+                              GestureDetector(
+                                onTap: () => _navigateToProfile(context, ref, request),
+                                child: CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: AppColors.gray50,
+                                  backgroundImage: AssetImage(
+                                    'assets/images/characters/${request.senderTemplateId}_big.png',
+                                  ),
+                                  onBackgroundImageError: (exception, stackTrace) {},
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: AppColors.gray300,
+                                    size: 30,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -347,12 +387,15 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      request.senderName,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.black,
+                                    GestureDetector(
+                                      onTap: () => _navigateToProfile(context, ref, request),
+                                      child: Text(
+                                        request.senderName,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.black,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -517,83 +560,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                       return const Divider(color: AppColors.gray50, height: 1);
                     }
                     final itemIndex = index ~/ 2;
-                    final friend = friends[itemIndex];
-                    return InkWell(
-                      onTap: () {
-                        context.pushNamed(
-                          AppRoute.friendProfile.name,
-                          extra: friend,
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: AppColors.gray50,
-                              backgroundImage: AssetImage(
-                                'assets/images/characters/${friend.characterTemplateId}_big.png',
-                              ),
-                              onBackgroundImageError: (exception, stackTrace) {},
-                              child: const Icon(
-                                Icons.person,
-                                color: AppColors.gray300,
-                                size: 30,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    friend.name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.eco,
-                                        size: 14,
-                                        color: AppColors.secondaryGreen,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${friend.leafProgress}/${friend.leafMax}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.gray600,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Icon(
-                                        Icons.pets,
-                                        size: 14,
-                                        color: AppColors.black,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${friend.pawProgress}/${friend.pawMax}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.gray600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    return _FriendListItem(friend: friends[itemIndex]);
                   },
                   childCount: friends.isEmpty ? 0 : friends.length * 2 - 1,
                 ),
@@ -611,6 +578,110 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
             child: SizedBox(height: 100),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FriendListItem extends ConsumerWidget {
+  const _FriendListItem({required this.friend});
+
+  final FriendModel friend;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
+
+    return InkWell(
+      onTap: () {
+        context.pushNamed(
+          AppRoute.friendProfile.name,
+          extra: friend,
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: AppColors.gray50,
+              backgroundImage: AssetImage(
+                'assets/images/characters/${friend.characterTemplateId}_big.png',
+              ),
+              onBackgroundImageError: (exception, stackTrace) {},
+              child: const Icon(
+                Icons.person,
+                color: AppColors.gray300,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    friend.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  friendCharactersAsync.when(
+                    data: (characters) {
+                      final visitedCount = characters
+                          .map((c) => c.discoveredSpotId)
+                          .where((id) => id.isNotEmpty)
+                          .toSet()
+                          .length;
+                      final collectedCount = characters.length;
+
+                      return Row(
+                        children: [
+                          const Icon(
+                            Icons.eco,
+                            size: 14,
+                            color: AppColors.secondaryGreen,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$visitedCount/${friend.leafMax}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.gray600,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(
+                            Icons.pets,
+                            size: 14,
+                            color: AppColors.black,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$collectedCount/${friend.pawMax}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.gray600,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    loading: () => const SizedBox(height: 14),
+                    error: (err, stack) => const Text(
+                      '데이터 로드 실패',
+                      style: TextStyle(fontSize: 10, color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
