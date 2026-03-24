@@ -10,7 +10,8 @@ enum AppRoute {
   friendProfile(name: 'friendProfile', path: 'profile'),
   notifications(name: 'notifications', path: '/notifications'),
   profileEdit(name: 'profileEdit', path: '/profileEdit'),
-  signIn(name: 'signIn', path: '/signIn');
+  signIn(name: 'signIn', path: '/signIn'),
+  settings(name: 'settings', path: '/settings');
 
   const AppRoute({required this.name, required this.path});
   final String name;

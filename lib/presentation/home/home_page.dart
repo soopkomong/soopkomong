@@ -23,6 +23,7 @@ import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
+import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
 class HomePage extends ConsumerStatefulWidget {
@@ -564,11 +565,16 @@ class _HomePageState extends ConsumerState<HomePage> {
             badgeCount: pendingRequests.length,
           ),
           const SizedBox(width: 8),
-          AppBarIcon(
-            svgPath: 'assets/images/Hamburger.svg',
-            onTap: () async {
-              await context.pushNamed(AppRoute.mypage.name);
-              ref.read(mapZoomResetProvider.notifier).triggerReset();
+          Builder(
+            builder: (innerContext) {
+              return AppBarIcon(
+                svgPath: 'assets/images/Hamburger.svg',
+                onTap: () => showHamburgerMenu(
+                  context: innerContext,
+                  ref: ref,
+                  isEn: isEn,
+                ),
+              );
             },
           ),
           const SizedBox(width: 12),

@@ -1,0 +1,101 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
+
+/// 햄버거 메뉴 팝업을 띄우는 독립 함수
+Future<void> showHamburgerMenu({
+  required BuildContext context,
+  required WidgetRef ref,
+  required bool isEn,
+}) async {
+  final RenderBox button = context.findRenderObject() as RenderBox;
+  final RenderBox overlay =
+      Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+  final RelativeRect position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(
+        button.size.bottomRight(Offset.zero),
+        ancestor: overlay,
+      ),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  final result = await showMenu<String>(
+    context: context,
+    position: position.shift(const Offset(0, 48)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    color: Colors.white.withOpacity(0.9),
+    elevation: 4,
+    items: [
+      PopupMenuItem<String>(
+        value: 'mypage',
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              'assets/images/User.svg',
+              width: 20,
+              height: 20,
+              colorFilter: const ColorFilter.mode(
+                Colors.black87,
+                BlendMode.srcIn,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              isEn ? 'My Page' : '마이페이지',
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const PopupMenuDivider(height: 1),
+      PopupMenuItem<String>(
+        value: 'settings',
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              'assets/images/Settings.svg',
+              width: 20,
+              height: 20,
+              colorFilter: const ColorFilter.mode(
+                Colors.black87,
+                BlendMode.srcIn,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              isEn ? 'Settings' : '설정',
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+
+  if (result == 'mypage') {
+    if (!context.mounted) return;
+    await context.pushNamed(AppRoute.mypage.name);
+    ref.read(mapZoomResetProvider.notifier).triggerReset();
+  } else if (result == 'settings') {
+    if (!context.mounted) return;
+    await context.pushNamed(AppRoute.settings.name);
+  }
+}

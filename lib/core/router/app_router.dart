@@ -15,6 +15,7 @@ import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
+import 'package:soopkomong/presentation/settings/settings_page.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 
 
@@ -155,6 +156,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.notifications.path,
         name: AppRoute.notifications.name,
         builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: AppRoute.settings.path,
+        name: AppRoute.settings.name,
+        builder: (context, state) => const SettingsPage(),
       ),
       GoRoute(
         path: AppRoute.signIn.path,
