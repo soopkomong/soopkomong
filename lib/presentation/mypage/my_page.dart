@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -24,7 +26,11 @@ class MyPage extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_ios_new),
           color: Colors.black,
           onPressed: () {
-            Navigator.pop(context);
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoute.home.path);
+            }
           },
         ),
         title: Text(

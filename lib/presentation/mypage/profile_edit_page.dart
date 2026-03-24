@@ -43,7 +43,13 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoute.mypage.path);
+            }
+          },
         ),
         title: const Text('프로필 수정'),
       ),
@@ -183,7 +189,11 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     try {
       await ref.read(authRepositoryProvider).updateDisplayName(newNickname);
       if (mounted) {
-        context.pop();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(AppRoute.mypage.path);
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('프로필이 수정되었습니다.'),

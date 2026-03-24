@@ -29,10 +29,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   // authStateChangesProvider 및 userProvider를 리스닝하여 상태가 바뀔 때마다 라우터 새로고침 트리거
   final refreshNotifier = ValueNotifier<bool>(false);
   ref.listen(authStateChangesProvider, (previous, next) {
-    refreshNotifier.value = !refreshNotifier.value;
+    if (previous?.value?.id != next.value?.id) {
+      refreshNotifier.value = !refreshNotifier.value;
+    }
   });
-  ref.listen(userProvider, (previous, next) {
-    refreshNotifier.value = !refreshNotifier.value;
+  ref.listen<AsyncValue<AppUser?>>(userProvider, (previous, next) {
+    if (previous?.value?.id != next.value?.id) {
+      refreshNotifier.value = !refreshNotifier.value;
+    }
   });
   final notifier = ValueNotifier<AppUser?>(ref.read(userProvider).value);
   ref.listen<AsyncValue<AppUser?>>(userProvider, (_, next) {
