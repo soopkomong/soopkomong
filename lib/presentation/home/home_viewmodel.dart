@@ -91,10 +91,7 @@ class HomeNotifier extends Notifier<HomeState> {
     // 전역 locationsProvider를 감시하여 언어 변경 시 상태 자동 갱신
     ref.listen(locationsProvider, (prev, next) {
       next.whenData((locations) {
-        state = state.copyWith(
-          locations: locations,
-          isLoading: false,
-        );
+        state = state.copyWith(locations: locations, isLoading: false);
       });
     });
 
@@ -115,10 +112,7 @@ class HomeNotifier extends Notifier<HomeState> {
   Future<void> loadData() async {
     final locationsAsync = ref.read(locationsProvider);
     if (locationsAsync.hasValue) {
-      state = state.copyWith(
-        locations: locationsAsync.value,
-        isLoading: false,
-      );
+      state = state.copyWith(locations: locationsAsync.value, isLoading: false);
     }
   }
 
