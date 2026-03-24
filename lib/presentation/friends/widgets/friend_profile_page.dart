@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/domain/entities/location.dart';
 
 class FriendProfilePage extends ConsumerWidget {
   const FriendProfilePage({super.key, required this.friend});
@@ -15,6 +16,9 @@ class FriendProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('yyyy년 M월 d일');
     final numberFormat = NumberFormat('#,###');
+
+    final friendsAsync = ref.watch(friendsViewModelProvider);
+    final isFriend = friendsAsync.value?.any((f) => f.id == friend.id) ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -27,10 +31,11 @@ class FriendProfilePage extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.black),
-            onPressed: () => _showDeleteDialog(context, ref),
-          ),
+          if (isFriend)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.black),
+              onPressed: () => _showDeleteDialog(context, ref),
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -92,7 +97,10 @@ class FriendProfilePage extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildInfoRow('친구 가 된 날', dateFormat.format(friend.friendedAt ?? DateTime.now())),
+                    _buildInfoRow(
+                      isFriend ? '친구 가 된 날' : '요청 받은 날', 
+                      dateFormat.format(friend.friendedAt ?? DateTime.now()),
+                    ),
                     const SizedBox(height: 12),
                     _buildInfoRow('총 걸음 수', numberFormat.format(friend.totalSteps)),
                   ],
@@ -105,33 +113,14 @@ class FriendProfilePage extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // 3. 진행도 배지 섹션
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  _buildProgressBadge(
-                    icon: Icons.eco,
-                    color: AppColors.secondaryGreen,
-                    current: friend.leafProgress,
-                    total: friend.leafMax,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildProgressBadge(
-                    icon: Icons.pets,
-                    color: AppColors.black,
-                    current: friend.pawProgress,
-                    total: friend.pawMax,
-                  ),
-                ],
-              ),
-            ),
+            _buildProgressBadges(ref),
 
             const SizedBox(height: 24),
 
             // 4. 생태공원 리스트
             _buildSectionTitle('생태공원'),
             const SizedBox(height: 12),
-            _buildHorizontalParkList(),
+            _buildHorizontalParkList(ref),
 
             const SizedBox(height: 24),
 
@@ -140,7 +129,7 @@ class FriendProfilePage extends ConsumerWidget {
             const SizedBox(height: 12),
             _buildHorizontalSoopkomongList(ref),
             
-            const SizedBox(height: 40),
+            const SizedBox(height: 120),
           ],
         ),
       ),
@@ -174,6 +163,46 @@ class FriendProfilePage extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+
+  Widget _buildProgressBadges(WidgetRef ref) {
+    final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
+
+    return friendCharactersAsync.when(
+      data: (characters) {
+        final visitedCount = characters
+            .map((c) => c.discoveredSpotId)
+            .where((id) => id.isNotEmpty)
+            .toSet()
+            .length;
+        final collectedCount = characters.length;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildProgressBadge(
+                icon: Icons.eco,
+                color: AppColors.secondaryGreen,
+                current: visitedCount,
+                total: friend.leafMax,
+              ),
+              const SizedBox(width: 12),
+              _buildProgressBadge(
+                icon: Icons.pets,
+                color: AppColors.black,
+                current: collectedCount,
+                total: friend.pawMax,
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox(height: 36), // 로딩 중 높이 유지
+      error: (err, stack) => const SizedBox.shrink(),
     );
   }
 
@@ -221,44 +250,96 @@ class FriendProfilePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHorizontalParkList() {
-    // 임시 데이터 (실제 데이터 연동은 추후)
-    return SizedBox(
-      height: 160,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        scrollDirection: Axis.horizontal,
-        itemCount: 3,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 120,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.gray100,
-                  borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/park_placeholder.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '의왕레일파크',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                '경기도 의왕시',
-                style: TextStyle(fontSize: 12, color: AppColors.gray500),
-              ),
-            ],
+  Widget _buildHorizontalParkList(WidgetRef ref) {
+    final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
+    final locationsAsync = ref.watch(locationsProvider);
+
+    return friendCharactersAsync.when(
+      data: (characters) {
+        // 획득한 캐릭터들의 발견 장소 ID 세트 (중복 제거)
+        final visitedSpotIds = characters
+            .map((c) => int.tryParse(c.discoveredSpotId) ?? -1)
+            .where((id) => id != -1)
+            .toSet();
+
+        if (visitedSpotIds.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Text('방문한 생태공원이 없습니다.', style: TextStyle(color: AppColors.gray400)),
           );
-        },
-      ),
+        }
+
+        return locationsAsync.when(
+          data: (allLocations) {
+            // 전체 공원 중 친구가 방문한 공원만 필터링 (중복 제거)
+            final uniqueMap = <int, Location>{};
+            for (var loc in allLocations) {
+              if (visitedSpotIds.contains(loc.id)) {
+                uniqueMap[loc.id] = loc;
+              }
+            }
+            final visitedLocations = uniqueMap.values.toList();
+
+            return SizedBox(
+              height: 160,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                scrollDirection: Axis.horizontal,
+                itemCount: visitedLocations.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final park = visitedLocations[index];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.gray100,
+                          borderRadius: BorderRadius.circular(12),
+                          image: park.imageUrl.isNotEmpty
+                              ? DecorationImage(
+                                  image: NetworkImage(park.imageUrl),
+                                  fit: BoxFit.cover,
+                                )
+                              : const DecorationImage(
+                                  image: AssetImage('assets/images/park_placeholder.png'),
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          park.name,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          park.address,
+                          style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => const Center(child: Text('공원 정보 로드 실패')),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => const Center(child: Text('방문 정보 로드 실패')),
     );
   }
 

@@ -35,11 +35,11 @@ class FriendModel {
       id: doc.id,
       name: data['displayName'] ?? '이름 없음',
       characterTemplateId: data['templateId'] ?? '007',
-      leafProgress: data['leafProgress'] ?? 0,
-      leafMax: data['leafMax'] ?? 50,
-      pawProgress: data['pawProgress'] ?? 0,
-      pawMax: data['pawMax'] ?? 30,
-      totalSteps: data['totalSteps'] ?? 0,
+      leafProgress: (data['leafProgress'] as num?)?.toInt() ?? 0,
+      leafMax: (data['leafMax'] as num?)?.toInt() ?? 50,
+      pawProgress: (data['pawProgress'] as num?)?.toInt() ?? 0,
+      pawMax: (data['pawMax'] as num?)?.toInt() ?? 30,
+      totalSteps: (data['totalSteps'] as num?)?.toInt() ?? 0,
       friendedAt: friendedAtOverride ?? (data['friendedAt'] != null
           ? (data['friendedAt'] as Timestamp).toDate()
           : null),
@@ -91,6 +91,12 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
       loading: () => state.value ?? [],
       error: (e, st) => throw e,
     );
+  }
+
+  Future<FriendModel> getFriendModelByUserId(String userId) async {
+    final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (!doc.exists) throw Exception('유저를 찾을 수 없습니다.');
+    return FriendModel.fromFirestore(doc);
   }
 
   // 친구 요청 보내기 기능
