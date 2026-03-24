@@ -111,3 +111,33 @@ final filteredTemplatesProvider = Provider<AsyncValue<List<SoopkomonTemplate>>>(
     });
   },
 );
+
+/// 8. 유저가 실제 방문한 공원 리스트 (조합 프로바이더)
+final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
+  final userSoopkomonsAsync = ref.watch(userSoopkomonProvider);
+  final locationsAsync = ref.watch(locationsProvider);
+
+  return locationsAsync.when(
+    data: (locations) {
+      return userSoopkomonsAsync.when(
+        data: (userSoopkomons) {
+          final visitedIds = userSoopkomons
+              .where((s) => s.discoveredSpotId != 'tutorial_start')
+              .map((s) => int.tryParse(s.discoveredSpotId))
+              .whereType<int>()
+              .toSet();
+
+          final visitedLocations = locations
+              .where((loc) => visitedIds.contains(loc.id))
+              .toList();
+          
+          return AsyncValue.data(visitedLocations);
+        },
+        loading: () => const AsyncValue.loading(),
+        error: (err, stack) => AsyncValue.error(err, stack),
+      );
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (err, stack) => AsyncValue.error(err, stack),
+  );
+});
