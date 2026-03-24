@@ -11,6 +11,7 @@ import 'package:soopkomong/core/router/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/home/widgets/step_count_card.dart';
 import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
@@ -21,6 +22,8 @@ import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
+import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
+import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
 class HomePage extends ConsumerStatefulWidget {
@@ -640,20 +643,30 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: const Icon(Icons.notifications),
             ),
             onPressed: () {
+        title: null,
+        actions: [
+          AppBarIcon(
+            svgPath: 'assets/images/bell.svg',
+            onTap: () {
               ref
                   .read(friendsViewModelProvider.notifier)
                   .markAllPendingRequestsAsNotified();
               context.pushNamed(AppRoute.notifications.name);
             },
-            style: IconButton.styleFrom(backgroundColor: Colors.white),
+            badgeCount: pendingRequests.length,
           ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () async {
-              await context.pushNamed(AppRoute.mypage.name);
-              ref.read(mapZoomResetProvider.notifier).triggerReset();
+          const SizedBox(width: 8),
+          Builder(
+            builder: (innerContext) {
+              return AppBarIcon(
+                svgPath: 'assets/images/Hamburger.svg',
+                onTap: () => showHamburgerMenu(
+                  context: innerContext,
+                  ref: ref,
+                  isEn: isEn,
+                ),
+              );
             },
-            style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
           const SizedBox(width: 12),
         ],
@@ -677,6 +690,11 @@ class _HomePageState extends ConsumerState<HomePage> {
               pitch: 0.0,
               bearing: 0.0,
             ),
+          ),
+          Positioned(
+            top: 65,
+            left: 16,
+            child: StepCountCard(state: state, isEn: isEn),
           ),
         ],
       ),
