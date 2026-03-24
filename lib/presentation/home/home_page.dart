@@ -2,10 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/utils/map_helper.dart';
 import 'package:soopkomong/core/utils/turf_helper.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
@@ -13,6 +11,7 @@ import 'package:soopkomong/core/router/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
+import 'package:soopkomong/presentation/home/widgets/step_count_card.dart';
 import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
@@ -23,6 +22,7 @@ import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
+import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
 
 /// [Presentation Layer] - View
 class HomePage extends ConsumerStatefulWidget {
@@ -461,68 +461,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildStepCountCard(HomeState state, bool isEn) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x26000000),
-            blurRadius: 4,
-            offset: Offset(0, 0),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            isEn ? "Today's Steps" : "오늘 걸음 수",
-            style: const TextStyle(
-              color: Color(0xFF191919),
-              fontSize: 12,
-              fontFamily: 'Pretendard',
-              fontWeight: FontWeight.w400,
-              height: 1.40,
-              letterSpacing: 0.12,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                "assets/images/footprints.svg",
-                width: 24,
-                height: 24,
-                colorFilter: ColorFilter.mode(
-                  AppColors.orange,
-                  BlendMode.srcIn,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                state.stepCount.toString(),
-                style: const TextStyle(
-                  color: Color(0xFF191919),
-                  fontSize: 24,
-                  fontFamily: 'Pretendard',
-                  fontWeight: FontWeight.w600,
-                  height: 1.50,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
@@ -615,32 +553,32 @@ class _HomePageState extends ConsumerState<HomePage> {
         titleSpacing: 12,
         title: null,
         actions: [
-          IconButton(
-            icon: Badge(
-              isLabelVisible: pendingRequests.isNotEmpty,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              label: Text(
-                '${pendingRequests.length}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              child: const Icon(Icons.notifications),
-            ),
-            onPressed: () {
+          AppBarIcon(
+            svgPath: 'assets/images/bell.svg',
+            onTap: () {
               ref
                   .read(friendsViewModelProvider.notifier)
                   .markAllPendingRequestsAsNotified();
               context.pushNamed(AppRoute.notifications.name);
             },
-            style: IconButton.styleFrom(backgroundColor: Colors.white),
+            badge: pendingRequests.isNotEmpty
+                ? Badge(
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                    label: Text(
+                      '${pendingRequests.length}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  )
+                : null,
           ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () async {
+          const SizedBox(width: 8),
+          AppBarIcon(
+            svgPath: 'assets/images/Hamburger.svg',
+            onTap: () async {
               await context.pushNamed(AppRoute.mypage.name);
               ref.read(mapZoomResetProvider.notifier).triggerReset();
             },
-            style: IconButton.styleFrom(backgroundColor: Colors.white),
           ),
           const SizedBox(width: 12),
         ],
@@ -668,7 +606,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           Positioned(
             top: 65,
             left: 16,
-            child: _buildStepCountCard(state, isEn),
+            child: StepCountCard(state: state, isEn: isEn),
           ),
         ],
       ),
