@@ -45,7 +45,7 @@ class SoopkomonImage extends StatelessWidget {
           borderRadius: 0,
         ),
         imageBuilder: (context, imageProvider) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+          // 루프 방지를 위해 콜백 제거 또는 가드 필요. 여기선 일단 제거.
           return Image(
             image: imageProvider,
             width: width,
@@ -56,7 +56,6 @@ class SoopkomonImage extends StatelessWidget {
           );
         },
         errorWidget: (context, url, error) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
           return errorWidget ??
               Image.asset(
                 'assets/images/character_silhouette.png',
@@ -77,14 +76,7 @@ class SoopkomonImage extends StatelessWidget {
       fit: fit,
       color: color,
       colorBlendMode: colorBlendMode,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (frame != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
-        }
-        return child;
-      },
       errorBuilder: (context, error, stackTrace) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
         return errorWidget ??
             Image.asset(
               'assets/images/character_silhouette.png',
