@@ -39,6 +39,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Timer? _themeTimer;
   final Map<String, int> _markerIndexMap = {};
   bool _isAddingMarkers = false;
+  bool _isMapReady = false; // 지도 플랫폼 채널 준비 상태 플래그
 
   @override
   void initState() {
@@ -65,20 +66,38 @@ class _HomePageState extends ConsumerState<HomePage> {
     List<Location> locations,
     List<SoopkomonTemplate> templates,
   ) async {
-    if (mapboxMap == null || locations.isEmpty || _isAddingMarkers) return;
+    if (mapboxMap == null ||
+        !_isMapReady ||
+        locations.isEmpty ||
+        _isAddingMarkers)
+      return;
     _isAddingMarkers = true;
 
     try {
+      // 매니저가 없거나 이전 지도의 매니저인 경우 새로 생성합니다.
+      // deleteAll 실패 시 매니저를 재생성하여 복구합니다.
       if (polygonAnnotationManager == null) {
-        polygonAnnotationManager = await mapboxMap!.annotations.createPolygonAnnotationManager();
+        polygonAnnotationManager = await mapboxMap!.annotations
+            .createPolygonAnnotationManager();
       } else {
-        await polygonAnnotationManager?.deleteAll();
+        try {
+          await polygonAnnotationManager?.deleteAll();
+        } catch (_) {
+          polygonAnnotationManager = await mapboxMap!.annotations
+              .createPolygonAnnotationManager();
+        }
       }
 
       if (pointAnnotationManager == null) {
-        pointAnnotationManager = await mapboxMap!.annotations.createPointAnnotationManager();
+        pointAnnotationManager = await mapboxMap!.annotations
+            .createPointAnnotationManager();
       } else {
-        await pointAnnotationManager?.deleteAll();
+        try {
+          await pointAnnotationManager?.deleteAll();
+        } catch (_) {
+          pointAnnotationManager = await mapboxMap!.annotations
+              .createPointAnnotationManager();
+        }
       }
 
       pointAnnotationManager?.tapEvents(
@@ -95,13 +114,17 @@ class _HomePageState extends ConsumerState<HomePage> {
       SoopkomonEggType getEggType(Location loc) {
         if (loc.petIds.isEmpty) return SoopkomonEggType.mystic;
         try {
-          return templates.firstWhere((t) => t.templateId == loc.petIds.first).eggType;
+          return templates
+              .firstWhere((t) => t.templateId == loc.petIds.first)
+              .eggType;
         } catch (_) {
           return SoopkomonEggType.mystic;
         }
       }
 
-      final Set<SoopkomonEggType> uniqueTypes = locations.map((loc) => getEggType(loc)).toSet();
+      final Set<SoopkomonEggType> uniqueTypes = locations
+          .map((loc) => getEggType(loc))
+          .toSet();
       final Map<SoopkomonEggType, String> typeToImageId = {};
 
       for (var type in uniqueTypes) {
@@ -161,7 +184,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
       // Ensure polygons are added before points so points are on top
       await polygonAnnotationManager?.createMulti(polygonOptions);
-      final annotations = await pointAnnotationManager?.createMulti(options) ?? [];
+      final annotations =
+          await pointAnnotationManager?.createMulti(options) ?? [];
 
       _markerIndexMap.clear();
       for (int i = 0; i < annotations.length; i++) {
@@ -170,6 +194,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           _markerIndexMap[id] = i;
         }
       }
+    } catch (e) {
+      // 지도 채널이 아직 준비되지 않았거나 파괴된 경우 조용히 실패합니다.
+      debugPrint("마커 추가 중 오류 발생: $e");
+      // 매니저 참조를 초기화하여 다음 시도 시 재생성되도록 합니다.
+      polygonAnnotationManager = null;
+      pointAnnotationManager = null;
     } finally {
       _isAddingMarkers = false;
     }
@@ -178,33 +208,48 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
 
+    // 지도가 새로 생성되면 이전 매니저 참조를 초기화하여
+    // 파괴된 플랫폼 채널 참조를 방지합니다.
+    pointAnnotationManager = null;
+    polygonAnnotationManager = null;
+    _markerIndexMap.clear();
+    _isMapReady = false;
+
     Future.microtask(() async {
       if (!mounted) return;
       try {
         await mapboxMap.compass.updateSettings(CompassSettings(enabled: false));
         await mapboxMap.logo.updateSettings(LogoSettings(enabled: false));
-        await mapboxMap.attribution.updateSettings(AttributionSettings(enabled: false));
-        await mapboxMap.scaleBar.updateSettings(ScaleBarSettings(enabled: false));
+        await mapboxMap.attribution.updateSettings(
+          AttributionSettings(enabled: false),
+        );
+        await mapboxMap.scaleBar.updateSettings(
+          ScaleBarSettings(enabled: false),
+        );
       } catch (e) {
         debugPrint("Mapbox UI settings error: $e");
       }
     });
 
-    await mapboxMap.location.updateSettings(
-      LocationComponentSettings(enabled: true, puckBearingEnabled: true),
-    );
+    try {
+      await mapboxMap.location.updateSettings(
+        LocationComponentSettings(enabled: true, puckBearingEnabled: true),
+      );
 
-    await mapboxMap.setBounds(
-      CameraBoundsOptions(
-        bounds: CoordinateBounds(
-          southwest: Point(coordinates: Position(-180, -90)),
-          northeast: Point(coordinates: Position(180, 90)),
-          infiniteBounds: true,
+      await mapboxMap.setBounds(
+        CameraBoundsOptions(
+          bounds: CoordinateBounds(
+            southwest: Point(coordinates: Position(-180, -90)),
+            northeast: Point(coordinates: Position(180, 90)),
+            infiniteBounds: true,
+          ),
+          minZoom: 14.5,
+          maxZoom: 22.0,
         ),
-        minZoom: 14.5,
-        maxZoom: 22.0,
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint("Mapbox 초기 설정 에러: $e");
+    }
 
     if (!mounted) return;
 
@@ -212,18 +257,34 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (!mounted) return;
       final size = MediaQuery.sizeOf(context);
 
-      await mapboxMap.gestures.updateSettings(
-        GesturesSettings(
-          scrollEnabled: false,
-          pinchPanEnabled: false,
-          focalPoint: ScreenCoordinate(x: size.width / 2.0, y: size.height / 2.0),
-        ),
-      );
+      try {
+        await mapboxMap.gestures.updateSettings(
+          GesturesSettings(
+            scrollEnabled: false,
+            pinchPanEnabled: false,
+            focalPoint: ScreenCoordinate(
+              x: size.width / 2.0,
+              y: size.height / 2.0,
+            ),
+          ),
+        );
+      } catch (e) {
+        debugPrint("Mapbox gestures 설정 에러: $e");
+      }
     });
+
+    // 지도가 완전히 준비된 후 마커를 추가합니다.
+    // 약간의 지연을 주어 플랫폼 채널이 안정화될 시간을 확보합니다.
+    _isMapReady = true;
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
 
     final state = ref.read(homeViewModelProvider);
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
-    if (!state.isLoading && state.locations.isNotEmpty && templatesAsync.hasValue) {
+    if (!state.isLoading &&
+        state.locations.isNotEmpty &&
+        templatesAsync.hasValue) {
       _addMarkers(state.locations, templatesAsync.value!);
     }
 
@@ -233,7 +294,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
     final String timePreset = _isNight() ? "night" : "day";
     try {
-      await mapbox.style.setStyleImportConfigProperty("basemap", "lightPreset", timePreset);
+      await mapbox.style.setStyleImportConfigProperty(
+        "basemap",
+        "lightPreset",
+        timePreset,
+      );
     } catch (e) {
       debugPrint("테마 갱신 에러: $e");
     }
@@ -251,10 +316,14 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (mapboxMap != null) {
       final currentCamera = await mapboxMap!.getCameraState();
-      final targetZoom = forceDefaultZoom ? _defaultZoomLevel : currentCamera.zoom;
+      final targetZoom = forceDefaultZoom
+          ? _defaultZoomLevel
+          : currentCamera.zoom;
       mapboxMap?.setCamera(
         CameraOptions(
-          center: Point(coordinates: Position(position.longitude, position.latitude)),
+          center: Point(
+            coordinates: Position(position.longitude, position.latitude),
+          ),
           zoom: targetZoom,
         ),
       );
@@ -279,7 +348,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SizedBox(height: 24),
               Text(
                 isEn ? '$parkName Soopkomon Egg' : '$parkName 숲코몽 알',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -302,10 +374,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                     backgroundColor: const Color(0xFF48B200),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: Text(isEn ? 'Acquire' : '획득하기',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    isEn ? 'Acquire' : '획득하기',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -315,7 +394,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  void _showPetHatchedDialog(String petName, String parkName, String imagePath) {
+  void _showPetHatchedDialog(
+    String petName,
+    String parkName,
+    String imagePath,
+  ) {
     final locale = ref.read(localeProvider);
     final isEn = locale == AppLocale.en;
 
@@ -331,14 +414,18 @@ class _HomePageState extends ConsumerState<HomePage> {
             children: [
               SoopkomonImage(
                 assetPath: imagePath,
-                remoteUrl: 'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${imagePath.split('/').last.split('_').first}_big.png?alt=media',
+                remoteUrl:
+                    'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${imagePath.split('/').last.split('_').first}_big.png?alt=media',
                 width: 120,
                 height: 120,
               ),
               const SizedBox(height: 24),
               Text(
                 '$parkName $petName',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -361,10 +448,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                     backgroundColor: const Color(0xFF48B200),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: Text(isEn ? 'Confirm' : '획득하기',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    isEn ? 'Confirm' : '획득하기',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -418,14 +512,20 @@ class _HomePageState extends ConsumerState<HomePage> {
     final isEn = locale == AppLocale.en;
 
     final friendRequests = friendRequestsAsync.value ?? [];
-    final pendingRequests = friendRequests.where((req) => req.status == FriendRequestStatus.pending && !req.notified).toList();
+    final pendingRequests = friendRequests
+        .where(
+          (req) => req.status == FriendRequestStatus.pending && !req.notified,
+        )
+        .toList();
 
     // 언어 변경 시 마커 갱신 트리거
     ref.listen(localeProvider, (prev, next) {
-      if (prev != next && mapboxMap != null) {
+      if (prev != next && mapboxMap != null && _isMapReady) {
         final currentState = ref.read(homeViewModelProvider);
         final templates = ref.read(soopkomonTemplatesProvider).value;
-        if (!currentState.isLoading && currentState.locations.isNotEmpty && templates != null) {
+        if (!currentState.isLoading &&
+            currentState.locations.isNotEmpty &&
+            templates != null) {
           _addMarkers(currentState.locations, templates);
         }
       }
@@ -433,7 +533,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 데이터 로드 완료 및 변경 시 마커 갱신
     ref.listen(homeViewModelProvider.select((s) => s.locations), (prev, next) {
-      if (next.isNotEmpty && mapboxMap != null) {
+      if (next.isNotEmpty && mapboxMap != null && _isMapReady) {
         final templates = ref.read(soopkomonTemplatesProvider).value;
         if (templates != null) {
           _addMarkers(next, templates);
@@ -441,25 +541,51 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     });
 
-    ref.listen(mapZoomResetProvider, (_, _) => _moveToCurrentLocation(forceDefaultZoom: true));
+    ref.listen(
+      mapZoomResetProvider,
+      (_, _) => _moveToCurrentLocation(forceDefaultZoom: true),
+    );
 
-    ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (prev, next) {
+    ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (
+      prev,
+      next,
+    ) {
       if (next != null && mapboxMap != null) {
-        mapboxMap?.setCamera(CameraOptions(center: Point(coordinates: Position(next.longitude, next.latitude))));
+        mapboxMap?.setCamera(
+          CameraOptions(
+            center: Point(coordinates: Position(next.longitude, next.latitude)),
+          ),
+        );
       }
     });
 
-    ref.listen(homeViewModelProvider.select((s) => s.lastAcquiredPetName), (prev, next) {
+    ref.listen(homeViewModelProvider.select((s) => s.lastAcquiredPetName), (
+      prev,
+      next,
+    ) {
       if (next != null) {
         final currentState = ref.read(homeViewModelProvider);
-        _showPetAcquiredDialog(next, currentState.lastAcquiredParkName ?? '', currentState.lastAcquiredPetEggPath ?? 'assets/images/characters/egg_mystery.png');
+        _showPetAcquiredDialog(
+          next,
+          currentState.lastAcquiredParkName ?? '',
+          currentState.lastAcquiredPetEggPath ??
+              'assets/images/characters/egg_mystery.png',
+        );
       }
     });
 
-    ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (prev, next) {
+    ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (
+      prev,
+      next,
+    ) {
       if (next != null) {
         final currentState = ref.read(homeViewModelProvider);
-        _showPetHatchedDialog(next, currentState.lastHatchedParkName ?? '', currentState.lastHatchedPetImagePath ?? 'assets/images/characters/007_big.png');
+        _showPetHatchedDialog(
+          next,
+          currentState.lastHatchedParkName ?? '',
+          currentState.lastHatchedPetImagePath ??
+              'assets/images/characters/007_big.png',
+        );
       }
     });
 
@@ -472,15 +598,31 @@ class _HomePageState extends ConsumerState<HomePage> {
           alignment: Alignment.centerLeft,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(isEn ? "Today's Steps" : "오늘 걸음 수", style: const TextStyle(fontSize: 12)),
+                Text(
+                  isEn ? "Today's Steps" : "오늘 걸음 수",
+                  style: const TextStyle(fontSize: 12),
+                ),
                 const SizedBox(width: 8),
-                Image.asset("assets/images/footprints.png", width: 20, height: 20),
+                Image.asset(
+                  "assets/images/footprints.png",
+                  width: 20,
+                  height: 20,
+                ),
                 const SizedBox(width: 8),
-                Text(state.stepCount.toString(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  state.stepCount.toString(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -491,11 +633,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               isLabelVisible: pendingRequests.isNotEmpty,
               backgroundColor: Colors.red,
               textColor: Colors.white,
-              label: Text('${pendingRequests.length}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(
+                '${pendingRequests.length}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               child: const Icon(Icons.notifications),
             ),
             onPressed: () {
-              ref.read(friendsViewModelProvider.notifier).markAllPendingRequestsAsNotified();
+              ref
+                  .read(friendsViewModelProvider.notifier)
+                  .markAllPendingRequestsAsNotified();
               context.pushNamed(AppRoute.notifications.name);
             },
             style: IconButton.styleFrom(backgroundColor: Colors.white),
@@ -520,7 +667,10 @@ class _HomePageState extends ConsumerState<HomePage> {
             key: const ValueKey("mapWidget"),
             styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
             onMapCreated: _onMapCreated,
-            viewport: FollowPuckViewportState(zoom: _defaultZoomLevel, pitch: 0.0),
+            viewport: FollowPuckViewportState(
+              zoom: _defaultZoomLevel,
+              pitch: 0.0,
+            ),
             cameraOptions: CameraOptions(
               center: Point(coordinates: Position(127.7669, 35.9078)),
               zoom: _defaultZoomLevel,
@@ -535,7 +685,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: const Icon(Icons.add_location_alt, color: Colors.green),
         onPressed: () {
           final currentSteps = ref.read(homeViewModelProvider).stepCount;
-          ref.read(homeViewModelProvider.notifier).updateStepCount(currentSteps + 100);
+          ref
+              .read(homeViewModelProvider.notifier)
+              .updateStepCount(currentSteps + 100);
         },
       ),
     );
