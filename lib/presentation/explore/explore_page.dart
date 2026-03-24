@@ -16,20 +16,20 @@ class ExplorePage extends ConsumerStatefulWidget {
 }
 
 class _ExplorePageState extends ConsumerState<ExplorePage> {
-  Region _selectedRegion = Region.capital;
   String _searchQuery = '';
 
   void _onRegionChanged(Region region) {
-    setState(() {
-      _selectedRegion = region;
-    });
+    // 전역 selectedRegionProvider를 업데이트하여
+    // filteredLocationsProvider가 자동으로 필터링합니다.
+    ref.read(selectedRegionProvider.notifier).update(region);
   }
 
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
-    final locationsAsync = ref.watch(locationsProvider);
+    // 중복 제거 + 지역 필터링이 적용된 데이터를 사용합니다.
+    final filteredAsync = ref.watch(filteredLocationsProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -107,16 +107,41 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
               ),
               const SizedBox(height: 16),
               // 공원 리스트
-              locationsAsync.when(
+              filteredAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text(isEn ? 'An error occurred: $err' : '에러 발생: $err')),
+                error: (err, stack) => Center(
+                  child: Text(
+                    isEn ? 'An error occurred: $err' : '에러 발생: $err',
+                  ),
+                ),
                 data: (allLocations) {
-                  final filteredLocations = allLocations.where((loc) {
-                    final matchesRegion = loc.region == _selectedRegion.label;
-                    final matchesSearch = _searchQuery.isEmpty ||
-                        loc.name.toLowerCase().contains(_searchQuery.toLowerCase());
-                    return matchesRegion && matchesSearch;
-                  }).toList();
+                  // 검색어 필터링 적용
+                  final filteredLocations = _searchQuery.isEmpty
+                      ? allLocations
+                      : allLocations
+                          .where(
+                            (loc) => loc.name
+                                .toLowerCase()
+                                .contains(_searchQuery.toLowerCase()),
+                          )
+                          .toList();
+
+                  if (filteredLocations.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 48),
+                      child: Center(
+                        child: Text(
+                          isEn
+                              ? 'No parks found.'
+                              : '해당하는 공원이 없습니다.',
+                          style: const TextStyle(
+                            color: Color(0xFF999999),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
 
                   return ListView.builder(
                     itemCount: filteredLocations.length,
@@ -167,3 +192,4 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     );
   }
 }
+
