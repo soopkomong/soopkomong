@@ -33,6 +33,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   late TabController _tabController;
   final GlobalKey _globalKey = GlobalKey(); // 캡쳐를 위한 키
   bool _isSaving = false; // 저장 중 로딩 상태
+  bool _isInitialLoading = true; // 초기 에셋 로딩 상태
 
   @override
   void dispose() {
@@ -46,7 +47,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   // 선택된 파츠 상태
   String _selectedHair = '01';
   String _selectedFace = 'smile';
-  String _selectedClothes = '01';
+  String _selectedClothes = '01'; // '01'은 의상 없음을 의미
   // 신발은 탭에서는 빠졌지만 아바타에 넘겨야 하므로 기본값 유지
   String? _selectedShoes; // 기본적으로 신발 안 신음 (null)
 
@@ -103,6 +104,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       final settings = user.characterSettings!;
       _selectedHair = settings['hair'] ?? '01';
       _selectedFace = settings['face'] ?? 'smile';
+      // 의상 설정 로드 ('01'은 의상 없음으로 정상 처리)
       _selectedClothes = settings['clothes'] ?? '01';
       _selectedShoes = settings['shoes'];
       _selectedSkinColor = Color(settings['skinColor'] as int);
@@ -124,6 +126,74 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     _tabController.addListener(() {
       setState(() {}); // 탭 바뀔 때마다 색상 팔레트 UI 갱신을 위해
     });
+
+    // 3. 에셋 사전 로드 시작
+    _preloadAssets();
+  }
+
+  /// 모든 필수 에셋을 사전에 로드
+  Future<void> _preloadAssets() async {
+    try {
+      // 1. 캐릭터 파츠 데이터 로딩 대기
+      final parts = await ref.read(characterPartsProvider.future);
+
+      if (!mounted) return;
+
+      // 2. 모든 이미지 URL 생성 및 프리캐시
+      // 기본 몸체
+      final List<String> allAssetPaths = [
+        'body_base.png',
+        'body_shadow.png',
+      ];
+
+      // 머리카락 (각 ID별로 메인, 하이라이트, 그림자 포함)
+      final List<String> hairs = parts['hairs'] ?? [];
+      for (final id in hairs) {
+        allAssetPaths.addAll([
+          'hair_$id.png',
+          'hair_${id}_highlight.png',
+          'hair_${id}_shadow.png',
+          'hair_${id}_sub_shadow.png',
+        ]);
+      }
+
+      // 얼굴
+      final List<String> faces = parts['faces'] ?? [];
+      for (final id in faces) {
+        allAssetPaths.add('face_$id.png');
+      }
+
+      // 의상
+      final List<String> clothes = parts['clothes'] ?? [];
+      for (final id in clothes) {
+        allAssetPaths.add('clothes_$id.png');
+      }
+
+      // 신발
+      final List<String> shoes = parts['shoes'] ?? [];
+      for (final id in shoes) {
+        allAssetPaths.add('shoes_$id.png');
+      }
+
+      // Storage URL로 변환하여 precacheImage 실행
+      const storageBaseUrl =
+          'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/';
+
+      final List<Future<void>> imageFutures = allAssetPaths.map((assetPath) {
+        final fileName = assetPath.split('/').last;
+        final imageUrl = '${storageBaseUrl}parts%2F$fileName?alt=media';
+        return precacheImage(CachedNetworkImageProvider(imageUrl), context);
+      }).toList();
+
+      // 3. 모든 에셋 로딩 대기
+      await Future.wait(imageFutures);
+    } catch (e) {
+      debugPrint('에셋 사전 로드 중 오류 발생: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isInitialLoading = false);
+      }
+    }
   }
 
   void _randomizeCharacter(Map<String, List<String>> parts) {
@@ -147,7 +217,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     setState(() {
       _selectedHair = '01';
       _selectedFace = 'smile';
-      _selectedClothes = '01';
+      _selectedClothes = '01'; // '01' (의상 없음)으로 리셋
       _selectedShoes = null;
       _selectedSkinColor = const Color(0xFFFFDAB9);
       _selectedHairColor = Colors.white;
@@ -162,6 +232,30 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     final isEn = locale == AppLocale.en;
     final categories = isEn ? _categoriesEn : _categoriesKo;
     final partsAsync = ref.watch(characterPartsProvider);
+
+    // 초기 로딩 중일 때 로딩 화면 표시
+    if (_isInitialLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF5F5F5),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.green),
+              SizedBox(height: 16),
+              Text(
+                '캐릭터 정보를 불러오는 중...',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -257,6 +351,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
   /// 색상 팔레트 영역
   Widget _buildColorPalette(int index) {
+    if (index == 2) return const SizedBox.shrink(); // 의상/신발 탭은 색상 선택 안 함
+
     List<Color> currentPalette;
     Color selectedColor;
     Function(Color) onColorSelected;
@@ -398,7 +494,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       data: (parts) {
         final hairs = parts['hairs'] ?? [];
         final faces = parts['faces'] ?? [];
-        final clothes = parts['clothes'] ?? [];
+        final clothes = (parts['clothes'] ?? []).where((id) => id != '01').toList();
         final shoes = parts['shoes'] ?? [];
 
         return Container(
@@ -552,25 +648,25 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               onSelect(itemId);
             }
           },
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? Colors.black : Colors.transparent,
-                  width: 2,
-                ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? Colors.black : Colors.transparent,
+                width: 2,
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: _buildNetworkImage(
-                    _getPartUrl(type, itemId, isThumbnail: true),
-                  ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: _buildNetworkImage(
+                  _getPartUrl(type, itemId, isThumbnail: true),
                 ),
               ),
             ),
+          ),
         );
       },
     );
@@ -598,9 +694,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
         return GestureDetector(
           onTap: () {
-            // 옷 탭에서 이미 입고 있는 옷을 다시 터치하면 기본 옷(01)으로 원복
-            if (isSelected && type == 'clothes') {
-              onSelect('01');
+            // 옷 탭에서 이미 입고 있는 옷을 다시 터치하면 의상 없음(01)으로 원복
+            if (isSelected) { // Removed type == 'clothes' condition to allow deselect for all categories
+              onSelect('01'); // '01' is used as a generic deselect ID for now
             } else {
               onSelect(itemId);
             }

@@ -110,6 +110,8 @@ class CharacterAvatar extends StatelessWidget {
       fit: BoxFit.contain,
       color: color,
       colorBlendMode: colorBlendMode,
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
       placeholder: (context, url) => Shimmer.fromColors(
         baseColor: Colors.grey[200]!,
         highlightColor: Colors.grey[100]!,
@@ -167,10 +169,10 @@ class CharacterAvatar extends StatelessWidget {
 
           // 2. 신발
           if (shoesImagePath != null)
-            _buildPartImage(path: shoesImagePath!, color: shoesColor),
+            _buildPartImage(path: shoesImagePath!), // 색상 필터 제거
 
           // 3. 옷
-          _buildPartImage(path: clothesImagePath, color: clothesColor),
+          _buildPartImage(path: clothesImagePath), // 색상 필터 제거
         ],
       ),
     );
