@@ -43,31 +43,31 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
-      // 1. 사용자 데이터 및 인증 상태 가져오기
-      final userAsync = ref.read(userProvider);
+      // 1. Firebase Auth 상태 및 사용자 데이터 가져오기
       final authState = ref.read(authStateChangesProvider);
+      final userAsync = ref.read(userProvider);
       
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
-      // 초기 로딩 중이면서 데이터가 아직 없는 경우
+      // 2. Firebase Auth 수준에서 로그아웃임이 명확한 경우
+      // (지연 없이 즉시 로그인 화면으로 보내기 위해 최우선 확인)
+      if (authState.hasValue && authState.value == null) {
+        return isLoggingIn ? null : AppRoute.signIn.path;
+      }
+
+      // 3. 초기 로딩 중이면서 데이터가 아직 없는 경우 (로그인 프로세스 중 등)
       if (userAsync.isLoading && userAsync.value == null) {
-        // 이미 Auth 단계에서 로그아웃임이 확인되었다면 즉시 로그인으로
-        if (authState.hasValue && authState.value == null) {
-          return isLoggingIn ? null : AppRoute.signIn.path;
-        }
-        // 그 외엔 현재 상태 유지 (스플래시 혹은 이전 화면)
-        return null;
+        return null; // 현재 위치 유지 (로딩 인디케이터 등 노출을 위해)
       }
 
       final user = userAsync.value;
 
-      // 2. 사용자가 없거나 탈퇴된 상태라면 로그인 페이지로
+      // 4. 사용자 데이터가 없는 경우 (탈퇴 유저 포함)
       if (user == null) {
-        // 단, 이미 로그인 페이지라면 무한 리다이렉트 방지를 위해 null 반환
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // 3. 사용자가 있고 로그인 페이지에 있다면 홈으로 (정상 로그인 완료)
+      // 5. 로그인 성공 후 로그인 화면에 머물러 있는 경우 홈으로
       if (isLoggingIn) {
         return AppRoute.home.path;
       }

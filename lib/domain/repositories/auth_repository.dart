@@ -9,5 +9,6 @@ abstract class AuthRepository {
   Future<void> signOut();
   Future<void> withdraw();
   Future<void> updateDisplayName(String name);
+  Future<void> clearReentryFlag();
   AppUser? get currentUser;
 }

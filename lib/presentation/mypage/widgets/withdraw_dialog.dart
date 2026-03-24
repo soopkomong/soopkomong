@@ -70,6 +70,7 @@ class WithdrawDialog extends ConsumerWidget {
 
       try {
         await ref.read(authRepositoryProvider).withdraw();
+        ref.read(showWithdrawalPopupProvider.notifier).set(true);
 
         // 성공 시: AppRouter에서 authStateChanges를 리스닝하여 자동으로 리다이렉트됩니다.
         // GoRouter.go()에 의해 전체 페이지 스택(다이얼로그 포함)이 초기화되고 /signIn으로 이동하므로

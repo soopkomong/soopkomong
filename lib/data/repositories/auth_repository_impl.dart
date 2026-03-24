@@ -73,6 +73,7 @@ class AuthRepositoryImpl implements AuthRepository {
       deletedAt: data?['deletedAt'] != null
           ? (data?['deletedAt'] as Timestamp).toDate()
           : null,
+      wasReentry: data?['wasReentry'] ?? false,
       friends: List<String>.from(data?['friends'] ?? []),
       providerId: user.providerData.isNotEmpty ? user.providerData[0].providerId : null,
     );
@@ -111,10 +112,14 @@ class AuthRepositoryImpl implements AuthRepository {
       return await userRef.get();
     } else {
       // 기존 유저 로그인 시각 및 토큰 업데이트
+      final data = userDoc.data();
+      final bool previouslyDeleted = data?['isDeleted'] ?? false;
+
       final Map<String, dynamic> updates = {
         'lastLoginAt': FieldValue.serverTimestamp(),
         'isDeleted': false, // 로그인 시 탈퇴 대기 상태 해제
         'deletedAt': null,   // 탈퇴 일시 초기화
+        'wasReentry': previouslyDeleted, // 탈퇴 상태였다면 재진입 플래그 설정
       };
       
       try {
@@ -161,26 +166,34 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AppUser?> signInWithGoogle() async {
     try {
-      // 7.2.0 버전에서는 authenticate() 사용
+      // 1. Google 로그인 수행 (인증 팝업 발생)
+      // google_sign_in 7.2.0+ 에서는 authenticate()를 사용합니다.
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
-      // accessToken은 authorizationClient를 통해 명시적으로 scope와 함께 요청해야 함
-      final authz = await googleUser.authorizationClient.authorizeScopes([
+      // 2. ID 토큰 가져오기 (Firebase 인증에 필수)
+      final String? idToken = googleUser.authentication.idToken;
+
+      // 3. 액세스 토큰 가져오기 (추가 팝업을 차단하기 위해 무인 방식 호출)
+      // authorizationForScopes는 promptIfUnauthorized를 false로 설정하여 추가 팝업을 띄우지 않습니다.
+      final authz = await googleUser.authorizationClient.authorizationForScopes([
         'email',
         'profile',
       ]);
 
+      // 4. Firebase Credential 생성
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: authz.accessToken,
-        idToken: googleUser.authentication.idToken,
+        accessToken: authz?.accessToken,
+        idToken: idToken,
       );
 
+      // 5. Firebase 로그인
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
-      final userDoc = await _syncUserToFirestore(userCredential.user);
-      return _mapFirebaseUser(userCredential.user, userDoc);
+      // authStateChanges 스트림에서 이미 Firestore 동기화를 수행하므로 여기서 중복 호출하지 않음
+      return _mapFirebaseUser(userCredential.user, null);
     } catch (e) {
+      log('Google Sign In Error: $e');
       rethrow;
     }
   }
@@ -215,8 +228,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
-      final userDoc = await _syncUserToFirestore(userCredential.user);
-      return _mapFirebaseUser(userCredential.user, userDoc);
+      // authStateChanges 스트림에서 이미 Firestore 동기화를 수행하므로 여기서 중복 호출하지 않음
+      return _mapFirebaseUser(userCredential.user, null);
     } catch (e) {
       rethrow;
     }
@@ -240,8 +253,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(oauthCredential);
 
-      final userDoc = await _syncUserToFirestore(userCredential.user);
-      return _mapFirebaseUser(userCredential.user, userDoc);
+      // authStateChanges 스트림에서 이미 Firestore 동기화를 수행하므로 여기서 중복 호출하지 않음
+      return _mapFirebaseUser(userCredential.user, null);
     } catch (e) {
       rethrow;
     }
@@ -289,5 +302,15 @@ class AuthRepositoryImpl implements AuthRepository {
     // 즉시 삭제를 원할 경우 user.delete() 호출 가능. 
     // 여기서는 14일 보존을 위해 로그아웃만 진행)
     await signOut();
+  }
+
+  @override
+  Future<void> clearReentryFlag() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return;
+
+    await _firestore.collection('users').doc(user.uid).update({
+      'wasReentry': false,
+    });
   }
 }
