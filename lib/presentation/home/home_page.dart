@@ -42,6 +42,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Timer? _themeTimer;
   final Map<String, int> _markerIndexMap = {};
   bool _isAddingMarkers = false;
+  bool _isMapReady = false; // 지도 플랫폼 채널 준비 상태 플래그
 
   @override
   void initState() {
@@ -68,22 +69,38 @@ class _HomePageState extends ConsumerState<HomePage> {
     List<Location> locations,
     List<SoopkomonTemplate> templates,
   ) async {
-    if (mapboxMap == null || locations.isEmpty || _isAddingMarkers) return;
+    if (mapboxMap == null ||
+        !_isMapReady ||
+        locations.isEmpty ||
+        _isAddingMarkers)
+      return;
     _isAddingMarkers = true;
 
     try {
+      // 매니저가 없거나 이전 지도의 매니저인 경우 새로 생성합니다.
+      // deleteAll 실패 시 매니저를 재생성하여 복구합니다.
       if (polygonAnnotationManager == null) {
         polygonAnnotationManager = await mapboxMap!.annotations
             .createPolygonAnnotationManager();
       } else {
-        await polygonAnnotationManager?.deleteAll();
+        try {
+          await polygonAnnotationManager?.deleteAll();
+        } catch (_) {
+          polygonAnnotationManager = await mapboxMap!.annotations
+              .createPolygonAnnotationManager();
+        }
       }
 
       if (pointAnnotationManager == null) {
         pointAnnotationManager = await mapboxMap!.annotations
             .createPointAnnotationManager();
       } else {
-        await pointAnnotationManager?.deleteAll();
+        try {
+          await pointAnnotationManager?.deleteAll();
+        } catch (_) {
+          pointAnnotationManager = await mapboxMap!.annotations
+              .createPointAnnotationManager();
+        }
       }
 
       pointAnnotationManager?.tapEvents(
@@ -180,6 +197,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           _markerIndexMap[id] = i;
         }
       }
+    } catch (e) {
+      // 지도 채널이 아직 준비되지 않았거나 파괴된 경우 조용히 실패합니다.
+      debugPrint("마커 추가 중 오류 발생: $e");
+      // 매니저 참조를 초기화하여 다음 시도 시 재생성되도록 합니다.
+      polygonAnnotationManager = null;
+      pointAnnotationManager = null;
     } finally {
       _isAddingMarkers = false;
     }
@@ -187,6 +210,13 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
+
+    // 지도가 새로 생성되면 이전 매니저 참조를 초기화하여
+    // 파괴된 플랫폼 채널 참조를 방지합니다.
+    pointAnnotationManager = null;
+    polygonAnnotationManager = null;
+    _markerIndexMap.clear();
+    _isMapReady = false;
 
     Future.microtask(() async {
       if (!mounted) return;
@@ -204,21 +234,25 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     });
 
-    await mapboxMap.location.updateSettings(
-      LocationComponentSettings(enabled: true, puckBearingEnabled: true),
-    );
+    try {
+      await mapboxMap.location.updateSettings(
+        LocationComponentSettings(enabled: true, puckBearingEnabled: true),
+      );
 
-    await mapboxMap.setBounds(
-      CameraBoundsOptions(
-        bounds: CoordinateBounds(
-          southwest: Point(coordinates: Position(-180, -90)),
-          northeast: Point(coordinates: Position(180, 90)),
-          infiniteBounds: true,
+      await mapboxMap.setBounds(
+        CameraBoundsOptions(
+          bounds: CoordinateBounds(
+            southwest: Point(coordinates: Position(-180, -90)),
+            northeast: Point(coordinates: Position(180, 90)),
+            infiniteBounds: true,
+          ),
+          minZoom: 14.5,
+          maxZoom: 22.0,
         ),
-        minZoom: 14.5,
-        maxZoom: 22.0,
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint("Mapbox 초기 설정 에러: $e");
+    }
 
     if (!mounted) return;
 
@@ -226,17 +260,28 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (!mounted) return;
       final size = MediaQuery.sizeOf(context);
 
-      await mapboxMap.gestures.updateSettings(
-        GesturesSettings(
-          scrollEnabled: false,
-          pinchPanEnabled: false,
-          focalPoint: ScreenCoordinate(
-            x: size.width / 2.0,
-            y: size.height / 2.0,
+      try {
+        await mapboxMap.gestures.updateSettings(
+          GesturesSettings(
+            scrollEnabled: false,
+            pinchPanEnabled: false,
+            focalPoint: ScreenCoordinate(
+              x: size.width / 2.0,
+              y: size.height / 2.0,
+            ),
           ),
-        ),
-      );
+        );
+      } catch (e) {
+        debugPrint("Mapbox gestures 설정 에러: $e");
+      }
     });
+
+    // 지도가 완전히 준비된 후 마커를 추가합니다.
+    // 약간의 지연을 주어 플랫폼 채널이 안정화될 시간을 확보합니다.
+    _isMapReady = true;
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
 
     final state = ref.read(homeViewModelProvider);
     final templatesAsync = ref.read(soopkomonTemplatesProvider);
@@ -478,7 +523,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 언어 변경 시 마커 갱신 트리거
     ref.listen(localeProvider, (prev, next) {
-      if (prev != next && mapboxMap != null) {
+      if (prev != next && mapboxMap != null && _isMapReady) {
         final currentState = ref.read(homeViewModelProvider);
         final templates = ref.read(soopkomonTemplatesProvider).value;
         if (!currentState.isLoading &&
@@ -491,7 +536,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 데이터 로드 완료 및 변경 시 마커 갱신
     ref.listen(homeViewModelProvider.select((s) => s.locations), (prev, next) {
-      if (next.isNotEmpty && mapboxMap != null) {
+      if (next.isNotEmpty && mapboxMap != null && _isMapReady) {
         final templates = ref.read(soopkomonTemplatesProvider).value;
         if (templates != null) {
           _addMarkers(next, templates);
@@ -552,6 +597,52 @@ class _HomePageState extends ConsumerState<HomePage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         titleSpacing: 12,
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isEn ? "Today's Steps" : "오늘 걸음 수",
+                  style: const TextStyle(fontSize: 12),
+                ),
+                const SizedBox(width: 8),
+                Image.asset(
+                  "assets/images/footprints.png",
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  state.stepCount.toString(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: pendingRequests.isNotEmpty,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              label: Text(
+                '${pendingRequests.length}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              child: const Icon(Icons.notifications),
+            ),
+            onPressed: () {
         title: null,
         actions: [
           AppBarIcon(
