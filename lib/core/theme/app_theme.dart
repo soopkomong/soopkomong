@@ -7,7 +7,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Pretendard',
-      scaffoldBackgroundColor: Colors.white,
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary500,
         primary: AppColors.primary500,

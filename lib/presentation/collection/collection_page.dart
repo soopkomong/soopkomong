@@ -11,7 +11,7 @@ import 'package:soopkomong/presentation/collection/widgets/park_card.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/collection/widgets/soopkomong_card.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
-import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
+import 'package:soopkomong/presentation/widgets/skeletons.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
