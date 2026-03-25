@@ -8,10 +8,15 @@ import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/repositories/auth_repository.dart';
 import 'package:soopkomong/core/services/fcm_service.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SharedPreferences _prefs;
+
+  AuthRepositoryImpl(this._prefs);
 
   @override
   Stream<AppUser?> get authStateChanges =>
@@ -81,6 +86,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   Future<DocumentSnapshot> _syncUserToFirestore(User? user) async {
     if (user == null) throw Exception('User is null');
+
+    // 백그라운드 작업을 위해 userId 저장
+    await _prefs.setString('user_id', user.uid);
 
     final userRef = _firestore.collection('users').doc(user.uid);
     final userDoc = await userRef.get();
