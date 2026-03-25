@@ -172,7 +172,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 .read(onboardingProvider.notifier)
                                 .completeOnboarding();
                             if (mounted) {
-                              context.go(AppRoute.signIn.path);
+                              context.go(AppRoute.home.path);
                             }
                           } else {
                             _pageController.nextPage(

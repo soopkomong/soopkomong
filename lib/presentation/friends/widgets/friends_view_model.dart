@@ -262,6 +262,19 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
     }
   }
 
+  // 알림(친구 요청) 삭제
+  Future<void> deleteNotification(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(requestId)
+          .delete();
+    } catch (e) {
+      print('❌ [DEBUG] 알림 삭제 중 에러 발생: $e');
+      rethrow;
+    }
+  }
+
   Future<void> addFriend(String code) async {
     await sendFriendRequest(code);
   }
