@@ -104,6 +104,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/onboarding/
     - assets/images/egg/
     - .env
   #   - images/a_dot_burr.jpeg

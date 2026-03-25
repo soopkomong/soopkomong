@@ -116,18 +116,18 @@ class _CharacterCard extends StatelessWidget {
                 ),
               ),
 
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
+              // Positioned(
+              //   top: 4,
+              //   right: 4,
+              //   child: Container(
+              //     width: 16,
+              //     height: 16,
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       shape: BoxShape.circle,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

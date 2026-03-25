@@ -127,11 +127,18 @@ final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) 
               .whereType<int>()
               .toSet();
 
-          final visitedLocations = locations
-              .where((loc) => visitedIds.contains(loc.id))
-              .toList();
-          
-          return AsyncValue.data(visitedLocations);
+          // 1. 고유 ID 기준 필터링
+          final visitedLocations =
+              locations.where((loc) => visitedIds.contains(loc.id)).toList();
+
+          // 2. 고유 ID(id) 기준 중복 제거 (방어적 코드)
+          final uniqueMap = <int, Location>{};
+          for (var loc in visitedLocations) {
+            uniqueMap[loc.id] = loc;
+          }
+          final deduplicated = uniqueMap.values.toList();
+
+          return AsyncValue.data(deduplicated);
         },
         loading: () => const AsyncValue.loading(),
         error: (err, stack) => AsyncValue.error(err, stack),

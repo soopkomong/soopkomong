@@ -3,17 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soopkomong/core/app_initializer.dart';
 import 'package:soopkomong/core/theme/app_theme.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/presentation/providers/onboarding_provider.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  final container = ProviderContainer();
   // AppInitializer 초기화 (Firebase, Dotenv 등)
   await AppInitializer.init();
+  
+  // SharedPreferences 초기화
+  final sharedPreferences = await SharedPreferences.getInstance();
+  
+  final container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+    ],
+  );
   
   // Google Sign In 초기화
   await GoogleSignIn.instance.initialize();

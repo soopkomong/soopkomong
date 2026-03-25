@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -58,9 +59,7 @@ class _AppBottomNavigationBarState
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(70),
             ),
-            shadows: const [
-              BoxShadow(color: Color(0x3F000000), blurRadius: 24),
-            ],
+            shadows: AppShadows.elevated,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

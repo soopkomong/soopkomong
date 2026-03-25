@@ -547,6 +547,20 @@ class _HomePageState extends ConsumerState<HomePage> {
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
           ),
+
+          // TODO : [임시] 온보딩 페이지 다시 보기 버튼
+          Positioned(
+            bottom: 120,
+            right: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'onboarding_test_btn',
+              backgroundColor: Colors.white,
+              child: const Icon(Icons.help_outline, color: Colors.green),
+              onPressed: () {
+                context.push(AppRoute.onboarding.path);
+              },
+            ),
+          ),
         ],
       ),
       // floatingActionButton: FloatingActionButton(
