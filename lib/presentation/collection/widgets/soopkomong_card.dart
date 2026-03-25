@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
@@ -126,9 +127,18 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
                           child: Container(
                             width: 24,
                             height: 24,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFAFAFAF),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: widget.template.eggType.color,
                               shape: BoxShape.circle,
+                            ),
+                            child: SvgPicture.asset(
+                              widget.template.eggType.iconPath,
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),

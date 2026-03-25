@@ -141,3 +141,21 @@ final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) 
     error: (err, stack) => AsyncValue.error(err, stack),
   );
 });
+
+/// 9. 중복 제거된 전체 공원 개수 (지역 필터 무시)
+final totalLocationsCountProvider = Provider<AsyncValue<int>>((ref) {
+  final locationsAsync = ref.watch(locationsProvider);
+  return locationsAsync.whenData((locations) {
+    final uniqueIds = locations.map((l) => l.id).toSet();
+    return uniqueIds.length;
+  });
+});
+
+/// 10. 중복 제거된 전체 템플릿 개수 (지역 필터 무시)
+final totalTemplatesCountProvider = Provider<AsyncValue<int>>((ref) {
+  final templatesAsync = ref.watch(soopkomonTemplatesProvider);
+  return templatesAsync.whenData((templates) {
+    final uniqueIds = templates.map((t) => t.templateId).toSet();
+    return uniqueIds.length;
+  });
+});

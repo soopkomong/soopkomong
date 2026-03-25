@@ -8,7 +8,7 @@ import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
-import 'package:soopkomong/presentation/widgets/character_avatar.dart';
+import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
 class ProfileCard extends ConsumerWidget {
   const ProfileCard({super.key});
@@ -38,11 +38,10 @@ class ProfileCard extends ConsumerWidget {
           Row(
             children: [
               // Profile circular avatar
-              UserAvatar(
-                characterSettings: user.characterSettings,
-                photoUrl: user.photoUrl,
+              UrlAvatar(
+                photoUrl: user.photoUrl ?? '',
                 size: 80,
-                isProfileMode: true,
+                useCircle: true,
               ),
               const SizedBox(width: 20),
               Expanded(

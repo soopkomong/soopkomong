@@ -12,12 +12,11 @@ import 'package:soopkomong/presentation/collection/collection_page.dart';
 import 'package:soopkomong/presentation/explore/explore_page.dart';
 import 'package:soopkomong/presentation/friends/friends_page.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart';
-import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
+import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
 import 'package:soopkomong/presentation/settings/settings_page.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
-
 
 export 'app_route.dart';
 
@@ -51,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 1. Firebase Auth 상태 및 사용자 데이터 가져오기
       final authState = ref.read(authStateChangesProvider);
       final userAsync = ref.read(userProvider);
-      
+
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
       // 2. Firebase Auth 수준에서 로그아웃임이 명확한 경우
@@ -126,20 +125,21 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: AppRoute.friends.path,
                 name: AppRoute.friends.name,
                 builder: (context, state) => const FriendsPage(),
-                routes: [
-                  GoRoute(
-                    path: AppRoute.friendProfile.path,
-                    name: AppRoute.friendProfile.name,
-                    builder: (context, state) {
-                      final friend = state.extra as FriendModel;
-                      return FriendProfilePage(friend: friend);
-                    },
-                  ),
-                ],
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoute.friendProfile.path,
+        name: AppRoute.friendProfile.name,
+        builder: (context, state) {
+          final friend = state.extra as FriendModel?;
+          if (friend == null) {
+            return const Scaffold(body: Center(child: Text('정보를 불러올 수 없습니다.')));
+          }
+          return FriendProfilePage(friend: friend);
+        },
       ),
       GoRoute(
         path: AppRoute.mypage.path,

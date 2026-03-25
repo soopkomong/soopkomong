@@ -7,7 +7,7 @@ enum AppRoute {
   mypage(name: 'mypage', path: '/mypage'),
   characterCustomize(name: 'characterCustomize', path: '/characterCustomize'),
   village(name: 'village', path: '/village'),
-  friendProfile(name: 'friendProfile', path: 'profile'),
+  friendProfile(name: 'friendProfile', path: '/friends/profile'),
   notifications(name: 'notifications', path: '/notifications'),
   profileEdit(name: 'profileEdit', path: '/profileEdit'),
   signIn(name: 'signIn', path: '/signIn'),

@@ -2,50 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
+import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/user_provider.dart';
-
-class FriendModel {
-  final String id; // 친구의 고유 id
-  final String name; // 친구 이름
-  final String characterTemplateId;
-  final int leafProgress; // 친구의 현재 레벨
-  final int leafMax; // 최대 레벨
-  final int pawProgress; // 얻은 캐릭터
-  final int pawMax; // 최대 캐릭터
-
-  final int totalSteps; // 친구의 총 걸음 수
-  final DateTime? friendedAt; // 친구가 된 날짜
-
-  FriendModel({
-    required this.id,
-    required this.name,
-    required this.characterTemplateId,
-    required this.leafProgress,
-    required this.leafMax,
-    required this.pawProgress,
-    required this.pawMax,
-    this.totalSteps = 0,
-    this.friendedAt,
-  });
-
-  factory FriendModel.fromFirestore(DocumentSnapshot doc, {DateTime? friendedAtOverride}) {
-    final data = doc.data() as Map<String, dynamic>? ?? {};
-    return FriendModel(
-      id: doc.id,
-      name: data['displayName'] ?? '이름 없음',
-      characterTemplateId: data['templateId'] ?? '007',
-      leafProgress: (data['leafProgress'] as num?)?.toInt() ?? 0,
-      leafMax: (data['leafMax'] as num?)?.toInt() ?? 50,
-      pawProgress: (data['pawProgress'] as num?)?.toInt() ?? 0,
-      pawMax: (data['pawMax'] as num?)?.toInt() ?? 30,
-      totalSteps: (data['totalSteps'] as num?)?.toInt() ?? 0,
-      friendedAt: friendedAtOverride ?? (data['friendedAt'] != null
-          ? (data['friendedAt'] as Timestamp).toDate()
-          : null),
-    );
-  }
-}
 
 class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
   @override
