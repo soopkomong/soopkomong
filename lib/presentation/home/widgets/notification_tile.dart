@@ -16,6 +16,7 @@ class NotificationTile extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onDecline;
   final String? statusText; // '수락됨', '거절됨' 등 상태 표시
+  final EdgeInsetsGeometry? margin;
 
   const NotificationTile({
     super.key,
@@ -28,12 +29,13 @@ class NotificationTile extends StatelessWidget {
     this.onAccept,
     this.onDecline,
     this.statusText,
+    this.margin,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: margin ?? const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -68,7 +70,9 @@ class NotificationTile extends StatelessWidget {
             ),
 
             if (type == NotificationType.friendRequest &&
-                statusText == null) ...[
+                statusText == null &&
+                onAccept != null &&
+                onDecline != null) ...[
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

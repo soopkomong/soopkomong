@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/utils/kakao_navi_service.dart';
 import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
@@ -115,7 +118,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                       var map = new kakao.maps.Map(mapContainer, mapOption);
                       
                       // 순수 HTML/SVG를 활용한 커스텀 마커 + 텍스트 오버레이 (이미지 로드 차단 방지)
-                      var svgMarker = '<svg width="24" height="35" viewBox="0 0 24 35" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 23 12 23s12-14 12-23C24 5.4 18.6 0 12 0zm0 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" fill="#FF4B4B"/></svg>';
+                      var svgMarker = '<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 14.8843C7.5 22.162 13.8667 28.1804 16.6848 30.4878C17.0881 30.818 17.2922 30.9851 17.5931 31.0699C17.8274 31.1358 18.1722 31.1358 18.4065 31.0699C18.708 30.985 18.9106 30.8195 19.3154 30.488C22.1335 28.1806 28.4999 22.1627 28.4999 14.8849C28.4999 12.1308 27.3937 9.48908 25.4246 7.54158C23.4554 5.59409 20.7849 4.5 18.0001 4.5C15.2153 4.5 12.5445 5.59425 10.5754 7.54175C8.60625 9.48924 7.5 12.1301 7.5 14.8843Z" fill="#FD8224"/><path d="M23.5928 9.84786C23.5861 9.73318 23.5375 9.62496 23.4563 9.54373C23.375 9.4625 23.2668 9.41393 23.1521 9.40723C18.6914 9.14532 15.1184 10.4883 13.5949 13.0078C13.0669 13.8697 12.8066 14.869 12.8473 15.8789C12.8738 16.5248 13.0052 17.162 13.2363 17.7656C13.2499 17.8028 13.2727 17.8359 13.3025 17.8619C13.3323 17.8879 13.3682 17.9059 13.4069 17.9142C13.4456 17.9226 13.4857 17.921 13.5236 17.9097C13.5615 17.8984 13.5959 17.8776 13.6236 17.8494L18.6041 12.7928C18.6477 12.7492 18.6994 12.7147 18.7563 12.6911C18.8132 12.6675 18.8741 12.6554 18.9357 12.6554C18.9973 12.6554 19.0583 12.6675 19.1152 12.6911C19.1721 12.7147 19.2238 12.7492 19.2674 12.7928C19.3109 12.8363 19.3455 12.888 19.3691 12.9449C19.3926 13.0018 19.4048 13.0628 19.4048 13.1244C19.4048 13.186 19.3926 13.247 19.3691 13.3039C19.3455 13.3608 19.3109 13.4125 19.2674 13.4561L13.8246 18.9809L12.9932 19.8123C12.9067 19.8965 12.8551 20.0101 12.8486 20.1306C12.842 20.2511 12.8811 20.3697 12.958 20.4627C13.0001 20.5115 13.0518 20.551 13.1099 20.5789C13.168 20.6068 13.2312 20.6224 13.2956 20.6248C13.36 20.6271 13.4242 20.6162 13.4841 20.5927C13.5441 20.5691 13.5986 20.5334 13.6441 20.4879L14.6279 19.5041C15.4564 19.9049 16.2926 20.1234 17.1217 20.1527C17.1869 20.1551 17.252 20.1563 17.3168 20.1563C18.261 20.1587 19.1872 19.8986 19.9922 19.4051C22.5117 17.8816 23.8553 14.3092 23.5928 9.84786Z" fill="white"/></svg>';
                       var overlayContent = '<div style="display:flex; flex-direction:column; align-items:center;">' +
                                            '  <div style="background:white; padding:4px 10px; border-radius:20px; border:1px solid #ddd; box-shadow:0px 2px 4px rgba(0,0,0,0.1); font-size:13px; font-weight:bold; color:#333; margin-bottom:4px; white-space:nowrap;">${widget.naviLoc}</div>' +
                                            '  <div>' + svgMarker + '</div>' +
@@ -378,10 +381,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   widget.name,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTextStyles.title.copyWith(color: AppColors.gray900),
                 ),
               ),
 
@@ -391,11 +391,17 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InfoCard(
-                  leading: const Icon(Icons.description_outlined),
+                  leading: SvgPicture.asset(
+                    'assets/images/Info.svg',
+                    width: 20,
+                    height: 20,
+                  ),
                   title: isEn ? 'About' : '공원 소개',
                   child: ExpandableText(
                     text: widget.description,
-                    style: const TextStyle(fontSize: 13, height: 1.5),
+                    style: AppTextStyles.subTitleM.copyWith(
+                      color: AppColors.gray900,
+                    ),
                   ),
                 ),
               ),
@@ -403,17 +409,26 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
               const SizedBox(height: 20),
 
               /// 🔹 이용안내 카드
-              if (widget.information.isNotEmpty || widget.tel.isNotEmpty || widget.tel1.isNotEmpty || widget.tel2.isNotEmpty) ...[
+              if (widget.information.isNotEmpty ||
+                  widget.tel.isNotEmpty ||
+                  widget.tel1.isNotEmpty ||
+                  widget.tel2.isNotEmpty) ...[
                 Builder(
                   builder: (context) {
-                    final allTels = [widget.tel, widget.tel1, widget.tel2]
-                        .where((t) => t.isNotEmpty)
-                        .toList();
-                    
+                    final allTels = [
+                      widget.tel,
+                      widget.tel1,
+                      widget.tel2,
+                    ].where((t) => t.isNotEmpty).toList();
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: InfoCard(
-                        leading: const Icon(Icons.info_outline, size: 24, color: Colors.grey),
+                        leading: SvgPicture.asset(
+                          'assets/images/Info.svg',
+                          width: 20,
+                          height: 20,
+                        ),
                         title: isEn ? 'Guide' : '이용안내',
                         child: SizedBox(
                           width: double.infinity,
@@ -436,37 +451,50 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: allTels.map((t) => GestureDetector(
-                                          onTap: () => _showPhonePopup([t], isEn),
-                                          child: Text(
-                                            t,
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              height: 1.5,
-                                              color: Colors.black87,
-                                              decoration: TextDecoration.underline,
-                                            ),
-                                          ),
-                                        )).toList(),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: allTels
+                                            .map(
+                                              (t) => GestureDetector(
+                                                onTap: () =>
+                                                    _showPhonePopup([t], isEn),
+                                                child: Text(
+                                                  t,
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    height: 1.5,
+                                                    color: Colors.black87,
+                                                    decoration: TextDecoration
+                                                        .underline,
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
                                       ),
                                     ),
                                   ],
                                 ),
-                              if (allTels.isNotEmpty && widget.information.isNotEmpty)
+                              if (allTels.isNotEmpty &&
+                                  widget.information.isNotEmpty)
                                 const SizedBox(height: 12),
                               // 이용안내 텍스트 영역
                               if (widget.information.isNotEmpty)
                                 Text(
-                                  widget.information.replaceAll('<br>', '\n').replaceAll('<br/>', '\n'),
-                                  style: const TextStyle(fontSize: 13, height: 1.5),
+                                  widget.information
+                                      .replaceAll('<br>', '\n')
+                                      .replaceAll('<br/>', '\n'),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    height: 1.5,
+                                  ),
                                 ),
                             ],
                           ),
                         ),
                       ),
                     );
-                  }
+                  },
                 ),
                 const SizedBox(height: 20),
               ],
@@ -475,9 +503,10 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InfoCard(
-                  leading: Image.asset(
-                    'assets/images/character_silhouette.png',
-                    width: 24,
+                  leading: SvgPicture.asset(
+                    'assets/images/Info.svg',
+                    width: 20,
+                    height: 20,
                   ),
                   title: isEn ? 'Obtainable Characters' : '얻을 수 있는 캐릭터',
                   child: Column(
@@ -496,7 +525,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                             children: widget.petIds.isEmpty
                                 ? [
                                     Text(
-                                      isEn ? 'No characters available.' : '얻을 수 있는 숲코몽이 없습니다.',
+                                      isEn
+                                          ? 'No characters available.'
+                                          : '얻을 수 있는 숲코몽이 없습니다.',
                                       style: const TextStyle(
                                         fontSize: 13,
                                         color: Colors.grey,
@@ -509,7 +540,8 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         ?.value
                                         .where((t) => t.templateId == petId)
                                         .firstOrNull;
-                                    final isAcquired = userCharacters.value?.any(
+                                    final isAcquired =
+                                        userCharacters.value?.any(
                                           (c) => c.templateId == petId,
                                         ) ??
                                         false;
@@ -525,7 +557,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         fit: BoxFit.contain,
                                         color: isAcquired
                                             ? null
-                                            : Colors.black.withValues(alpha: 0.7),
+                                            : Colors.black.withValues(
+                                                alpha: 0.7,
+                                              ),
                                         colorBlendMode: isAcquired
                                             ? null
                                             : BlendMode.srcIn,
@@ -644,17 +678,17 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const Icon(Icons.location_on_outlined),
+                                SvgPicture.asset(
+                                  'assets/images/Map_pin_area.svg',
+                                  width: 24,
+                                  height: 24,
+                                ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
                                     widget.address,
-                                    style: const TextStyle(
-                                      color: Color(0xFF191919),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.5,
-                                      overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.subTitleM.copyWith(
+                                      color: AppColors.black,
                                     ),
                                   ),
                                 ),
@@ -690,49 +724,52 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ...tels.map((t) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            final Uri url = Uri(scheme: 'tel', path: t);
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url);
-                            }
-                            if (context.mounted) Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF48B200),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                ...tels.map(
+                  (t) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final Uri url = Uri(scheme: 'tel', path: t);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary700,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            isEn ? 'Call $t' : '$t에 통화 연결',
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                        child: Text(
+                          isEn ? 'Call $t' : '$t 에 통화 연결',
+                          style: AppTextStyles.subTitleM.copyWith(
+                            color: AppColors.white,
                           ),
                         ),
                       ),
-                    )),
+                    ),
+                  ),
+                ),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE0E0E0),
-                      foregroundColor: const Color(0xFF333333),
+                      backgroundColor: AppColors.gray200,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -740,8 +777,9 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                     ),
                     child: Text(
                       isEn ? 'Cancel' : '취소하기',
-                      style:
-                          const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      style: AppTextStyles.subTitleM.copyWith(
+                        color: AppColors.black,
+                      ),
                     ),
                   ),
                 ),

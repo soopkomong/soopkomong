@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class ExpandableText extends ConsumerStatefulWidget {
@@ -44,7 +46,9 @@ class _ExpandableTextState extends ConsumerState<ExpandableText>
 
   @override
   Widget build(BuildContext context) {
-    final displayText = widget.text.replaceAll('<br>', '\n').replaceAll('<br/>', '\n');
+    final displayText = widget.text
+        .replaceAll('<br>', '\n')
+        .replaceAll('<br/>', '\n');
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
@@ -53,7 +57,7 @@ class _ExpandableTextState extends ConsumerState<ExpandableText>
         children: [
           Text(
             displayText,
-            style: widget.style,
+            style: AppTextStyles.body.copyWith(color: AppColors.gray900),
             maxLines: _expanded ? null : widget.trimLines,
             overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
           ),
@@ -71,9 +75,13 @@ class _ExpandableTextState extends ConsumerState<ExpandableText>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _expanded 
-                        ? (ref.watch(localeProvider) == AppLocale.en ? 'Collapse' : '내용 접기')
-                        : (ref.watch(localeProvider) == AppLocale.en ? 'Read more' : '더보기'),
+                      _expanded
+                          ? (ref.watch(localeProvider) == AppLocale.en
+                                ? 'Collapse'
+                                : '내용 접기')
+                          : (ref.watch(localeProvider) == AppLocale.en
+                                ? 'Read more'
+                                : '더보기'),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

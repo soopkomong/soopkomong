@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
 import 'package:soopkomong/presentation/explore/widgets/explore_park_card.dart';
 import 'package:soopkomong/presentation/widgets/park_detail_sheet.dart';
@@ -41,24 +43,25 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
               const SizedBox(height: 24),
               // 상단 헤더
               Center(
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/images/park.png',
-                      width: 64,
-                      height: 64,
+                      'assets/images/Leaf_3D.png',
+                      width: 26,
+                      height: 26,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(width: 6),
                     Text(
                       isEn ? 'Eco Parks' : '생태 공원',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                      style: AppTextStyles.subTitleL.copyWith(
+                        color: AppColors.gray900,
                       ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
               // 검색바
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -102,38 +105,32 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 ),
               ),
               const SizedBox(height: 16),
-              RegionFilterBar(
-                onChanged: _onRegionChanged,
-              ),
+              RegionFilterBar(onChanged: _onRegionChanged),
               const SizedBox(height: 16),
               // 공원 리스트
               filteredAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(
-                  child: Text(
-                    isEn ? 'An error occurred: $err' : '에러 발생: $err',
-                  ),
+                  child: Text(isEn ? 'An error occurred: $err' : '에러 발생: $err'),
                 ),
                 data: (allLocations) {
                   // 검색어 필터링 적용
                   final filteredLocations = _searchQuery.isEmpty
                       ? allLocations
                       : allLocations
-                          .where(
-                            (loc) => loc.name
-                                .toLowerCase()
-                                .contains(_searchQuery.toLowerCase()),
-                          )
-                          .toList();
+                            .where(
+                              (loc) => loc.name.toLowerCase().contains(
+                                _searchQuery.toLowerCase(),
+                              ),
+                            )
+                            .toList();
 
                   if (filteredLocations.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 48),
                       child: Center(
                         child: Text(
-                          isEn
-                              ? 'No parks found.'
-                              : '해당하는 공원이 없습니다.',
+                          isEn ? 'No parks found.' : '해당하는 공원이 없습니다.',
                           style: const TextStyle(
                             color: Color(0xFF999999),
                             fontSize: 14,
@@ -151,7 +148,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     itemBuilder: (context, index) {
                       final location = filteredLocations[index];
                       return ExploreParkCard(
-                        region: Region.fromValue(location.region).getLabel(isEn),
+                        region: Region.fromValue(
+                          location.region,
+                        ).getLabel(isEn),
                         name: location.name,
                         description: location.summary,
                         imageUrl: location.imageUrl,
@@ -192,4 +191,3 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     );
   }
 }
-

@@ -7,6 +7,7 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/home/widgets/notification_tile.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -61,32 +62,49 @@ class NotificationsPage extends ConsumerWidget {
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final req = requests[index];
-                  return NotificationTile(
-                    title: isEn ? 'Friend Request' : '친구 신청',
-                    subtitle: isEn
-                        ? '${req.senderName} sent you a friend request.'
-                        : '${req.senderName}님이 친구 신청을 보냈습니다.',
-                    date: req.formattedTimestamp,
-                    type: NotificationType.friendRequest,
-                    characterTemplateId: req.senderTemplateId,
-                    avatarUrl: req.senderPhotoUrl,
-                    statusText: req.status == FriendRequestStatus.pending
-                        ? null
-                        : (req.status == FriendRequestStatus.accepted
-                              ? (isEn ? 'Accepted' : '수락됨')
-                              : (isEn ? 'Declined' : '거절됨')),
-                    onAccept: () {
-                      ref
-                          .read(friendsViewModelProvider.notifier)
-                          .acceptFriendRequest(req);
-                      _showSnackBar(context, isEn ? 'Accepted.' : '수락했습니다.');
-                    },
-                    onDecline: () {
-                      ref
-                          .read(friendsViewModelProvider.notifier)
-                          .declineFriendRequest(req.id);
-                      _showSnackBar(context, isEn ? 'Declined.' : '거절했습니다.');
-                    },
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Slidable(
+                      key: ValueKey(req.id),
+                      endActionPane: ActionPane(
+                        motion: const ScrollMotion(),
+                        extentRatio: 0.25,
+                        children: [
+                          SlidableAction(
+                            onPressed: (context) {
+                              ref
+                                  .read(friendsViewModelProvider.notifier)
+                                  .deleteNotification(req.id);
+                              _showSnackBar(
+                                context,
+                                isEn ? 'Deleted.' : '삭제되었습니다.',
+                              );
+                            },
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            icon: Icons.delete,
+                            label: isEn ? 'Delete' : '삭제',
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ],
+                      ),
+                      child: NotificationTile(
+                        title: isEn ? 'Friend Request' : '친구 신청',
+                        subtitle: isEn
+                            ? '${req.senderName} sent you a friend request.'
+                            : '${req.senderName}님이 친구 신청을 보냈습니다.',
+                        date: req.formattedTimestamp,
+                        type: NotificationType.friendRequest,
+                        characterTemplateId: req.senderTemplateId,
+                        avatarUrl: req.senderPhotoUrl,
+                        margin: EdgeInsets.zero,
+                        statusText: req.status == FriendRequestStatus.pending
+                            ? null
+                            : (req.status == FriendRequestStatus.accepted
+                                ? (isEn ? 'Accepted' : '수락됨')
+                                : (isEn ? 'Declined' : '거절됨')),
+                      ),
+                    ),
                   );
                 }, childCount: requests.length),
               ),

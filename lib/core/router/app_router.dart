@@ -39,6 +39,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       refreshNotifier.value = !refreshNotifier.value;
     }
   });
+  // 온보딩 완료 시 라우터 새로고침 트리거
+  ref.listen<bool>(onboardingProvider, (_, _) {
+    refreshNotifier.value = !refreshNotifier.value;
+  });
   final notifier = ValueNotifier<AppUser?>(ref.read(userProvider).value);
   ref.listen<AsyncValue<AppUser?>>(userProvider, (_, next) {
     notifier.value = next.value;
@@ -71,17 +75,19 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // 4. 사용자 데이터가 없는 경우 (로그아웃 상태)
       if (user == null) {
-        // 온보딩을 보지 않았다면 온보딩으로, 봤다면 로그인으로
-        if (!hasSeenOnboarding) {
-          return state.matchedLocation == AppRoute.onboarding.path 
-              ? null 
-              : AppRoute.onboarding.path;
-        }
+        // 로그아웃 상태에서는 항상 로그인 화면으로 이동
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // 5. 로그인 성공 후 로그인 화면에 머물러 있는 경우 홈으로
-      if (isLoggingIn) {
+      // 5. 로그인 상태인 경우, 온보딩을 보지 않았다면 온보딩 화면으로 이동
+      if (!hasSeenOnboarding) {
+        return state.matchedLocation == AppRoute.onboarding.path
+            ? null
+            : AppRoute.onboarding.path;
+      }
+
+      // 6. 로그인 성공 및 온보딩 완료 후 로그인 화면이나 온보딩 화면에 머물러 있는 경우 홈으로
+      if (isLoggingIn || state.matchedLocation == AppRoute.onboarding.path) {
         return AppRoute.home.path;
       }
 

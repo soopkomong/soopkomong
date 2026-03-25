@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
@@ -82,11 +83,7 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
             // 메시지
             Text(
               isEn ? 'Not discovered yet' : '아직 만나지 못했어요',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+              style: AppTextStyles.body.copyWith(color: AppColors.gray900),
             ),
 
             const SizedBox(height: 20),
@@ -103,10 +100,8 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
                 children: [
                   Text(
                     isEn ? 'Available Parks' : '발견 가능한 공원',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.black45,
-                      fontWeight: FontWeight.w500,
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.gray900,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -115,10 +110,8 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
                         ? (isEn ? 'No info' : '정보 없음')
                         : availableParks.join(', '),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                    style: AppTextStyles.subTitleM.copyWith(
+                      color: AppColors.gray900,
                     ),
                   ),
                 ],

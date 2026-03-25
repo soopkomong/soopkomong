@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_shadows.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -70,7 +74,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
             children: [
               Expanded(
                 child: _buildStatCard(
-                  isEn ? 'Character Attribute' : '캐릭터 속성',
+                  isEn ? 'Type' : '속성',
                   isEn ? template.eggType.labelEn : template.eggType.label,
                   template.eggType.color,
                 ),
@@ -78,27 +82,98 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  isEn ? 'Steps walked together' : '함께 걸은 걸음 수',
+                  isEn ? 'Steps walked together' : '함께 걸은 걸음',
                   '${NumberFormat('#,###').format(soopkomon?.traveledSteps ?? 0)} ${isEn ? 'steps' : '걸음'}',
                   null,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+
+          // 발견 장소 및 날짜 카드
+          if (soopkomon != null) _buildDiscoveryCard(soopkomon!, isEn),
+
           const SizedBox(height: 16),
           InfoCard(
-            leading: const Icon(Icons.description_outlined),
+            leading: SvgPicture.asset(
+              'assets/images/book.svg',
+              width: 24,
+              height: 24,
+            ),
             title: isEn ? 'Character Description' : '캐릭터 설명',
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(
                 template.description,
-                style: const TextStyle(fontSize: 13, height: 1.5),
+                style: AppTextStyles.label.copyWith(color: AppColors.gray900),
               ),
             ),
           ),
         ],
       ],
+    );
+  }
+
+  /// 발견 장소와 발견 날짜를 하나의 카드에 표시
+  Widget _buildDiscoveryCard(Soopkomon soopkomon, bool isEn) {
+    // 한/영 날짜 포맷 분리
+    final dateText = isEn
+        ? DateFormat(
+            'EEEE, MMMM d, yyyy',
+            'en_US',
+          ).format(soopkomon.discoveredAt)
+        : DateFormat('yyyy년 M월 d일 EEEE', 'ko').format(soopkomon.discoveredAt);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 발견 장소 행
+          Row(
+            children: [
+              SvgPicture.asset(
+                'assets/images/Map_pin_area.svg',
+                width: 24,
+                height: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  soopkomon.discoveredSpotName,
+                  style: AppTextStyles.subTitleM.copyWith(
+                    color: AppColors.gray900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // 발견 날짜 행
+          Row(
+            children: [
+              SvgPicture.asset(
+                'assets/images/Calendar_Check.svg',
+                width: 24,
+                height: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${isEn ? 'Discovered on' : '발견한 날짜'} :  $dateText',
+                  style: AppTextStyles.label.copyWith(color: AppColors.gray900),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -108,17 +183,13 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.black54,
-            ),
+            style: AppTextStyles.label.copyWith(color: AppColors.gray900),
           ),
           const SizedBox(height: 8),
           Row(
@@ -137,9 +208,8 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
               ],
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                style: AppTextStyles.subTitleM.copyWith(
+                  color: AppColors.gray900,
                 ),
               ),
             ],

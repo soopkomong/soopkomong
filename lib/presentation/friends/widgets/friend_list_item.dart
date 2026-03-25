@@ -61,14 +61,10 @@ class FriendListItem extends ConsumerWidget {
 
                       return Row(
                         children: [
-                          SvgPicture.asset(
-                            'assets/images/Leaf.svg',
-                            width: 14,
-                            height: 14,
-                            colorFilter: const ColorFilter.mode(
-                              AppColors.secondaryGreen,
-                              BlendMode.srcIn,
-                            ),
+                          Image.asset(
+                            'assets/images/Sprout.png',
+                            width: 20,
+                            height: 20,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -80,9 +76,9 @@ class FriendListItem extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Image.asset(
-                            'assets/images/character_silhouette.png',
-                            width: 14,
-                            height: 14,
+                            'assets/images/Sprout.png',
+                            width: 20,
+                            height: 20,
                           ),
                           const SizedBox(width: 4),
                           Text(
