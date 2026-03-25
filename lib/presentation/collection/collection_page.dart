@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
@@ -114,9 +115,14 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.book, size: 40),
-                const SizedBox(width: 4),
-                Text(isEn ? 'Collection' : '도감', style: AppTextStyles.subTitleL),
+                Image.asset('assets/images/Book_3D.png', width: 26, height: 26),
+                const SizedBox(width: 6),
+                Text(
+                  isEn ? 'Collection' : '도감',
+                  style: AppTextStyles.subTitleL.copyWith(
+                    color: AppColors.gray900,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -190,7 +196,11 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           sliver: tabIndex == 0
               ? _buildParkSliverGrid(locationsAsync, isEn)
-              : _buildCharacterSliverGrid(templatesAsync, userCharactersAsync, isEn),
+              : _buildCharacterSliverGrid(
+                  templatesAsync,
+                  userCharactersAsync,
+                  isEn,
+                ),
         ),
 
         // 하단 여백
@@ -199,7 +209,10 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     );
   }
 
-  Widget _buildParkSliverGrid(AsyncValue<List<Location>> locationsAsync, bool isEn) {
+  Widget _buildParkSliverGrid(
+    AsyncValue<List<Location>> locationsAsync,
+    bool isEn,
+  ) {
     return locationsAsync.when(
       loading: () => SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -213,8 +226,11 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           childCount: 6, // 6개의 스켈레톤 노출
         ),
       ),
-      error: (err, stack) =>
-          SliverToBoxAdapter(child: Center(child: Text(isEn ? 'Error occurred: $err' : '에러 발생: $err'))),
+      error: (err, stack) => SliverToBoxAdapter(
+        child: Center(
+          child: Text(isEn ? 'Error occurred: $err' : '에러 발생: $err'),
+        ),
+      ),
       data: (locations) => SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -251,8 +267,11 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
           childCount: 9,
         ),
       ),
-      error: (err, stack) =>
-          SliverToBoxAdapter(child: Center(child: Text(isEn ? 'Error occurred: $err' : '에러 발생: $err'))),
+      error: (err, stack) => SliverToBoxAdapter(
+        child: Center(
+          child: Text(isEn ? 'Error occurred: $err' : '에러 발생: $err'),
+        ),
+      ),
       data: (templates) {
         final userCharacters = userCharactersAsync.value ?? [];
 
@@ -301,9 +320,6 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
             ? locations.where((l) => l.isVisited).length
             : userCharacters.map((c) => c.templateId).toSet().length,
         totalCount: tabIndex == 0 ? locations.length : templates.length,
-        iconPath: tabIndex == 0
-            ? 'assets/images/park.png'
-            : 'assets/images/character_silhouette.png',
       );
     }
 
@@ -311,7 +327,6 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     return const CollectionProgressBadge(
       currentCount: 0,
       totalCount: 0,
-      iconPath: '',
     );
   }
 }

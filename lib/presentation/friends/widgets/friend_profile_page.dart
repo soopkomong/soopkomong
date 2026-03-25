@@ -71,10 +71,10 @@ class FriendProfilePage extends ConsumerWidget {
                 ),
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: AppColors.black,
-                    size: 20,
+                  icon: SvgPicture.asset(
+                    'assets/images/trash.svg',
+                    width: 20,
+                    height: 20,
                   ),
                   onPressed: () => _showDeleteDialog(context, ref),
                 ),
@@ -204,14 +204,10 @@ class FriendProfilePage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildProgressBadge(
-                iconWidget: SvgPicture.asset(
-                  'assets/images/Leaf.svg',
-                  width: 18,
-                  height: 18,
-                  colorFilter: const ColorFilter.mode(
-                    AppColors.primary800,
-                    BlendMode.srcIn,
-                  ),
+                iconWidget: Image.asset(
+                  'assets/images/Sprout.png',
+                  width: 24,
+                  height: 24,
                 ),
                 current: visitedCount,
                 total: leafMax,
@@ -219,9 +215,9 @@ class FriendProfilePage extends ConsumerWidget {
               const SizedBox(width: 8),
               _buildProgressBadge(
                 iconWidget: Image.asset(
-                  'assets/images/character_silhouette.png',
-                  width: 16,
-                  height: 16,
+                  'assets/images/Sprout.png',
+                  width: 24,
+                  height: 24,
                 ),
                 current: collectedCount,
                 total: pawMax,
