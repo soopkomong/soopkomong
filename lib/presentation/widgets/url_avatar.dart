@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 
 /// 실제 프로필 사진(URL)을 보여주는 전용 위젯
 class UrlAvatar extends StatelessWidget {
-  final String photoUrl;
+  final String? photoUrl;
   final double size;
   final bool useCircle;
 
   const UrlAvatar({
     super.key,
-    required this.photoUrl,
+    this.photoUrl,
     this.size = 80,
     this.useCircle = true,
   });
 
+
   @override
   Widget build(BuildContext context) {
+    if (photoUrl == null || photoUrl!.isEmpty) {
+      return _buildErrorPlaceholder();
+    }
+
     final image = CachedNetworkImage(
-      imageUrl: photoUrl,
+      imageUrl: photoUrl!,
       width: size,
       height: size,
       fit: useCircle ? BoxFit.cover : BoxFit.contain,
@@ -33,6 +39,7 @@ class UrlAvatar extends StatelessWidget {
       errorWidget: (context, url, error) => _buildErrorPlaceholder(),
     );
 
+
     if (!useCircle) {
       return SizedBox(width: size, height: size, child: image);
     }
@@ -41,7 +48,7 @@ class UrlAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        color: Color(0xFFE8F5E9),
+        color: AppColors.primary100, // 배경색 변경
         shape: BoxShape.circle,
       ),
       child: ClipOval(child: image),
@@ -54,7 +61,7 @@ class UrlAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F7ED), // ProfileCard와 같은 연한 연두색 배경
+        color: AppColors.primary100, // 배경색 변경
         shape: useCircle ? BoxShape.circle : BoxShape.rectangle,
         borderRadius: useCircle ? null : BorderRadius.circular(20),
       ),
@@ -62,7 +69,7 @@ class UrlAvatar extends StatelessWidget {
         child: Icon(
           Icons.person,
           size: displaySize * 0.5,
-          color: const Color(0xFFB0BEC5), // 조금 더 부드러운 회색
+          color: AppColors.gray300, // 회색으로 변경
         ),
       ),
     );

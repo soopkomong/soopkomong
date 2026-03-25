@@ -7,9 +7,6 @@ class FriendModel {
   final String characterTemplateId;
   final Map<String, dynamic>? characterSettings; // 캐릭터 파츠 설정
   
-  final int leafMax; // 최대 레벨 (UI 표시용)
-  final int pawMax; // 최대 캐릭터 (UI 표시용)
-
   final int totalSteps; // 친구의 총 걸음 수
   final DateTime? friendedAt; // 친구가 된 날짜
 
@@ -19,8 +16,6 @@ class FriendModel {
     this.photoUrl,
     required this.characterTemplateId,
     this.characterSettings,
-    required this.leafMax,
-    required this.pawMax,
     this.totalSteps = 0,
     this.friendedAt,
   });
@@ -33,8 +28,6 @@ class FriendModel {
       photoUrl: data['photoUrl'],
       characterTemplateId: data['templateId'] ?? '007',
       characterSettings: data['character_settings'] as Map<String, dynamic>?,
-      leafMax: (data['leafMax'] as num?)?.toInt() ?? 50,
-      pawMax: (data['pawMax'] as num?)?.toInt() ?? 30,
       totalSteps: (data['totalSteps'] as num?)?.toInt() ?? 0,
       friendedAt: friendedAtOverride ?? (data['friendedAt'] != null
           ? (data['friendedAt'] as Timestamp).toDate()

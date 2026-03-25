@@ -56,6 +56,13 @@ class AppTheme {
         circularTrackColor: AppColors.gray100,
         refreshBackgroundColor: Colors.white,
       ),
+
+      // 텍스트 선택 및 커서 전역 테마
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.gray500,
+        selectionColor: AppColors.primary100,
+        selectionHandleColor: AppColors.gray500,
+      ),
     );
   }
 }

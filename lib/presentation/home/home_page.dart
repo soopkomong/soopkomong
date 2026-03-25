@@ -24,9 +24,7 @@ import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart'
 import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
-import 'package:soopkomong/presentation/home/widgets/update_notice_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
-import 'package:soopkomong/presentation/home/widgets/welcome_back_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
@@ -76,8 +74,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (mapboxMap == null ||
         !_isMapReady ||
         locations.isEmpty ||
-        _isAddingMarkers)
+        _isAddingMarkers) {
       return;
+    }
     _isAddingMarkers = true;
 
     try {
@@ -119,13 +118,13 @@ class _HomePageState extends ConsumerState<HomePage> {
       List<PointAnnotationOptions> options = [];
 
       SoopkomonEggType getEggType(Location loc) {
-        if (loc.petIds.isEmpty) return SoopkomonEggType.mystic;
+        if (loc.petIds.isEmpty) return SoopkomonEggType.psychic;
         try {
           return templates
               .firstWhere((t) => t.templateId == loc.petIds.first)
               .eggType;
         } catch (_) {
-          return SoopkomonEggType.mystic;
+          return SoopkomonEggType.psychic;
         }
       }
 
@@ -548,111 +547,18 @@ class _HomePageState extends ConsumerState<HomePage> {
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
           ),
-          // TODO: 나중에 삭제 (팝업 확인용 임시 테스트 버튼들)
-          Positioned(
-            left: 16,
-            top: 200,
-            // TODO: 나중에 삭제 (테스트용 버튼들)
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTempPopupButton(
-                  label: '알 획득 팝업',
-                  onTap: () => PetAcquiredDialog.show(
-                    context,
-                    petName: '신비로운 알',
-                    parkName: '성수동 공원',
-                    eggPath: 'assets/images/egg/egg_mystery.png',
-                    isEn: isEn,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildTempPopupButton(
-                  label: '부화 팝업',
-                  onTap: () => PetHatchedDialog.show(
-                    context,
-                    petName: '숲코몽',
-                    parkName: '성수동 공원',
-                    imagePath: 'assets/images/characters/007_big.png',
-                    isEn: isEn,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildTempPopupButton(
-                  label: '공지 팝업',
-                  onTap: () => UpdateNoticeDialog.show(context, isEn: isEn),
-                ),
-                const SizedBox(height: 8),
-                _buildTempPopupButton(
-                  label: '친구 신청 팝업',
-                  onTap: () => FriendRequestDialog.show(
-                    context,
-                    nickname: '가나다',
-                    photoUrl: 'Y7XFAkb26weAoVMnMB8uaAFYp2r2_1773648628022.png',
-                    isEn: isEn,
-                    onConfirm: () {
-                      debugPrint('Accepted');
-                    },
-                    onReject: () {
-                      debugPrint('Rejected');
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildTempPopupButton(
-                  label: '재방문 환영 팝업',
-                  onTap: () =>
-                      WelcomeBackDialog.show(context, onConfirm: () {}),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.white,
-        child: const Icon(Icons.add_location_alt, color: Colors.green),
-        onPressed: () {
-          final currentSteps = ref.read(homeViewModelProvider).stepCount;
-          ref
-              .read(homeViewModelProvider.notifier)
-              .updateStepCount(currentSteps + 100);
-        },
-      ),
-    );
-  }
-
-  Widget _buildTempPopupButton({
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: Colors.white,
+      //   child: const Icon(Icons.add_location_alt, color: Colors.green),
+      //   onPressed: () {
+      //     final currentSteps = ref.read(homeViewModelProvider).stepCount;
+      //     ref
+      //         .read(homeViewModelProvider.notifier)
+      //         .updateStepCount(currentSteps + 100);
+      //   },
+      // ),
     );
   }
 }

@@ -164,7 +164,7 @@ class _CharacterCard extends StatelessWidget {
         return Image.asset(
           character.imagePath,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) =>
+          errorBuilder: (_, _, _) =>
               const Icon(Icons.pets, color: AppColors.gray300),
         );
       },

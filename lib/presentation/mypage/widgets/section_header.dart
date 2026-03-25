@@ -31,14 +31,15 @@ class SectionHeader extends StatelessWidget {
             ],
           ],
         ),
-        GestureDetector(
-          onTap: onTap,
-          child: const Icon(
-            Icons.arrow_forward_ios,
-            size: 20,
-            color: AppColors.gray900,
+        if (onTap != null)
+          GestureDetector(
+            onTap: onTap,
+            child: const Icon(
+              Icons.arrow_forward_ios,
+              size: 20,
+              color: AppColors.gray900,
+            ),
           ),
-        ),
       ],
     );
   }

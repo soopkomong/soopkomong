@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
+import 'package:soopkomong/presentation/widgets/url_avatar.dart';
+
 
 enum NotificationType { friendRequest, notice, eggObtained, eggHatched }
 
@@ -10,6 +12,7 @@ class NotificationTile extends StatelessWidget {
   final String date;
   final NotificationType type;
   final String? characterTemplateId; // 친구 신청일 경우 캐릭터 ID
+  final String? avatarUrl; // 친구 신청일 경우 프로필 이미지 URL
   final VoidCallback? onAccept;
   final VoidCallback? onDecline;
   final String? statusText; // '수락됨', '거절됨' 등 상태 표시
@@ -21,6 +24,7 @@ class NotificationTile extends StatelessWidget {
     required this.date,
     required this.type,
     this.characterTemplateId,
+    this.avatarUrl,
     this.onAccept,
     this.onDecline,
     this.statusText,
@@ -62,27 +66,7 @@ class NotificationTile extends StatelessWidget {
                 ),
               ],
             ),
-            if (type == NotificationType.eggHatched &&
-                characterTemplateId != null &&
-                characterTemplateId!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary100.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Image.asset(
-                    'assets/images/characters/${characterTemplateId}_big.png',
-                    height: 120,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            ],
+
             if (type == NotificationType.friendRequest &&
                 statusText == null) ...[
               const SizedBox(height: 16),
@@ -133,36 +117,27 @@ class NotificationTile extends StatelessWidget {
             'assets/images/egg/egg_mystery.png',
             width: 24,
             height: 24,
-            errorBuilder: (_, __, ___) =>
+            errorBuilder: (_, _, _) =>
                 const Icon(Icons.egg, color: AppColors.primary700, size: 20),
           ),
         );
       case NotificationType.eggHatched:
         return _buildCircleIcon(
-          size: 40, // 다른 아이콘과 크기 통일
+          size: 40,
           backgroundColor: AppColors.primary100,
-          child: const Icon(
-            Icons.auto_awesome,
-            color: AppColors.primary700,
-            size: 20,
+          child: Image.asset(
+            'assets/images/character_silhouette.png',
+            width: 24,
+            height: 24,
+            errorBuilder: (_, _, _) => const Icon(
+              Icons.auto_awesome,
+              color: AppColors.primary700,
+              size: 20,
+            ),
           ),
         );
       case NotificationType.friendRequest:
-        return _buildCircleIcon(
-          size: 40,
-          backgroundColor: AppColors.gray50,
-          child: ClipOval(
-            child:
-                (characterTemplateId != null && characterTemplateId!.isNotEmpty)
-                ? Image.asset(
-                    'assets/images/characters/${characterTemplateId}_big.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.person, color: AppColors.gray300),
-                  )
-                : const Icon(Icons.person, color: AppColors.gray300),
-          ),
-        );
+        return UrlAvatar(photoUrl: avatarUrl, size: 40);
     }
   }
 

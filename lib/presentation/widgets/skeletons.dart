@@ -30,12 +30,9 @@ class SoopkomongCardSkeleton extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: const [
-        ShimmerLoading.rectangular(
-          width: 104,
-          height: 104,
-        ),
-        const SizedBox(height: 10),
-        const ShimmerLoading.rectangular(width: 80, height: 16),
+        ShimmerLoading.rectangular(width: 86, height: 86),
+        SizedBox(height: 8),
+        ShimmerLoading.rectangular(width: 80, height: 16),
       ],
     );
   }

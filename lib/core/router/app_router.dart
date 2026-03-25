@@ -18,7 +18,6 @@ import 'package:soopkomong/presentation/home/notifications_page.dart';
 import 'package:soopkomong/presentation/settings/settings_page.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 
-
 export 'app_route.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -51,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 1. Firebase Auth 상태 및 사용자 데이터 가져오기
       final authState = ref.read(authStateChangesProvider);
       final userAsync = ref.read(userProvider);
-      
+
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
 
       // 2. Firebase Auth 수준에서 로그아웃임이 명확한 경우
@@ -132,14 +131,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
-        path: AppRoute.friendProfile.path, // Enum 상수로 변경
+        path: AppRoute.friendProfile.path,
         name: AppRoute.friendProfile.name,
         builder: (context, state) {
           final friend = state.extra as FriendModel?;
           if (friend == null) {
-            return const Scaffold(
-              body: Center(child: Text('정보를 불러올 수 없습니다.')),
-            );
+            return const Scaffold(body: Center(child: Text('정보를 불러올 수 없습니다.')));
           }
           return FriendProfilePage(friend: friend);
         },
