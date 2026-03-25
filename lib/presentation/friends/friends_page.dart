@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/user_provider.dart';
@@ -148,13 +149,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
+                    boxShadow: AppShadows.card,
                   ),
                   child: Row(
                     children: [

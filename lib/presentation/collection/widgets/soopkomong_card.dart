@@ -127,18 +127,14 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
                           child: Container(
                             width: 24,
                             height: 24,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: widget.template.eggType.color,
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                             ),
-                            child: SvgPicture.asset(
-                              widget.template.eggType.iconPath,
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
+                            child: ClipOval(
+                              child: SvgPicture.asset(
+                                widget.template.eggType.iconPath,
+                                fit: BoxFit.cover,
                               ),
-                              fit: BoxFit.contain,
                             ),
                           ),
                         ),

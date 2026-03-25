@@ -5,6 +5,7 @@ import 'package:soopkomong/presentation/widgets/expandable_text.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -571,14 +572,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x26000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 0),
-                        spreadRadius: 0,
-                      ),
-                    ],
+                    boxShadow: AppShadows.card,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

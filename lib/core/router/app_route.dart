@@ -11,6 +11,7 @@ enum AppRoute {
   notifications(name: 'notifications', path: '/notifications'),
   profileEdit(name: 'profileEdit', path: '/profileEdit'),
   signIn(name: 'signIn', path: '/signIn'),
+  onboarding(name: 'onboarding', path: '/onboarding'),
   settings(name: 'settings', path: '/settings');
 
   const AppRoute({required this.name, required this.path});

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_shadows.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class InfoCard extends StatelessWidget {
   final Widget? leading;
@@ -21,7 +23,7 @@ class InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Color(0x26000000), blurRadius: 4)],
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,15 +36,7 @@ class InfoCard extends StatelessWidget {
                 Align(alignment: Alignment.center, child: leading),
                 const SizedBox(width: 6),
               ],
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(title, style: AppTextStyles.label)),
             ],
           ),
           const SizedBox(height: 8),

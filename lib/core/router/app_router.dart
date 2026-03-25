@@ -5,6 +5,7 @@ import 'package:soopkomong/presentation/mypage/my_page.dart';
 import 'package:soopkomong/presentation/mypage/profile_edit_page.dart';
 import 'package:soopkomong/presentation/mypage/character_page/character_customize_page.dart';
 import 'package:soopkomong/presentation/auth/sign_in_screen.dart';
+import 'package:soopkomong/presentation/auth/onboarding_screen.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/presentation/home/home_page.dart';
@@ -16,6 +17,7 @@ import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
 import 'package:soopkomong/presentation/settings/settings_page.dart';
+import 'package:soopkomong/presentation/providers/onboarding_provider.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 
 export 'app_route.dart';
@@ -65,9 +67,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final user = userAsync.value;
+      final hasSeenOnboarding = ref.read(onboardingProvider);
 
-      // 4. 사용자 데이터가 없는 경우 (탈퇴 유저 포함)
+      // 4. 사용자 데이터가 없는 경우 (로그아웃 상태)
       if (user == null) {
+        // 온보딩을 보지 않았다면 온보딩으로, 봤다면 로그인으로
+        if (!hasSeenOnboarding) {
+          return state.matchedLocation == AppRoute.onboarding.path 
+              ? null 
+              : AppRoute.onboarding.path;
+        }
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
@@ -170,6 +179,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.signIn.path,
         name: AppRoute.signIn.name,
         builder: (context, state) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.onboarding.path,
+        name: AppRoute.onboarding.name,
+        builder: (context, state) => const OnboardingScreen(),
       ),
     ],
     errorBuilder: (context, state) =>

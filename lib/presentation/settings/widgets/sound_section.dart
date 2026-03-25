@@ -40,7 +40,6 @@ class SwitchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SwitchListTile(
-      activeColor: const Color(0xFF48B200),
       contentPadding: EdgeInsets.zero,
       title: Text(
         title,
