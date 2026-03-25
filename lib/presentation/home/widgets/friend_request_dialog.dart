@@ -73,7 +73,7 @@ class FriendRequestDialog extends StatelessWidget {
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(shape: BoxShape.circle),
-                  child: UserAvatar(
+                  child: CharacterAvatar(
                     photoUrl: photoUrl,
                     size: 100,
                     isProfileMode: true,

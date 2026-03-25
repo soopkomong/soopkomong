@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 
 class FriendProfilePage extends ConsumerWidget {
@@ -23,20 +25,56 @@ class FriendProfilePage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.black),
-          onPressed: () => context.pop(),
+        leadingWidth: 70,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.gray100),
+              ),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: AppColors.black,
+                  size: 18,
+                ),
+                onPressed: () => context.pop(),
+              ),
+            ),
+          ),
         ),
         actions: [
           if (isFriend)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.black),
-              onPressed: () => _showDeleteDialog(context, ref),
+            Padding(
+              padding: const EdgeInsets.only(right: 20),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.gray100),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.black,
+                    size: 20,
+                  ),
+                  onPressed: () => _showDeleteDialog(context, ref),
+                ),
+              ),
             ),
-          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -47,35 +85,63 @@ class FriendProfilePage extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-                  Image.asset(
-                    'assets/images/characters/${friend.characterTemplateId}_big.png',
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: 200,
-                      height: 200,
-                      decoration: const BoxDecoration(
-                        color: AppColors.gray50,
-                        shape: BoxShape.circle,
+                  const SizedBox(height: 10),
+                  // 캐릭터 전신 이미지는 중앙 정렬
+                  Center(
+                    child: CharacterAvatar(
+                      characterSettings: friend.characterSettings,
+                      templateId: friend.characterTemplateId,
+                      size: 300, // 큼직하게 300으로 조정하여 전신이 잘 보이게 함
+                      useCircle: false, // 원형 배경 및 클리핑 제거
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // 사용자 이름은 좌측 정렬
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      friend.name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.black,
                       ),
-                      child: const Icon(Icons.person, size: 80, color: AppColors.gray300),
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // 2. 정보 카드 (좌측 정렬 배치)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        friend.name,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.black,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9F9F9), // 카드 배경 살짝 밝은 그레이
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.gray100.withValues(alpha: 0.5),
                         ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildInfoRow(
+                            isFriend ? '친구가 된 날' : '요청 받은 날',
+                            dateFormat.format(
+                              friend.friendedAt ?? DateTime.now(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildInfoRow(
+                            '총 걸음 수',
+                            numberFormat.format(friend.totalSteps),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -83,33 +149,8 @@ class FriendProfilePage extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
-
-            // 2. 정보 카드 (친구 된 날, 총 걸음 수)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.gray100),
-                ),
-                child: Column(
-                  children: [
-                    _buildInfoRow(
-                      isFriend ? '친구 가 된 날' : '요청 받은 날', 
-                      dateFormat.format(friend.friendedAt ?? DateTime.now()),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildInfoRow('총 걸음 수', numberFormat.format(friend.totalSteps)),
-                  ],
-                ),
-              ),
-            ),
-
             const SizedBox(height: 24),
-            const Divider(height: 1, thickness: 1, color: AppColors.gray50),
+            const Divider(height: 1, thickness: 1, color: AppColors.gray100),
             const SizedBox(height: 24),
 
             // 3. 진행도 배지 섹션
@@ -128,7 +169,7 @@ class FriendProfilePage extends ConsumerWidget {
             _buildSectionTitle('숲코몽'),
             const SizedBox(height: 12),
             _buildHorizontalSoopkomongList(ref),
-            
+
             const SizedBox(height: 120),
           ],
         ),
@@ -166,7 +207,6 @@ class FriendProfilePage extends ConsumerWidget {
     );
   }
 
-
   Widget _buildProgressBadges(WidgetRef ref) {
     final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
 
@@ -189,19 +229,21 @@ class FriendProfilePage extends ConsumerWidget {
                 color: AppColors.secondaryGreen,
                 current: visitedCount,
                 total: friend.leafMax,
+                bgColor: const Color(0xFFF1F8E9),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               _buildProgressBadge(
                 icon: Icons.pets,
                 color: AppColors.black,
                 current: collectedCount,
                 total: friend.pawMax,
+                bgColor: const Color(0xFFF5F5F5),
               ),
             ],
           ),
         );
       },
-      loading: () => const SizedBox(height: 36), // 로딩 중 높이 유지
+      loading: () => const SizedBox(height: 36),
       error: (err, stack) => const SizedBox.shrink(),
     );
   }
@@ -211,18 +253,19 @@ class FriendProfilePage extends ConsumerWidget {
     required Color color,
     required int current,
     required int total,
+    required Color bgColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3FAF3), // 연한 초록빛 배경
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
           Text(
             '$current/$total',
             style: const TextStyle(
@@ -265,7 +308,10 @@ class FriendProfilePage extends ConsumerWidget {
         if (visitedSpotIds.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text('방문한 생태공원이 없습니다.', style: TextStyle(color: AppColors.gray400)),
+            child: Text(
+              '방문한 생태공원이 없습니다.',
+              style: TextStyle(color: AppColors.gray400),
+            ),
           );
         }
 
@@ -297,14 +343,16 @@ class FriendProfilePage extends ConsumerWidget {
                         height: 80,
                         decoration: BoxDecoration(
                           color: AppColors.gray100,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20), // 더 둥글게
                           image: park.imageUrl.isNotEmpty
                               ? DecorationImage(
                                   image: NetworkImage(park.imageUrl),
                                   fit: BoxFit.cover,
                                 )
                               : const DecorationImage(
-                                  image: AssetImage('assets/images/park_placeholder.png'),
+                                  image: AssetImage(
+                                    'assets/images/park_placeholder.png',
+                                  ),
                                   fit: BoxFit.cover,
                                 ),
                         ),
@@ -314,7 +362,10 @@ class FriendProfilePage extends ConsumerWidget {
                         width: 120,
                         child: Text(
                           park.name,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -323,7 +374,10 @@ class FriendProfilePage extends ConsumerWidget {
                         width: 120,
                         child: Text(
                           park.address,
-                          style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.gray500,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -351,7 +405,10 @@ class FriendProfilePage extends ConsumerWidget {
         if (characters.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Text('획득한 숲코몽이 없습니다.', style: TextStyle(color: AppColors.gray400)),
+            child: Text(
+              '획득한 숲코몽이 없습니다.',
+              style: TextStyle(color: AppColors.gray400),
+            ),
           );
         }
         return SizedBox(
@@ -363,29 +420,43 @@ class FriendProfilePage extends ConsumerWidget {
             separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final character = characters[index];
+              // 배경색 순환 (연두, 핑크, 그레이, 베이지)
+              final bgColors = [
+                const Color(0xFFF1F8E9),
+                const Color(0xFFFFF0F0),
+                const Color(0xFFF5F5F5),
+                const Color(0xFFFDF7E7),
+              ];
+              final bgColor = bgColors[index % bgColors.length];
+
               return Column(
                 children: [
                   Container(
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: AppColors.gray50,
-                      borderRadius: BorderRadius.circular(12),
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(20), // 더 둥글게
                     ),
                     child: Center(
                       child: Image.asset(
                         character.imagePath,
-                        width: 60,
-                        height: 60,
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(Icons.pets, color: AppColors.gray300),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     character.name,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.black,
+                    ),
                   ),
                 ],
               );
@@ -411,7 +482,9 @@ class FriendProfilePage extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () async {
-              await ref.read(friendsViewModelProvider.notifier).removeFriend(friend.id);
+              await ref
+                  .read(friendsViewModelProvider.notifier)
+                  .removeFriend(friend.id);
               if (context.mounted) {
                 Navigator.pop(context); // 다이얼로그 닫기
                 context.pop(); // 프로필 페이지 닫기

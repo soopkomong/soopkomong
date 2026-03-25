@@ -12,7 +12,7 @@ import 'package:soopkomong/presentation/collection/collection_page.dart';
 import 'package:soopkomong/presentation/explore/explore_page.dart';
 import 'package:soopkomong/presentation/friends/friends_page.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart';
-import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
+import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
 import 'package:soopkomong/presentation/settings/settings_page.dart';
@@ -126,20 +126,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: AppRoute.friends.path,
                 name: AppRoute.friends.name,
                 builder: (context, state) => const FriendsPage(),
-                routes: [
-                  GoRoute(
-                    path: AppRoute.friendProfile.path,
-                    name: AppRoute.friendProfile.name,
-                    builder: (context, state) {
-                      final friend = state.extra as FriendModel;
-                      return FriendProfilePage(friend: friend);
-                    },
-                  ),
-                ],
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoute.friendProfile.path, // Enum 상수로 변경
+        name: AppRoute.friendProfile.name,
+        builder: (context, state) {
+          final friend = state.extra as FriendModel?;
+          if (friend == null) {
+            return const Scaffold(
+              body: Center(child: Text('정보를 불러올 수 없습니다.')),
+            );
+          }
+          return FriendProfilePage(friend: friend);
+        },
       ),
       GoRoute(
         path: AppRoute.mypage.path,

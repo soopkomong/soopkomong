@@ -11,6 +11,8 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
+import 'package:soopkomong/domain/entities/friend_model.dart';
+import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({super.key});
@@ -28,37 +30,38 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
     super.dispose();
   }
 
-  Future<void> _navigateToProfile(BuildContext context, WidgetRef ref, FriendRequest request) async {
+  Future<void> _navigateToProfile(
+    BuildContext context,
+    WidgetRef ref,
+    FriendRequest request,
+  ) async {
     // 로딩 다이얼로그 표시 (rootNavigator 사용하여 전역적으로 띄움)
     showDialog(
       context: context,
-      useRootNavigator: true, 
+      useRootNavigator: true,
       barrierDismissible: false,
       builder: (context) => const Center(
         child: CircularProgressIndicator(color: AppColors.primary700),
       ),
     );
-    
+
     try {
       final friendModel = await ref
           .read(friendsViewModelProvider.notifier)
           .getFriendModelByUserId(request.senderId);
-      
+
       if (context.mounted) {
         // 로딩 다이얼로그 닫기 (명시적으로 rootNavigator에서 pop)
         Navigator.of(context, rootNavigator: true).pop();
-        
-        context.pushNamed(
-          AppRoute.friendProfile.name,
-          extra: friendModel,
-        );
+
+        context.pushNamed(AppRoute.friendProfile.name, extra: friendModel);
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('프로필 로드 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('프로필 로드 실패: $e')));
       }
     }
   }
@@ -126,8 +129,13 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                           children: [
                             TextSpan(text: isEn ? 'My Code : ' : '내 코드 : '),
                             TextSpan(
-                              text: (ref.watch(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'] ?? '-',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              text:
+                                  (ref.watch(userDocumentProvider).value?.data()
+                                      as Map<String, dynamic>?)?['user_code'] ??
+                                  '-',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -135,9 +143,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                       const Spacer(),
                       GestureDetector(
                         onTap: () {
-                          final userCode = (ref.read(userDocumentProvider).value?.data() as Map<String, dynamic>?)?['user_code'];
+                          final userCode =
+                              (ref.read(userDocumentProvider).value?.data()
+                                  as Map<String, dynamic>?)?['user_code'];
                           if (userCode == null) return;
-                          
+
                           Clipboard.setData(ClipboardData(text: userCode));
                           showDialog(
                             context: context,
@@ -147,16 +157,22 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                               ),
                               actionsAlignment: MainAxisAlignment.center,
                               content: Text(
-                                isEn ? 'Code copied to clipboard.' : '코드가 클립보드에 복사되었습니다.',
+                                isEn
+                                    ? 'Code copied to clipboard.'
+                                    : '코드가 클립보드에 복사되었습니다.',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
                                   child: Text(
                                     isEn ? 'OK' : '확인',
-                                    style: const TextStyle(color: AppColors.primary700),
+                                    style: const TextStyle(
+                                      color: AppColors.primary700,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -204,7 +220,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                               child: TextField(
                                 controller: _idController,
                                 decoration: InputDecoration(
-                                  hintText: isEn ? 'Enter friend code...' : '친구 코드를 입력해주세요',
+                                  hintText: isEn
+                                      ? 'Enter friend code...'
+                                      : '친구 코드를 입력해주세요',
                                   hintStyle: const TextStyle(
                                     color: AppColors.gray400,
                                     fontSize: 13,
@@ -226,29 +244,36 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                 onPressed: () async {
                                   final value = _idController.text;
                                   if (value.isEmpty) return;
-                                  
+
                                   try {
                                     await ref
                                         .read(friendsViewModelProvider.notifier)
                                         .sendFriendRequest(value);
                                     _idController.clear();
-                                    
+
                                     if (!context.mounted) return;
                                     FocusScope.of(context).unfocus();
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
                                         ),
                                         content: Text(
-                                          isEn ? 'Friend request sent.' : '친구 요청을 보냈습니다.',
+                                          isEn
+                                              ? 'Friend request sent.'
+                                              : '친구 요청을 보냈습니다.',
                                           textAlign: TextAlign.center,
-                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.pop(context),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
                                             child: Text(
                                               isEn ? 'OK' : '확인',
                                               style: const TextStyle(
@@ -258,7 +283,8 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                             ),
                                           ),
                                         ],
-                                        actionsAlignment: MainAxisAlignment.center,
+                                        actionsAlignment:
+                                            MainAxisAlignment.center,
                                       ),
                                     );
                                   } catch (e) {
@@ -267,18 +293,28 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                       context: context,
                                       builder: (context) => AlertDialog(
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
                                         ),
                                         content: Text(
-                                          isEn 
-                                            ? e.toString().contains('already') ? 'Wait for response or check your friend list.' : 'Invalid code or error occurred.'
-                                            : e.toString().replaceAll('Exception: ', ''),
+                                          isEn
+                                              ? e.toString().contains('already')
+                                                    ? 'Wait for response or check your friend list.'
+                                                    : 'Invalid code or error occurred.'
+                                              : e.toString().replaceAll(
+                                                  'Exception: ',
+                                                  '',
+                                                ),
                                           textAlign: TextAlign.center,
-                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.pop(context),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
                                             child: Text(
                                               isEn ? 'OK' : '확인',
                                               style: const TextStyle(
@@ -288,7 +324,8 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                             ),
                                           ),
                                         ],
-                                        actionsAlignment: MainAxisAlignment.center,
+                                        actionsAlignment:
+                                            MainAxisAlignment.center,
                                       ),
                                     );
                                   }
@@ -304,7 +341,8 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                     vertical: 8,
                                   ),
                                   minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: Text(
                                   isEn ? 'Send' : '보내기',
@@ -344,7 +382,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          isEn ? 'Friend Requests : ${requests.length}' : '친구 신청 목록 : ${requests.length}명',
+                          isEn
+                              ? 'Friend Requests : ${requests.length}'
+                              : '친구 신청 목록 : ${requests.length}명',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -367,19 +407,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                           child: Row(
                             children: [
                               GestureDetector(
-                                onTap: () => _navigateToProfile(context, ref, request),
-                                child: CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: AppColors.gray50,
-                                  backgroundImage: AssetImage(
-                                    'assets/images/characters/${request.senderTemplateId}_big.png',
-                                  ),
-                                  onBackgroundImageError: (exception, stackTrace) {},
-                                  child: const Icon(
-                                    Icons.person,
-                                    color: AppColors.gray300,
-                                    size: 30,
-                                  ),
+                                onTap: () =>
+                                    _navigateToProfile(context, ref, request),
+                                child: UrlAvatar(
+                                  photoUrl: request.senderPhotoUrl ?? '',
+                                  size: 60,
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -388,7 +420,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     GestureDetector(
-                                      onTap: () => _navigateToProfile(context, ref, request),
+                                      onTap: () => _navigateToProfile(
+                                        context,
+                                        ref,
+                                        request,
+                                      ),
                                       child: Text(
                                         request.senderName,
                                         style: const TextStyle(
@@ -402,35 +438,52 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                     Row(
                                       children: [
                                         GestureDetector(
-                                          onTap: friendsAsync.isLoading 
-                                            ? null 
-                                            : () async {
-                                              try {
-                                                await ref
-                                                    .read(friendsViewModelProvider.notifier)
-                                                    .acceptFriendRequest(request);
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text('친구 요청을 수락했습니다.')),
-                                                  );
-                                                }
-                                              } catch (e) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('수락 실패: $e')),
-                                                  );
-                                                }
-                                              }
-                                            },
+                                          onTap: friendsAsync.isLoading
+                                              ? null
+                                              : () async {
+                                                  try {
+                                                    await ref
+                                                        .read(
+                                                          friendsViewModelProvider
+                                                              .notifier,
+                                                        )
+                                                        .acceptFriendRequest(
+                                                          request,
+                                                        );
+                                                    if (context.mounted) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            '친구 요청을 수락했습니다.',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  } catch (e) {
+                                                    if (context.mounted) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(
+                                                            '수락 실패: $e',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
                                               vertical: 6,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: friendsAsync.isLoading 
-                                                ? AppColors.gray300 
-                                                : AppColors.primary700,
+                                              color: friendsAsync.isLoading
+                                                  ? AppColors.gray300
+                                                  : AppColors.primary700,
                                               borderRadius:
                                                   BorderRadius.circular(15),
                                             ),
@@ -446,26 +499,43 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                         ),
                                         const SizedBox(width: 8),
                                         GestureDetector(
-                                          onTap: friendsAsync.isLoading 
-                                            ? null 
-                                            : () async {
-                                              try {
-                                                await ref
-                                                    .read(friendsViewModelProvider.notifier)
-                                                    .declineFriendRequest(request.id);
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text('친구 요청을 거절했습니다.')),
-                                                  );
-                                                }
-                                              } catch (e) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('거절 실패: $e')),
-                                                  );
-                                                }
-                                              }
-                                            },
+                                          onTap: friendsAsync.isLoading
+                                              ? null
+                                              : () async {
+                                                  try {
+                                                    await ref
+                                                        .read(
+                                                          friendsViewModelProvider
+                                                              .notifier,
+                                                        )
+                                                        .declineFriendRequest(
+                                                          request.id,
+                                                        );
+                                                    if (context.mounted) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text(
+                                                            '친구 요청을 거절했습니다.',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  } catch (e) {
+                                                    if (context.mounted) {
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(
+                                                            '거절 실패: $e',
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16,
@@ -480,9 +550,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                               isEn ? 'Decline' : '거절',
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: friendsAsync.isLoading 
-                                                  ? AppColors.gray300 
-                                                  : AppColors.gray600,
+                                                color: friendsAsync.isLoading
+                                                    ? AppColors.gray300
+                                                    : AppColors.gray600,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -535,7 +605,9 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        isEn ? 'My Friends : ${friendsAsync.value?.length ?? 0}' : '내 친구 : ${friendsAsync.value?.length ?? 0}명',
+                        isEn
+                            ? 'My Friends : ${friendsAsync.value?.length ?? 0}'
+                            : '내 친구 : ${friendsAsync.value?.length ?? 0}명',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -554,29 +626,26 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
             data: (friends) => SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    if (index.isOdd) {
-                      return const Divider(color: AppColors.gray50, height: 1);
-                    }
-                    final itemIndex = index ~/ 2;
-                    return _FriendListItem(friend: friends[itemIndex]);
-                  },
-                  childCount: friends.isEmpty ? 0 : friends.length * 2 - 1,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index.isOdd) {
+                    return const Divider(color: AppColors.gray50, height: 1);
+                  }
+                  final itemIndex = index ~/ 2;
+                  return _FriendListItem(friend: friends[itemIndex]);
+                }, childCount: friends.isEmpty ? 0 : friends.length * 2 - 1),
               ),
             ),
             loading: () => const SliverToBoxAdapter(
               child: Center(child: CircularProgressIndicator()),
             ),
             error: (e, _) => SliverToBoxAdapter(
-              child: Center(child: Text(isEn ? 'Error occurred: $e' : '오류 발생: $e')),
+              child: Center(
+                child: Text(isEn ? 'Error occurred: $e' : '오류 발생: $e'),
+              ),
             ),
           ),
           // 하단 네비게이션 바 공간 확보를 위한 여백
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 100),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
@@ -594,27 +663,15 @@ class _FriendListItem extends ConsumerWidget {
 
     return InkWell(
       onTap: () {
-        context.pushNamed(
-          AppRoute.friendProfile.name,
-          extra: friend,
-        );
+        context.pushNamed(AppRoute.friendProfile.name, extra: friend);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: AppColors.gray50,
-              backgroundImage: AssetImage(
-                'assets/images/characters/${friend.characterTemplateId}_big.png',
-              ),
-              onBackgroundImageError: (exception, stackTrace) {},
-              child: const Icon(
-                Icons.person,
-                color: AppColors.gray300,
-                size: 30,
-              ),
+            UrlAvatar(
+              photoUrl: friend.photoUrl ?? '',
+              size: 60,
             ),
             const SizedBox(width: 16),
             Expanded(

@@ -7,7 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/presentation/mypage/character_page/widgets/character_create_popup.dart';
-import 'package:soopkomong/presentation/widgets/character_avatar.dart';
+import 'package:soopkomong/presentation/widgets/character_parts_avatar.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -321,7 +321,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           // RepaintBoundary로 감싸서 캡쳐 가능하게 함
           RepaintBoundary(
             key: _globalKey,
-            child: CharacterAvatar(
+            child: CharacterPartsAvatar(
               baseImagePath: 'body_base.png',
               bodyShadowImagePath: 'body_shadow.png',
               baseColor: _selectedSkinColor,
@@ -528,6 +528,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
                       faces,
                       _selectedFace,
                       (id) => setState(() => _selectedFace = id),
+                      deselectId: 'smile', // 얼굴은 중복 선택 시 smile로 고정
                     ),
                   ),
                 ],
@@ -676,8 +677,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     String type,
     List<String> items,
     String selectedId,
-    Function(String) onSelect,
-  ) {
+    Function(String) onSelect, {
+    String deselectId = '01',
+  }) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 20), // 상단 패딩 20에서 10으로 축소
@@ -694,9 +696,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
         return GestureDetector(
           onTap: () {
-            // 옷 탭에서 이미 입고 있는 옷을 다시 터치하면 의상 없음(01)으로 원복
-            if (isSelected) { // Removed type == 'clothes' condition to allow deselect for all categories
-              onSelect('01'); // '01' is used as a generic deselect ID for now
+            // 이미 선택된 아이템을 다시 터치하면 deselectId(기본값)로 원복
+            if (isSelected) {
+              onSelect(deselectId);
             } else {
               onSelect(itemId);
             }

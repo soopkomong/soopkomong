@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
-import 'package:soopkomong/presentation/widgets/character_avatar.dart';
+import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key});
@@ -78,11 +78,10 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                         ),
                       ],
                     ),
-                    child: UserAvatar(
-                      characterSettings: user.characterSettings,
-                      photoUrl: user.photoUrl,
+                    child: UrlAvatar(
+                      photoUrl: user.photoUrl ?? '',
                       size: 152,
-                      isProfileMode: true,
+                      useCircle: true,
                     ),
                   ),
                   // Pencil Icon
