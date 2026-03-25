@@ -79,6 +79,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   mocktail: ^1.0.4
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -138,3 +140,20 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path_android: "assets/images/App_Logo_and.png"
+  image_path_ios: "assets/images/App_Logo_ios.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#EFFCE8"
+  adaptive_icon_foreground: "assets/images/App_Logo_and.png"
+
+flutter_native_splash:
+  color: "#EFFCE8"
+  image: "assets/images/App_Logo_and.png"
+  android_12:
+    image: "assets/images/App_Logo_and.png"
+    color: "#EFFCE8"
+  fullscreen: true
