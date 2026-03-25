@@ -41,36 +41,6 @@ class NotificationsPage extends ConsumerWidget {
         slivers: [
           const SliverPadding(padding: EdgeInsets.only(top: 16)),
 
-          // 목업: 업데이트 공지 (사용자 요청 이미지 반영)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  NotificationTile(
-                    title: '업데이트 공지',
-                    subtitle: '2026년 3월 29일 23:00 업데이트 예정입니다',
-                    date: '26.03.17',
-                    type: NotificationType.notice,
-                  ),
-                  NotificationTile(
-                    title: '알 획득!',
-                    subtitle: '숲을 산책하다가 신비로운 알을 발견했습니다.',
-                    date: '26.03.20',
-                    type: NotificationType.eggObtained,
-                  ),
-                  NotificationTile(
-                    title: '숲코몽 부화!',
-                    subtitle: '알에서 새로운 친구가 태어났습니다! 확인해보세요.',
-                    date: '26.03.24',
-                    type: NotificationType.eggHatched,
-                    characterTemplateId: '01',
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           // 실제 친구 요청 목록
           if (requests.isEmpty)
             SliverFillRemaining(
@@ -99,6 +69,7 @@ class NotificationsPage extends ConsumerWidget {
                     date: req.formattedTimestamp,
                     type: NotificationType.friendRequest,
                     characterTemplateId: req.senderTemplateId,
+                    avatarUrl: req.senderPhotoUrl,
                     statusText: req.status == FriendRequestStatus.pending
                         ? null
                         : (req.status == FriendRequestStatus.accepted

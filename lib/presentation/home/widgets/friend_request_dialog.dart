@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
-import 'package:soopkomong/presentation/widgets/character_avatar.dart';
+import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
 class FriendRequestDialog extends StatelessWidget {
   final String nickname;
@@ -73,10 +73,10 @@ class FriendRequestDialog extends StatelessWidget {
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(shape: BoxShape.circle),
-                  child: UserAvatar(
-                    photoUrl: photoUrl,
+                  child: UrlAvatar(
+                    photoUrl: photoUrl ?? '',
                     size: 100,
-                    isProfileMode: true,
+                    useCircle: true,
                   ),
                 ),
                 const SizedBox(height: 20),

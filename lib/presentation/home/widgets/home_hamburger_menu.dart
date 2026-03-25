@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 
 /// 햄버거 메뉴 팝업을 띄우는 독립 함수
@@ -29,10 +31,12 @@ Future<void> showHamburgerMenu({
     context: context,
     position: position.shift(const Offset(0, 48)),
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
+      side: const BorderSide(color: AppColors.gray100, width: 1),
     ),
-    color: Colors.white.withOpacity(0.9),
-    elevation: 4,
+    color: Colors.white.withValues(alpha: 0.6),
+    elevation: 0,
+
     items: [
       PopupMenuItem<String>(
         value: 'mypage',
@@ -60,7 +64,7 @@ Future<void> showHamburgerMenu({
           ],
         ),
       ),
-      const PopupMenuDivider(height: 1),
+      const PopupMenuDivider(height: 1, color: AppColors.gray200),
       PopupMenuItem<String>(
         value: 'settings',
         child: Row(
@@ -75,15 +79,7 @@ Future<void> showHamburgerMenu({
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              isEn ? 'Settings' : '설정',
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
+            Text(isEn ? 'Settings' : '설정', style: AppTextStyles.body),
           ],
         ),
       ),
