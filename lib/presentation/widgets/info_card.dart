@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 
@@ -36,7 +37,14 @@ class InfoCard extends StatelessWidget {
                 Align(alignment: Alignment.center, child: leading),
                 const SizedBox(width: 6),
               ],
-              Expanded(child: Text(title, style: AppTextStyles.label)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.subTitleM.copyWith(
+                    color: AppColors.gray900,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),

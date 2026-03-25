@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 /// 개인정보처리방침 & 약관동의 링크 위젯
@@ -18,42 +20,33 @@ class PolicyLinks extends ConsumerWidget {
             _showPolicyDialog(
               context,
               isEn ? 'Privacy Policy' : '개인정보처리방침',
-              isEn ? 'Privacy policy content is being prepared.' : '개인정보처리방침 내용이 준비 중입니다.',
+              isEn
+                  ? 'Privacy policy content is being prepared.'
+                  : '개인정보처리방침 내용이 준비 중입니다.',
             );
           },
           child: Text(
             isEn ? 'Privacy Policy' : '개인정보처리방침',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF999999),
-              decoration: TextDecoration.underline,
-              decorationColor: Color(0xFF999999),
-            ),
+            style: AppTextStyles.label.copyWith(color: AppColors.black),
           ),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(
-            '|',
-            style: TextStyle(fontSize: 13, color: Color(0xFFCCCCCC)),
-          ),
+          child: Text('|', style: AppTextStyles.label),
         ),
         GestureDetector(
           onTap: () {
             _showPolicyDialog(
               context,
               isEn ? 'Terms of Service' : '약관동의',
-              isEn ? 'Terms of service content is being prepared.' : '이용약관 내용이 준비 중입니다.',
+              isEn
+                  ? 'Terms of service content is being prepared.'
+                  : '이용약관 내용이 준비 중입니다.',
             );
           },
           child: Text(
             isEn ? 'Terms of Service' : '약관동의',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF999999),
-              decoration: TextDecoration.underline,
-              decorationColor: Color(0xFF999999),
-            ),
+            style: AppTextStyles.label.copyWith(color: AppColors.black),
           ),
         ),
       ],

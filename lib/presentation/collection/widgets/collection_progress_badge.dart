@@ -7,12 +7,10 @@ class CollectionProgressBadge extends StatelessWidget {
     super.key,
     required this.currentCount,
     required this.totalCount,
-    required this.iconPath,
   });
 
   final int currentCount;
   final int totalCount;
-  final String iconPath;
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +23,7 @@ class CollectionProgressBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(
-            iconPath,
-            width: 20,
-            height: 20,
-            color: AppColors.primary800,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.error, size: 20),
-          ),
+          Image.asset('assets/images/Sprout.png', width: 24, height: 24),
           const SizedBox(width: 8),
           Text(
             '$currentCount/$totalCount',
