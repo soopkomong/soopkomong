@@ -18,6 +18,7 @@ class AppColors {
   static const Color orange = Color(0xFFFD8224);
   static const Color lightGreen = Color(0xFFCEF17B);
   static const Color secondaryGreen = Color(0xFF228B22); // 기존 Green과 구분
+  static const Color error = Color(0xFFFF4B4B);
 
   // Black & White & Grayscale
   static const Color white = Color(0xFFFFFFFF);
