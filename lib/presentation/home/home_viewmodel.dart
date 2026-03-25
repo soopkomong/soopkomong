@@ -8,6 +8,7 @@ import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
+import 'package:soopkomong/presentation/providers/step_provider.dart';
 
 /// Home State
 class HomeState {
@@ -117,7 +118,16 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> startTracking() async {
-    // 위치 추적과 걸음 수 추적을 병렬로 시작하여 초기화 지연 방지
+    // 앱 시작 시 초기 걸음수 로드 및 건강 앱 동기화
+    final stepRepo = ref.read(stepRepositoryProvider);
+    final initialSteps = await stepRepo.getTotalSteps();
+    state = state.copyWith(stepCount: initialSteps);
+    
+    await stepRepo.syncWithHealthApp();
+    final syncedSteps = await stepRepo.getTotalSteps();
+    state = state.copyWith(stepCount: syncedSteps);
+
+    // 위치 추적과 걸음 수 추적 시작
     _startLocationTracking();
     _startPedometerTracking();
   }
@@ -230,8 +240,10 @@ class HomeNotifier extends Notifier<HomeState> {
   void _startPedometerTracking() {
     _stepSubscription?.cancel();
     _stepSubscription = Pedometer.stepCountStream.listen(
-      (StepCount event) {
-        _processNewStepCount(event.steps);
+      (StepCount event) async {
+        final stepRepo = ref.read(stepRepositoryProvider);
+        final totalSteps = await stepRepo.updateFromPedometer(event.steps);
+        _processNewStepCount(totalSteps);
       },
       onError: (error) {
         debugPrint('[디버그] 걸음 수 스트림 에러: $error');
