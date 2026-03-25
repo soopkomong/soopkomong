@@ -3,7 +3,7 @@ import 'package:soopkomong/data/repositories/auth_repository_impl.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/repositories/auth_repository.dart';
 
-import 'package:soopkomong/presentation/providers/step_provider.dart';
+import 'package:soopkomong/presentation/providers/common_providers.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);

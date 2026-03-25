@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError();
-});
+import 'package:soopkomong/presentation/providers/common_providers.dart';
 
 class OnboardingNotifier extends Notifier<bool> {
   static const _key = 'has_seen_onboarding';
