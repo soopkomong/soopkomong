@@ -10,41 +10,51 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
   @override
   Future<List<FriendModel>> build() async {
     final userDocAsync = ref.watch(userDocumentProvider);
-    
+
     return userDocAsync.when(
       data: (userDoc) async {
         if (userDoc == null || !userDoc.exists) return [];
 
         final data = userDoc.data() as Map<String, dynamic>?;
-        final List<String> friendIds = List<String>.from(data?['friends'] ?? [])
-            .where((id) => id.trim().isNotEmpty)
-            .toList();
+        final List<String> friendIds = List<String>.from(
+          data?['friends'] ?? [],
+        ).where((id) => id.trim().isNotEmpty).toList();
         final Map<String, dynamic> friendships = data?['friendships'] ?? {};
 
         if (friendIds.isEmpty) return [];
 
         final List<FriendModel> friends = [];
-        
+
         for (var i = 0; i < friendIds.length; i += 30) {
-          final chunk = friendIds.sublist(i, i + 30 > friendIds.length ? friendIds.length : i + 30);
+          final chunk = friendIds.sublist(
+            i,
+            i + 30 > friendIds.length ? friendIds.length : i + 30,
+          );
           final querySnapshot = await FirebaseFirestore.instance
               .collection('users')
               .where(FieldPath.documentId, whereIn: chunk)
               .get();
-          
-          friends.addAll(querySnapshot.docs.map((doc) {
-            final friendshipTimestamp = friendships[doc.id];
-            DateTime? friendedAt;
-            if (friendshipTimestamp is Timestamp) {
-              friendedAt = friendshipTimestamp.toDate();
-            }
-            return FriendModel.fromFirestore(doc, friendedAtOverride: friendedAt);
-          }));
+
+          friends.addAll(
+            querySnapshot.docs.map((doc) {
+              final friendshipTimestamp = friendships[doc.id];
+              DateTime? friendedAt;
+              if (friendshipTimestamp is Timestamp) {
+                friendedAt = friendshipTimestamp.toDate();
+              }
+              return FriendModel.fromFirestore(
+                doc,
+                friendedAtOverride: friendedAt,
+              );
+            }),
+          );
         }
-        
+
         // 추가된 순서대로 정렬 (friendIds 리스트의 인덱스 기준)
-        friends.sort((a, b) => friendIds.indexOf(a.id).compareTo(friendIds.indexOf(b.id)));
-        
+        friends.sort(
+          (a, b) => friendIds.indexOf(a.id).compareTo(friendIds.indexOf(b.id)),
+        );
+
         return friends;
       },
       loading: () => state.value ?? [],
@@ -53,7 +63,10 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
   }
 
   Future<FriendModel> getFriendModelByUserId(String userId) async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
     if (!doc.exists) throw Exception('유저를 찾을 수 없습니다.');
     return FriendModel.fromFirestore(doc);
   }
@@ -87,7 +100,9 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .collection('users')
           .doc(currentUser.id)
           .get();
-      final List<String> friends = List<String>.from(userDoc.data()?['friends'] ?? []);
+      final List<String> friends = List<String>.from(
+        userDoc.data()?['friends'] ?? [],
+      );
       if (friends.contains(targetId)) {
         throw Exception('이미 친구입니다.');
       }
@@ -203,7 +218,6 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
 
       print('✅ [DEBUG] 4. 수락 완료! Firestore 데이터 변경 성공');
       print('-----------------------------------------');
-      
     } catch (e, stack) {
       print('❌ [DEBUG] 5. 수락 처리 중 치명적 에러 발생!');
       print('❌ [DEBUG] 에러 내용: $e');
@@ -288,14 +302,18 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
       final batch = FirebaseFirestore.instance.batch();
 
       // 1. 내 친구 목록 및 날짜 데이터 삭제
-      final myRef = FirebaseFirestore.instance.collection('users').doc(currentUser.id);
+      final myRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.id);
       batch.update(myRef, {
         'friends': FieldValue.arrayRemove([friendId]),
         'friendships.$friendId': FieldValue.delete(),
       });
 
       // 2. 상대방 친구 목록 및 날짜 데이터 삭제
-      final friendRef = FirebaseFirestore.instance.collection('users').doc(friendId);
+      final friendRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(friendId);
       batch.update(friendRef, {
         'friends': FieldValue.arrayRemove([currentUser.id]),
         'friendships.${currentUser.id}': FieldValue.delete(),

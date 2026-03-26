@@ -113,7 +113,7 @@ class SettingsPage extends ConsumerWidget {
                 },
               ),
               ListTile(
-                title: const Text('English'),
+                title: const Text('English', style: AppTextStyles.subTitleL),
                 trailing: ref.watch(localeProvider) == AppLocale.en
                     ? const Icon(Icons.check, color: Colors.green)
                     : null,
@@ -190,11 +190,7 @@ class _BottomActions extends StatelessWidget {
           onTap: () => WithdrawDialog.show(context),
           child: Text(
             isEn ? 'Delete Account' : '회원탈퇴',
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: AppTextStyles.body.copyWith(color: Colors.grey),
           ),
         ),
         const SizedBox(width: 8),
@@ -207,11 +203,7 @@ class _BottomActions extends StatelessWidget {
           onTap: () => _showLogoutDialog(context),
           child: Text(
             isEn ? 'Log Out' : '로그아웃',
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: AppTextStyles.body.copyWith(color: Colors.grey),
           ),
         ),
       ],

@@ -21,11 +21,8 @@ class MainPage extends ConsumerStatefulWidget {
 }
 
 class _MainPageState extends ConsumerState<MainPage> {
-
-
   @override
   Widget build(BuildContext context) {
-
     // 탭 진입 전 미리 로드 (collection 탭 shimmer 방지)
     ref.watch(locationsProvider);
     ref.watch(soopkomonTemplatesProvider);
@@ -41,7 +38,9 @@ class _MainPageState extends ConsumerState<MainPage> {
               nickname: request.senderName,
               isEn: ref.read(localeProvider) == AppLocale.en,
               onConfirm: () {
-                ref.read(friendsViewModelProvider.notifier).markNotified(request.id);
+                ref
+                    .read(friendsViewModelProvider.notifier)
+                    .markNotified(request.id);
               },
             );
           }
@@ -77,7 +76,9 @@ class _MainPageState extends ConsumerState<MainPage> {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Align(
                   alignment: Alignment.bottomCenter,
-                  child: AppBottomNavigationBar(navigationShell: widget.navigationShell),
+                  child: AppBottomNavigationBar(
+                    navigationShell: widget.navigationShell,
+                  ),
                 ),
               ),
             ),

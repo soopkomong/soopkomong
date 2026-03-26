@@ -2,11 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Firebase Firestore 데이터베이스와 앱 사이 '친구 요청' 데이터 주고 받을 수 있도록
 // 데이,터 모델 클래스 구현
-enum FriendRequestStatus {
-  pending,
-  accepted,
-  declined,
-}
+enum FriendRequestStatus { pending, accepted, declined }
 
 class FriendRequest {
   final String id; // Firestore 문서 고유 id
@@ -50,7 +46,7 @@ class FriendRequest {
 
   factory FriendRequest.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    
+
     // timestamp 파싱 로직: Timestamp 객체이거나 String 일치 처리
     DateTime parsedTime = DateTime.now();
     final rawTime = data['timestamp'];
@@ -72,7 +68,7 @@ class FriendRequest {
               .replaceAll(RegExp(r'\s+-\s*'), '-') // 불필요한 공백 제거
               .replaceAll(RegExp(r'\s+'), ' ')
               .trim();
-          
+
           parsedTime = DateTime.parse(cleaned);
         } catch (innerE) {
           // 최후의 수단으로 현재 시간 배정

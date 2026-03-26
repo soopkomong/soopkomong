@@ -24,7 +24,7 @@ class CollectedCharactersSection extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.gray100),
       ),
@@ -84,7 +84,10 @@ class CollectedCharactersSection extends ConsumerWidget {
 
   Widget _buildEmptyState(String message) {
     return Center(
-      child: Text(message, style: const TextStyle(color: AppColors.gray500)),
+      child: Text(
+        message,
+        style: AppTextStyles.body.copyWith(color: AppColors.gray500),
+      ),
     );
   }
 }
@@ -156,7 +159,7 @@ class _CharacterCard extends StatelessWidget {
           height: 20,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: Colors.green.shade400,
+            color: AppColors.primary400,
           ),
         ),
       ),

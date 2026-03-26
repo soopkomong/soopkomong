@@ -40,7 +40,7 @@ class RegionChip extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: AppTextStyles.body.copyWith(
-                color: selected ? Colors.white : AppColors.gray500,
+                color: selected ? AppColors.white : AppColors.gray500,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),

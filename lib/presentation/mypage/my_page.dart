@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/mypage/widgets/profile_card.dart';
 import 'package:soopkomong/presentation/mypage/widgets/visited_parks_section.dart';
@@ -20,11 +21,11 @@ class MyPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
-          color: Colors.black,
+          color: AppColors.black,
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -35,10 +36,7 @@ class MyPage extends ConsumerWidget {
         ),
         title: Text(
           isEn ? 'My Page' : '마이페이지',
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.title.copyWith(color: AppColors.black),
         ),
         centerTitle: true,
       ),

@@ -34,7 +34,7 @@ Future<void> showHamburgerMenu({
       borderRadius: BorderRadius.circular(12),
       side: const BorderSide(color: AppColors.gray100, width: 1),
     ),
-    color: Colors.white.withValues(alpha: 0.6),
+    color: AppColors.white.withValues(alpha: 0.6),
     elevation: 0,
 
     items: [
@@ -47,18 +47,16 @@ Future<void> showHamburgerMenu({
               width: 20,
               height: 20,
               colorFilter: const ColorFilter.mode(
-                Colors.black87,
+                AppColors.gray800,
                 BlendMode.srcIn,
               ),
             ),
             const SizedBox(width: 12),
             Text(
               isEn ? 'My Page' : '마이페이지',
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 16,
+              style: AppTextStyles.body.copyWith(
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.gray800,
               ),
             ),
           ],

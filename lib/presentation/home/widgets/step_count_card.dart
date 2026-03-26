@@ -16,7 +16,7 @@ class StepCountCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: ShapeDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         shadows: AppShadows.card,
       ),
@@ -43,7 +43,7 @@ class StepCountCard extends StatelessWidget {
               Text(
                 state.stepCount.toString(),
                 style: AppTextStyles.headline.copyWith(
-                  color: const Color(0xFF191919),
+                  color: AppColors.gray900,
                 ),
               ),
             ],

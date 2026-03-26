@@ -24,7 +24,7 @@ class SignInScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -60,10 +60,9 @@ class SignInScreen extends ConsumerWidget {
               // 부제목
               Text(
                 isEn ? 'Every step turns into an adventure' : '발걸음이 모이면 모험이 돼요',
-                style: const TextStyle(
-                  fontSize: 15,
+                style: AppTextStyles.subTitleM.copyWith(
+                  color: AppColors.gray500,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF888888),
                 ),
               ),
 
@@ -100,21 +99,21 @@ class SignInScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           isEn ? 'Withdrawal Complete' : '회원 탈퇴 완료',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: AppTextStyles.title,
         ),
         content: Text(
           isEn
               ? 'Your account has been withdrawn. You cannot re-register for 14 days after withdrawal. Please return after 14 days.'
               : '회원 탈퇴 처리되었습니다.\n탈퇴 후 14일 동안은 재가입이 불가능하며, 14일 이후에 다시 이용해 주시기 바랍니다.',
-          style: const TextStyle(fontSize: 15),
+          style: AppTextStyles.subTitleM,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               isEn ? 'Confirm' : '확인',
-              style: const TextStyle(
-                color: Color(0xFF1A1A1A),
+              style: AppTextStyles.subTitleM.copyWith(
+                color: AppColors.gray900,
                 fontWeight: FontWeight.bold,
               ),
             ),

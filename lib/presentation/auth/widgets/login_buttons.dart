@@ -25,7 +25,7 @@ class LoginButtons extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5A8D6D)),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary700),
             ),
           ),
         // 카카오 로그인 버튼
@@ -36,7 +36,7 @@ class LoginButtons extends ConsumerWidget {
             onPressed: isLoading ? null : () => _signInWithKakao(context, ref),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFEE500),
-              foregroundColor: const Color(0xFF191919),
+              foregroundColor: AppColors.black,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -72,8 +72,8 @@ class LoginButtons extends ConsumerWidget {
           child: OutlinedButton(
             onPressed: isLoading ? null : () => _signInWithGoogle(context, ref),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF1A1A1A),
-              side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
+              foregroundColor: AppColors.gray900,
+              side: const BorderSide(color: AppColors.gray200, width: 1),
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -112,8 +112,8 @@ class LoginButtons extends ConsumerWidget {
                   ? null
                   : () => _signInWithApple(context, ref),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1A1A1A),
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.black,
+                foregroundColor: AppColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -128,7 +128,7 @@ class LoginButtons extends ConsumerWidget {
                     width: 20,
                     height: 20,
                     colorFilter: const ColorFilter.mode(
-                      Colors.white,
+                      AppColors.white,
                       BlendMode.srcIn,
                     ),
                   ),
@@ -157,9 +157,9 @@ class LoginButtons extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       ref.read(authLoadingProvider.notifier).set(false);
@@ -175,9 +175,9 @@ class LoginButtons extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       ref.read(authLoadingProvider.notifier).set(false);
@@ -193,9 +193,9 @@ class LoginButtons extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } finally {
       ref.read(authLoadingProvider.notifier).set(false);

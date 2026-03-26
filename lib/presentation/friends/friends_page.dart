@@ -248,9 +248,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                       ),
                                       child: Text(
                                         request.senderName,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                        style: AppTextStyles.subTitleL.copyWith(
                                           color: AppColors.black,
                                         ),
                                       ),
@@ -310,11 +308,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                             ),
                                             child: Text(
                                               isEn ? 'Accept' : '승인',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: AppColors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                              style: AppTextStyles.label
+                                                  .copyWith(
+                                                    color: AppColors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -369,13 +367,14 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                             ),
                                             child: Text(
                                               isEn ? 'Decline' : '거절',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: friendsAsync.isLoading
-                                                    ? AppColors.gray300
-                                                    : AppColors.gray600,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                              style: AppTextStyles.label
+                                                  .copyWith(
+                                                    color:
+                                                        friendsAsync.isLoading
+                                                        ? AppColors.gray300
+                                                        : AppColors.gray600,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -406,7 +405,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
               child: Center(
                 child: Text(
                   isEn ? 'Error loading requests: $e' : '친구 신청 로드 오류: $e',
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  style: AppTextStyles.label.copyWith(color: AppColors.error),
                 ),
               ),
             ),

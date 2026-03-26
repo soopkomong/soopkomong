@@ -11,7 +11,8 @@ enum Region {
   final String enLabel;
   const Region(this.koLabel, this.enLabel);
 
-  String get label => koLabel; // Default to Korean for backward compatibility if needed, but we'll use a method for locale
+  String get label =>
+      koLabel; // Default to Korean for backward compatibility if needed, but we'll use a method for locale
 
   String getLabel(bool isEn) => isEn ? enLabel : koLabel;
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 
 /// 캐릭터 파츠를 실시간으로 조합하여 렌더링하는 위젯
 class CharacterPartsAvatar extends StatelessWidget {
@@ -36,29 +37,48 @@ class CharacterPartsAvatar extends StatelessWidget {
     String? hairHighlightImagePath,
     Color? hairColor,
     required this.size,
-  })  : baseImagePath = baseImagePath ?? 'body_base.png',
-        baseColor = baseColor ??
-            (settings != null ? Color(settings['skinColor'] as int) : Colors.white),
-        hairImagePath = hairImagePath ??
-            (settings != null ? 'hair_${settings['hair']}.png' : 'hair_01.png'),
-        hairHighlightImagePath = hairHighlightImagePath ??
-            (settings != null ? 'hair_${settings['hair']}_highlight.png' : null),
-        hairColor = hairColor ??
-            (settings != null ? Color(settings['hairColor'] as int) : Colors.white),
-        faceImagePath = faceImagePath ??
-            (settings != null ? 'face_${settings['face']}.png' : 'face_smile.png'),
-        clothesImagePath = clothesImagePath ??
-            (settings != null ? 'clothes_${settings['clothes']}.png' : 'clothes_01.png'),
-        clothesColor = clothesColor ??
-            (settings != null ? Color(settings['clothesColor'] as int) : Colors.white),
-        shoesImagePath = shoesImagePath ??
-            (settings != null && settings['shoes'] != null
-                ? 'shoes_${settings['shoes']}.png'
-                : null),
-        shoesColor = shoesColor ??
-            (settings != null
-                ? Color(settings['shoesColor'] as int? ?? 0xFFFFFFFF)
-                : Colors.white);
+  }) : baseImagePath = baseImagePath ?? 'body_base.png',
+       baseColor =
+           baseColor ??
+           (settings != null
+               ? Color(settings['skinColor'] as int)
+               : Colors.white),
+       hairImagePath =
+           hairImagePath ??
+           (settings != null ? 'hair_${settings['hair']}.png' : 'hair_01.png'),
+       hairHighlightImagePath =
+           hairHighlightImagePath ??
+           (settings != null ? 'hair_${settings['hair']}_highlight.png' : null),
+       hairColor =
+           hairColor ??
+           (settings != null
+               ? Color(settings['hairColor'] as int)
+               : Colors.white),
+       faceImagePath =
+           faceImagePath ??
+           (settings != null
+               ? 'face_${settings['face']}.png'
+               : 'face_smile.png'),
+       clothesImagePath =
+           clothesImagePath ??
+           (settings != null
+               ? 'clothes_${settings['clothes']}.png'
+               : 'clothes_01.png'),
+       clothesColor =
+           clothesColor ??
+           (settings != null
+               ? Color(settings['clothesColor'] as int)
+               : Colors.white),
+       shoesImagePath =
+           shoesImagePath ??
+           (settings != null && settings['shoes'] != null
+               ? 'shoes_${settings['shoes']}.png'
+               : null),
+       shoesColor =
+           shoesColor ??
+           (settings != null
+               ? Color(settings['shoesColor'] as int? ?? 0xFFFFFFFF)
+               : AppColors.white);
 
   static const _storageBaseUrl =
       'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/';
@@ -88,11 +108,8 @@ class CharacterPartsAvatar extends StatelessWidget {
       colorBlendMode: colorBlendMode,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
-      placeholder: (context, url) => Container(
-        width: size,
-        height: size,
-        color: Colors.white10,
-      ),
+      placeholder: (context, url) =>
+          Container(width: size, height: size, color: AppColors.white.withValues(alpha: 0.1)),
       errorWidget: (context, url, error) => const SizedBox.shrink(),
     );
   }

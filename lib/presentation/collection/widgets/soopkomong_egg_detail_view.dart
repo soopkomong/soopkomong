@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -57,12 +59,12 @@ class SoopkomongEggDetailView extends ConsumerWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2.5),
+                      border: Border.all(color: AppColors.black, width: 2.5),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: AppColors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(2, 4),
                         ),
@@ -74,7 +76,7 @@ class SoopkomongEggDetailView extends ConsumerWidget {
                         child: SoopkomonImage(
                           assetPath: template.actualImagePath,
                           remoteUrl: template.remoteImagePath,
-                          color: Colors.black,
+                          color: AppColors.black,
                           colorBlendMode: BlendMode.srcIn,
                         ),
                       ),
@@ -90,14 +92,10 @@ class SoopkomongEggDetailView extends ConsumerWidget {
 
         /// 2. 타이틀 (공원 이름 숲코몽 알)
         Text(
-          isEn 
+          isEn
               ? '${soopkomon?.discoveredSpotName ?? 'Eco'} Soopkomong Egg'
               : '${soopkomon?.discoveredSpotName ?? '숲'} 숲코몽 알',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
+          style: AppTextStyles.headline.copyWith(color: AppColors.black),
           textAlign: TextAlign.center,
         ),
 
@@ -110,7 +108,7 @@ class SoopkomongEggDetailView extends ConsumerWidget {
               width: double.infinity,
               height: 10,
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F0F0),
+                color: AppColors.gray100,
                 borderRadius: BorderRadius.circular(5),
               ),
               child: FractionallySizedBox(
@@ -118,7 +116,7 @@ class SoopkomongEggDetailView extends ConsumerWidget {
                 widthFactor: progress,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black87,
+                    color: AppColors.black.withValues(alpha: 0.87),
                     borderRadius: BorderRadius.circular(5),
                   ),
                 ),
@@ -127,10 +125,9 @@ class SoopkomongEggDetailView extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               '$currentStepsValue/$targetSteps',
-              style: const TextStyle(
-                fontSize: 16,
+              style: AppTextStyles.body.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Colors.black54,
+                color: AppColors.gray500,
               ),
             ),
           ],
@@ -142,10 +139,10 @@ class SoopkomongEggDetailView extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: const Color(0xFFE0E0E0).withValues(alpha: 0.5),
+              color: AppColors.gray200.withValues(alpha: 0.5),
               width: 1.5,
             ),
           ),
@@ -153,7 +150,8 @@ class SoopkomongEggDetailView extends ConsumerWidget {
             children: [
               _buildInfoRow(
                 Icons.location_on_outlined,
-                soopkomon?.discoveredSpotName ?? (isEn ? 'Undiscovered region' : '미발견 지역'),
+                soopkomon?.discoveredSpotName ??
+                    (isEn ? 'Undiscovered region' : '미발견 지역'),
               ),
               const SizedBox(height: 16),
               _buildInfoRow(
@@ -172,15 +170,14 @@ class SoopkomongEggDetailView extends ConsumerWidget {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 24, color: Colors.black),
+        Icon(icon, size: 24, color: AppColors.black),
         const SizedBox(width: 14),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 16,
+            style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.black.withValues(alpha: 0.87),
             ),
           ),
         ),

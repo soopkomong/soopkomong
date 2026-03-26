@@ -44,7 +44,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
                   fit: BoxFit.contain,
                   color: isDiscovered
                       ? null
-                      : Colors.black.withValues(alpha: 0.7),
+                      : AppColors.black.withValues(alpha: 0.7),
                   colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
                 ),
               ),
@@ -54,10 +54,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
                 children: [
                   Text(
                     isDiscovered ? template.name : '????',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppTextStyles.title.copyWith(color: AppColors.black),
                   ),
                   if (isDiscovered) ...[
                     const SizedBox(width: 4),
@@ -128,7 +125,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppShadows.card,
       ),
@@ -181,7 +178,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppShadows.card,
       ),
@@ -196,11 +193,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (iconPath != null) ...[
-                SvgPicture.asset(
-                  iconPath,
-                  width: 16,
-                  height: 16,
-                ),
+                SvgPicture.asset(iconPath, width: 16, height: 16),
                 const SizedBox(width: 6),
               ],
               Text(

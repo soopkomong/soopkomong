@@ -8,7 +8,7 @@ class StepRepositoryImpl implements StepRepository {
   static const String _keyTodaySteps = 'today_steps';
   static const String _keyLastUpdateDate = 'last_step_update_date';
   static const String _keyLastPedometer = 'last_known_pedometer_value';
-  
+
   final SharedPreferences _prefs;
   final Health _health = Health();
 
@@ -32,7 +32,9 @@ class StepRepositoryImpl implements StepRepository {
     final lastDateStr = _prefs.getString(_keyLastUpdateDate) ?? "";
 
     if (todayStr != lastDateStr) {
-      debugPrint('[StepRepo] Date changed from $lastDateStr to $todayStr. Resetting today_steps.');
+      debugPrint(
+        '[StepRepo] Date changed from $lastDateStr to $todayStr. Resetting today_steps.',
+      );
       await _prefs.setInt(_keyTodaySteps, 0);
       await _prefs.setString(_keyLastUpdateDate, todayStr);
     }
@@ -49,7 +51,7 @@ class StepRepositoryImpl implements StepRepository {
     // 재부팅 감지
     if (pedometerValue < lastPedometer) {
       debugPrint('[StepRepo] Reboot detected. Resetting pedometer baseline.');
-      lastPedometer = 0; 
+      lastPedometer = 0;
     }
 
     int delta = pedometerValue - lastPedometer;
@@ -68,7 +70,7 @@ class StepRepositoryImpl implements StepRepository {
   Future<StepData> syncWithHealthApp() async {
     try {
       final types = [HealthDataType.STEPS];
-      
+
       bool requested = await _health.requestAuthorization(types);
       if (!requested) {
         return StepData(
@@ -79,27 +81,30 @@ class StepRepositoryImpl implements StepRepository {
 
       final now = DateTime.now();
       final midnight = DateTime(now.year, now.month, now.day);
-      
+
       int? healthSteps = await _health.getTotalStepsInInterval(midnight, now);
-      
+
       if (healthSteps != null) {
         await _checkAndResetDailySteps();
         int currentToday = _prefs.getInt(_keyTodaySteps) ?? 0;
-        
+
         if (healthSteps > currentToday) {
           int diff = healthSteps - currentToday;
           int currentTotal = _prefs.getInt(_keyTotalSteps) ?? 0;
-          
+
           await _prefs.setInt(_keyTodaySteps, healthSteps);
           await _prefs.setInt(_keyTotalSteps, currentTotal + diff);
-          
-          return StepData(todaySteps: healthSteps, totalSteps: currentTotal + diff);
+
+          return StepData(
+            todaySteps: healthSteps,
+            totalSteps: currentTotal + diff,
+          );
         }
       }
     } catch (e) {
       debugPrint('[StepRepo] Health Sync Error: $e');
     }
-    
+
     return StepData(
       todaySteps: await getTodaySteps(),
       totalSteps: await getTotalSteps(),

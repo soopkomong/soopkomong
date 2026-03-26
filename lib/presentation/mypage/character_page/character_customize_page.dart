@@ -19,6 +19,7 @@ import 'package:soopkomong/presentation/providers/character_parts_provider.dart'
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 // import 'package:soopkomong/domain/entities/soopkomon.dart'; // 튜토리얼 구현 시 활성화
 
 class CharacterCustomizePage extends ConsumerStatefulWidget {
@@ -241,14 +242,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
             children: [
               CircularProgressIndicator(color: Colors.green),
               SizedBox(height: 16),
-              Text(
-                '캐릭터 정보를 불러오는 중...',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text('캐릭터 정보를 불러오는 중...', style: AppTextStyles.body),
             ],
           ),
         ),
@@ -277,11 +271,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               ),
               label: Text(
                 isEn ? 'Random' : '랜덤 꾸미기',
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTextStyles.subTitleM.copyWith(color: Colors.black87),
               ),
             ),
             loading: () => const SizedBox.shrink(),
@@ -436,14 +426,10 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
         indicatorColor: Colors.green, // 녹색으로 변경
         indicatorWeight: 3, // 두께 증가
         indicatorSize: TabBarIndicatorSize.tab, // 탭 전체 너비로 확장
-        labelStyle: const TextStyle(
-          fontSize: 15,
+        labelStyle: AppTextStyles.subTitleM.copyWith(
           fontWeight: FontWeight.bold,
         ), // 글자 크기 및 굵기 강조
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-        ),
+        unselectedLabelStyle: AppTextStyles.subTitleM,
         tabs: categories.asMap().entries.map((entry) {
           final svgIcons = [
             'assets/images/scissors.svg',
@@ -553,8 +539,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
                             clothes,
                             _selectedClothes,
                             (id) {
-                              if (id != null)
+                              if (id != null) {
                                 setState(() => _selectedClothes = id);
+                              }
                             },
                             allowDeselect: true,
                             deselectId: '01',
@@ -616,14 +603,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
+      child: Text(title, style: AppTextStyles.subTitleL),
     );
   }
 
@@ -916,9 +896,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
                           )
                         : Text(
                             isEn ? 'Save' : '저장하기',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                            style: AppTextStyles.subTitleL.copyWith(
                               color: Colors.white,
                             ),
                           ),

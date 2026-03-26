@@ -71,7 +71,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       useRootNavigator: true,
       builder: (context) {
         return ParkDetailSheet(
@@ -106,7 +106,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -324,9 +324,6 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     }
 
     // 로딩 중이거나 에러 발생 시 기본값 표시
-    return const CollectionProgressBadge(
-      currentCount: 0,
-      totalCount: 0,
-    );
+    return const CollectionProgressBadge(currentCount: 0, totalCount: 0);
   }
 }

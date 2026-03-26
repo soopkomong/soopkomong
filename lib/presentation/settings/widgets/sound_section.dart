@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'settings_card.dart';
 
 class SoundSection extends ConsumerWidget {
@@ -16,11 +17,7 @@ class SoundSection extends ConsumerWidget {
         children: [
           Text(
             isEn ? 'Sound' : '소리',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-            ),
+            style: AppTextStyles.label.copyWith(color: Colors.grey),
           ),
           const SizedBox(height: 12),
           SwitchTile(title: isEn ? 'BGM' : '배경음'),
@@ -41,14 +38,7 @@ class SwitchTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      title: Text(title, style: AppTextStyles.subTitleL),
       value: true,
       onChanged: (v) {},
     );

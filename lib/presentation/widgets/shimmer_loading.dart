@@ -45,7 +45,8 @@ class ShimmerLoading extends StatelessWidget {
         height: height,
         decoration: ShapeDecoration(
           color: AppColors.gray300,
-          shape: shapeBorder ??
+          shape:
+              shapeBorder ??
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(borderRadius ?? 12),
               ),

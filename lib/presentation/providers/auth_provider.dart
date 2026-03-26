@@ -40,5 +40,5 @@ class ShowWithdrawalPopupNotifier extends Notifier<bool> {
 
 final showWithdrawalPopupProvider =
     NotifierProvider<ShowWithdrawalPopupNotifier, bool>(
-  ShowWithdrawalPopupNotifier.new,
-);
+      ShowWithdrawalPopupNotifier.new,
+    );

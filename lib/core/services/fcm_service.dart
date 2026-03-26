@@ -11,7 +11,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class FcmService {
-  static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  static final FirebaseMessaging _firebaseMessaging =
+      FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -22,7 +23,7 @@ class FcmService {
       badge: true,
       sound: true,
     );
-    
+
     log('User granted permission: ${settings.authorizationStatus}');
 
     // 2. 백그라운드 핸들러 등록
@@ -33,14 +34,15 @@ class FcmService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
-    );
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+          requestSoundPermission: true,
+          requestBadgePermission: true,
+          requestAlertPermission: true,
+        );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
     await _localNotificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
@@ -58,7 +60,8 @@ class FcmService {
 
     await _localNotificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     // iOS Foreground 알림 표시 설정
@@ -80,14 +83,17 @@ class FcmService {
     });
 
     // 6. FCM 토큰 확인 및 갱신 리스너
-    _firebaseMessaging.getToken().then((token) {
-      log("FCM Token: $token");
-      if (token != null) {
-        _updateTokenInFirestore(token);
-      }
-    }).catchError((e) {
-      log("FCM Token Error: $e");
-    });
+    _firebaseMessaging
+        .getToken()
+        .then((token) {
+          log("FCM Token: $token");
+          if (token != null) {
+            _updateTokenInFirestore(token);
+          }
+        })
+        .catchError((e) {
+          log("FCM Token Error: $e");
+        });
 
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
       log("FCM Token Refreshed: $newToken");
@@ -111,7 +117,9 @@ class FcmService {
   }
 
   static Future<void> _showLocalNotification(
-      RemoteMessage message, AndroidNotificationChannel channel) async {
+    RemoteMessage message,
+    AndroidNotificationChannel channel,
+  ) async {
     final notification = message.notification;
     final android = message.notification?.android;
 

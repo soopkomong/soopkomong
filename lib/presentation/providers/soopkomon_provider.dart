@@ -10,7 +10,9 @@ import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 
 /// 1-1. 데이터 소스 프로바이더
-final remoteLocationDataSourceProvider = Provider<RemoteLocationDataSource>((ref) {
+final remoteLocationDataSourceProvider = Provider<RemoteLocationDataSource>((
+  ref,
+) {
   return RemoteLocationDataSourceImpl();
 });
 
@@ -65,7 +67,10 @@ final userSoopkomonProvider = StreamProvider<List<Soopkomon>>((ref) {
 });
 
 /// 5-2. 특정 사용자가 획득한 캐릭터 리스트 관리 (매개변수 기반)
-final friendSoopkomonProvider = StreamProvider.family<List<Soopkomon>, String>((ref, userId) {
+final friendSoopkomonProvider = StreamProvider.family<List<Soopkomon>, String>((
+  ref,
+  userId,
+) {
   final repository = ref.watch(soopkomonRepositoryProvider);
   return repository.getUserSoopkomons(userId);
 });
@@ -113,7 +118,9 @@ final filteredTemplatesProvider = Provider<AsyncValue<List<SoopkomonTemplate>>>(
 );
 
 /// 8. 유저가 실제 방문한 공원 리스트 (조합 프로바이더)
-final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
+final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((
+  ref,
+) {
   final userSoopkomonsAsync = ref.watch(userSoopkomonProvider);
   final locationsAsync = ref.watch(locationsProvider);
 
@@ -128,8 +135,9 @@ final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) 
               .toSet();
 
           // 1. 고유 ID 기준 필터링
-          final visitedLocations =
-              locations.where((loc) => visitedIds.contains(loc.id)).toList();
+          final visitedLocations = locations
+              .where((loc) => visitedIds.contains(loc.id))
+              .toList();
 
           // 2. 고유 ID(id) 기준 중복 제거 (방어적 코드)
           final uniqueMap = <int, Location>{};

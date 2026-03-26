@@ -123,7 +123,7 @@ class HomeNotifier extends Notifier<HomeState> {
     final stepRepo = ref.read(stepRepositoryProvider);
     final initialTodaySteps = await stepRepo.getTodaySteps();
     state = state.copyWith(stepCount: initialTodaySteps);
-    
+
     final stepData = await stepRepo.syncWithHealthApp();
     state = state.copyWith(stepCount: stepData.todaySteps);
 
@@ -346,7 +346,8 @@ class HomeNotifier extends Notifier<HomeState> {
     final userPetsAsync = ref.read(userSoopkomonProvider);
     userPetsAsync.whenData((pets) {
       for (final pet in pets) {
-        if (!pet.isHatched && (currentTotalSteps - pet.stepsAtDiscovery) >= 1000) {
+        if (!pet.isHatched &&
+            (currentTotalSteps - pet.stepsAtDiscovery) >= 1000) {
           _hatchPet(pet);
           break;
         }

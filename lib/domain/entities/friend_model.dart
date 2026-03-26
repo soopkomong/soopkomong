@@ -6,7 +6,7 @@ class FriendModel {
   final String? photoUrl; // 프로필 사진 URL
   final String characterTemplateId;
   final Map<String, dynamic>? characterSettings; // 캐릭터 파츠 설정
-  
+
   final int totalSteps; // 친구의 총 걸음 수
   final DateTime? friendedAt; // 친구가 된 날짜
 
@@ -20,7 +20,10 @@ class FriendModel {
     this.friendedAt,
   });
 
-  factory FriendModel.fromFirestore(DocumentSnapshot doc, {DateTime? friendedAtOverride}) {
+  factory FriendModel.fromFirestore(
+    DocumentSnapshot doc, {
+    DateTime? friendedAtOverride,
+  }) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     return FriendModel(
       id: doc.id,
@@ -29,9 +32,11 @@ class FriendModel {
       characterTemplateId: data['templateId'] ?? '007',
       characterSettings: data['character_settings'] as Map<String, dynamic>?,
       totalSteps: (data['totalSteps'] as num?)?.toInt() ?? 0,
-      friendedAt: friendedAtOverride ?? (data['friendedAt'] != null
-          ? (data['friendedAt'] as Timestamp).toDate()
-          : null),
+      friendedAt:
+          friendedAtOverride ??
+          (data['friendedAt'] != null
+              ? (data['friendedAt'] as Timestamp).toDate()
+              : null),
     );
   }
 }

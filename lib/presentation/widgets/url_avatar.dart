@@ -15,7 +15,6 @@ class UrlAvatar extends StatelessWidget {
     this.useCircle = true,
   });
 
-
   @override
   Widget build(BuildContext context) {
     if (photoUrl == null || photoUrl!.isEmpty) {
@@ -31,14 +30,13 @@ class UrlAvatar extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: Colors.white10,
+          color: AppColors.white.withValues(alpha: 0.1),
           shape: useCircle ? BoxShape.circle : BoxShape.rectangle,
           borderRadius: useCircle ? null : BorderRadius.circular(20),
         ),
       ),
       errorWidget: (context, url, error) => _buildErrorPlaceholder(),
     );
-
 
     if (!useCircle) {
       return SizedBox(width: size, height: size, child: image);

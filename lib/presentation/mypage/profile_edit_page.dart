@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_route.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
@@ -39,7 +41,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     if (user == null) return const Scaffold();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -51,7 +53,10 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
             }
           },
         ),
-        title: const Text('프로필 수정'),
+        title: const Text(
+          '프로필 수정',
+          style: AppTextStyles.title,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -67,12 +72,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     width: 160,
                     height: 160,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F7ED),
+                      color: AppColors.primary50,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
+                      border: Border.all(color: AppColors.white, width: 4),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: AppColors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -95,13 +100,13 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF999999),
+                          color: AppColors.gray400,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: AppColors.white, width: 2),
                         ),
                         child: const Icon(
                           Icons.edit,
-                          color: Colors.white,
+                          color: AppColors.white,
                           size: 20,
                         ),
                       ),
@@ -112,14 +117,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
             ),
             const SizedBox(height: 48),
             // Nickname Label
-            const Text(
-              '닉네임',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
-              ),
-            ),
+            const Text('닉네임', style: AppTextStyles.subTitleL),
             const SizedBox(height: 12),
             // Nickname Input
             TextField(
@@ -128,18 +126,20 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                 hintText: '닉네임을 입력하세요',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Color(0xFFEEEEEE)),
+                  borderSide: BorderSide(color: AppColors.gray100),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Color(0xFFEEEEEE)),
+                  borderSide: BorderSide(color: AppColors.gray100),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Color(0xFF4CAF50)),
+                  borderSide: BorderSide(color: AppColors.primary700),
                 ),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
           ],
@@ -151,21 +151,15 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
           child: ElevatedButton(
             onPressed: _saveProfile,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary700,
+              foregroundColor: AppColors.white,
               minimumSize: const Size(double.infinity, 54),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 0,
             ),
-            child: const Text(
-              '저장하기',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: const Text('저장하기', style: AppTextStyles.subTitleL),
           ),
         ),
       ),

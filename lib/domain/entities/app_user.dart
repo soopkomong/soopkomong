@@ -7,7 +7,7 @@ class AppUser {
   final String? photoUrl;
 
   final String? providerId; // 로그인 제공자 ID (google.com, apple.com, oidc.kakao 등)
-  
+
   // 만보기 관련 필드
   final int totalSteps; // 현재 총 걸음 수
   final DateTime? lastStepUpdateAt; // 마지막으로 업데이트 된 시각

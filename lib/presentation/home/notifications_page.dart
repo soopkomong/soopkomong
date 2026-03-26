@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
@@ -24,11 +25,7 @@ class NotificationsPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           isEn ? 'Notifications' : '알림',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
+          style: AppTextStyles.title.copyWith(letterSpacing: -0.5),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -49,10 +46,7 @@ class NotificationsPage extends ConsumerWidget {
               child: Center(
                 child: Text(
                   isEn ? 'No more notifications.' : '더 이상의 알림이 없습니다.',
-                  style: const TextStyle(
-                    color: AppColors.gray400,
-                    fontSize: 14,
-                  ),
+                  style: AppTextStyles.body.copyWith(color: AppColors.gray400),
                 ),
               ),
             )
@@ -101,8 +95,8 @@ class NotificationsPage extends ConsumerWidget {
                         statusText: req.status == FriendRequestStatus.pending
                             ? null
                             : (req.status == FriendRequestStatus.accepted
-                                ? (isEn ? 'Accepted' : '수락됨')
-                                : (isEn ? 'Declined' : '거절됨')),
+                                  ? (isEn ? 'Accepted' : '수락됨')
+                                  : (isEn ? 'Declined' : '거절됨')),
                       ),
                     ),
                   );

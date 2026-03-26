@@ -199,11 +199,11 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
       return SizedBox(
         height: 300,
         child: Container(
-          color: Colors.grey[200],
+          color: AppColors.gray200,
           child: const Center(
             child: Icon(
               Icons.image_not_supported,
-              color: Colors.grey,
+              color: AppColors.gray500,
               size: 48,
             ),
           ),
@@ -234,7 +234,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
-                      color: Colors.grey[200],
+                      color: AppColors.gray100,
                       child: const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
@@ -242,11 +242,11 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                   },
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: Colors.grey[200],
+                      color: AppColors.gray100,
                       child: const Center(
                         child: Icon(
                           Icons.image_not_supported,
-                          color: Colors.grey,
+                          color: AppColors.gray500,
                         ),
                       ),
                     );
@@ -267,14 +267,13 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
+                  color: AppColors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   '${_currentImageIndex + 1}/${images.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -297,8 +296,8 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                     height: _currentImageIndex == index ? 10 : 8,
                     decoration: BoxDecoration(
                       color: _currentImageIndex == index
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.5),
+                          ? AppColors.white
+                          : AppColors.white.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -348,7 +347,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: ListView(
@@ -363,7 +362,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: AppColors.gray300,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -442,9 +441,8 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                   children: [
                                     Text(
                                       isEn ? 'Inquiry' : '문의',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey,
+                                      style: AppTextStyles.label.copyWith(
+                                        color: AppColors.gray500,
                                         height: 1.5,
                                       ),
                                     ),
@@ -460,13 +458,15 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                                     _showPhonePopup([t], isEn),
                                                 child: Text(
                                                   t,
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    height: 1.5,
-                                                    color: Colors.black87,
-                                                    decoration: TextDecoration
-                                                        .underline,
-                                                  ),
+                                                  style: AppTextStyles.label
+                                                      .copyWith(
+                                                        height: 1.5,
+                                                        color:
+                                                            AppColors.gray900,
+                                                        decoration:
+                                                            TextDecoration
+                                                                .underline,
+                                                      ),
                                                 ),
                                               ),
                                             )
@@ -484,8 +484,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                   widget.information
                                       .replaceAll('<br>', '\n')
                                       .replaceAll('<br/>', '\n'),
-                                  style: const TextStyle(
-                                    fontSize: 13,
+                                  style: AppTextStyles.label.copyWith(
                                     height: 1.5,
                                   ),
                                 ),
@@ -528,9 +527,8 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                       isEn
                                           ? 'No characters available.'
                                           : '얻을 수 있는 숲코몽이 없습니다.',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey,
+                                      style: AppTextStyles.label.copyWith(
+                                        color: AppColors.gray500,
                                       ),
                                     ),
                                   ]
@@ -557,7 +555,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         fit: BoxFit.contain,
                                         color: isAcquired
                                             ? null
-                                            : Colors.black.withValues(
+                                            : AppColors.black.withValues(
                                                 alpha: 0.7,
                                               ),
                                         colorBlendMode: isAcquired
@@ -575,7 +573,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         width: 56,
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFEDEDED),
+                                          color: AppColors.gray100,
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
@@ -604,7 +602,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                   width: double.infinity,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: AppShadows.card,
                   ),
@@ -619,7 +617,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                           height: 199.33,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            color: Colors.grey[200],
+                            color: AppColors.gray100,
                           ),
                           clipBehavior: Clip.hardEdge,
                           child: Stack(
@@ -669,7 +667,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                               : 0.3,
                           child: Container(
                             width: double.infinity,
-                            color: Colors.transparent, // 터치 영역 확장
+                            color: AppColors.transparent, // 터치 영역 확장
                             padding: const EdgeInsets.only(
                               left: 16,
                               right: 16,
@@ -796,7 +794,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
     Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder(
         opaque: false,
-        barrierColor: Colors.black87,
+        barrierColor: AppColors.black.withValues(alpha: 0.87),
         pageBuilder: (context, animation, secondaryAnimation) {
           return _FullScreenImageViewer(
             images: images,
@@ -845,13 +843,13 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       body: Stack(
         children: [
           // 배경 탭하면 닫기
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
-            child: Container(color: Colors.transparent),
+            child: Container(color: AppColors.transparent),
           ),
 
           // 이미지 페이지뷰 (핀치 줌 지원)
@@ -876,18 +874,18 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
-                        return const Center(
+                        return Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.white,
                           ),
                         );
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        return const Center(
+                        return Center(
                           child: Icon(
                             Icons.image_not_supported,
-                            color: Colors.white54,
+                            color: AppColors.white.withValues(alpha: 0.54),
                             size: 64,
                           ),
                         );
@@ -908,10 +906,14 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: AppColors.black.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.close, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.close,
+                  color: AppColors.white,
+                  size: 24,
+                ),
               ),
             ),
           ),
@@ -927,14 +929,13 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: AppColors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   '${_currentIndex + 1}/${widget.images.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

@@ -27,10 +27,13 @@ class AuthRepositoryImpl implements AuthRepository {
       });
 
   @override
-  Stream<AppUser?> get userStream => _firebaseAuth.authStateChanges().asyncMap((user) async {
+  Stream<AppUser?> get userStream => _firebaseAuth
+      .authStateChanges()
+      .asyncMap((user) async {
         if (user == null) return null;
         return user;
-      }).asyncExpand((user) {
+      })
+      .asyncExpand((user) {
         if (user == null) return Stream.value(null);
         return _firestore
             .collection('users')
@@ -43,20 +46,22 @@ class AuthRepositoryImpl implements AuthRepository {
   AppUser? get currentUser {
     final user = _firebaseAuth.currentUser;
     if (user == null) return null;
-    // 동기적으로 가져올 수 없는 Firestore 데이터는 일단 null로 처리하거나 
-    // 나중에 필요한 곳에서 별도로 가져와야 함. 
+    // 동기적으로 가져올 수 없는 Firestore 데이터는 일단 null로 처리하거나
+    // 나중에 필요한 곳에서 별도로 가져와야 함.
     // 여기서는 기본 정보를 매핑.
     return _mapFirebaseUser(user, null);
   }
 
   AppUser? _mapFirebaseUser(User? user, DocumentSnapshot? doc) {
     if (user == null) return null;
-    
+
     Map<String, dynamic>? data = doc?.data() as Map<String, dynamic>?;
-    
+
     // 탈퇴한 유저인 경우 null 반환
     if (data?['isDeleted'] == true) {
-      log('User ${user.uid} is marked as deleted in Firestore. Returning null.');
+      log(
+        'User ${user.uid} is marked as deleted in Firestore. Returning null.',
+      );
       return null;
     }
 
@@ -80,7 +85,9 @@ class AuthRepositoryImpl implements AuthRepository {
           : null,
       wasReentry: data?['wasReentry'] ?? false,
       friends: List<String>.from(data?['friends'] ?? []),
-      providerId: user.providerData.isNotEmpty ? user.providerData[0].providerId : null,
+      providerId: user.providerData.isNotEmpty
+          ? user.providerData[0].providerId
+          : null,
     );
   }
 
@@ -92,11 +99,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final userRef = _firestore.collection('users').doc(user.uid);
     final userDoc = await userRef.get();
-    
+
     if (!userDoc.exists) {
       // 신규 유저 초기 데이터
       final String newCode = await _generateUniqueUserCode();
-      
+
       String? fcmToken;
       try {
         fcmToken = await FcmService.getToken();
@@ -126,10 +133,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final Map<String, dynamic> updates = {
         'lastLoginAt': FieldValue.serverTimestamp(),
         'isDeleted': false, // 로그인 시 탈퇴 대기 상태 해제
-        'deletedAt': null,   // 탈퇴 일시 초기화
+        'deletedAt': null, // 탈퇴 일시 초기화
         'wasReentry': previouslyDeleted, // 탈퇴 상태였다면 재진입 플래그 설정
       };
-      
+
       try {
         final token = await FcmService.getToken();
         if (token != null) {
@@ -148,7 +155,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String> _generateUniqueUserCode() async {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 헷갈리기 쉬운 I, O, 0, 1 제외
     final random = DateTime.now().microsecondsSinceEpoch;
-    
+
     while (true) {
       // 6~8자리 랜덤 코드 생성 (단순화를 위해 일단 8자리로 고정하거나 가변적 구현)
       final String code = List.generate(8, (index) {
@@ -183,10 +190,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
       // 3. 액세스 토큰 가져오기 (추가 팝업을 차단하기 위해 무인 방식 호출)
       // authorizationForScopes는 promptIfUnauthorized를 false로 설정하여 추가 팝업을 띄우지 않습니다.
-      final authz = await googleUser.authorizationClient.authorizationForScopes([
-        'email',
-        'profile',
-      ]);
+      final authz = await googleUser.authorizationClient.authorizationForScopes(
+        ['email', 'profile'],
+      );
 
       // 4. Firebase Credential 생성
       final AuthCredential credential = GoogleAuthProvider.credential(
@@ -320,8 +326,8 @@ class AuthRepositoryImpl implements AuthRepository {
       'deletedAt': FieldValue.serverTimestamp(),
     });
 
-    // 로그아웃 처리 (실제 Auth 계정 삭제는 14일 후 백엔드에서 처리하거나, 
-    // 즉시 삭제를 원할 경우 user.delete() 호출 가능. 
+    // 로그아웃 처리 (실제 Auth 계정 삭제는 14일 후 백엔드에서 처리하거나,
+    // 즉시 삭제를 원할 경우 user.delete() 호출 가능.
     // 여기서는 14일 보존을 위해 로그아웃만 진행)
     await signOut();
   }

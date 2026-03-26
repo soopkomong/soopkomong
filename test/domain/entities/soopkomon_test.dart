@@ -7,7 +7,7 @@ import 'package:soopkomong/domain/entities/soopkomon.dart';
 void main() {
   group('Soopkomon Entity Tests', () {
     final now = DateTime.now();
-    
+
     test('traveledSteps should calculate correctly', () {
       final pet = Soopkomon(
         instanceId: '1',
@@ -39,10 +39,7 @@ void main() {
         isHatched: false,
       );
 
-      final hatchedPet = pet.copyWith(
-        isHatched: true,
-        currentTotalSteps: 6000,
-      );
+      final hatchedPet = pet.copyWith(isHatched: true, currentTotalSteps: 6000);
 
       expect(hatchedPet.isHatched, true);
       expect(hatchedPet.currentTotalSteps, 6000);

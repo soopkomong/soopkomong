@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'url_avatar.dart';
 import 'character_parts_avatar.dart';
 
@@ -28,20 +29,12 @@ class CharacterAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     // 1. forceUrl이 true이고 photoUrl이 있는 경우 우선 표시
     if (forceUrl && photoUrl != null && photoUrl!.isNotEmpty) {
-      return UrlAvatar(
-        photoUrl: photoUrl!,
-        size: size,
-        useCircle: useCircle,
-      );
+      return UrlAvatar(photoUrl: photoUrl!, size: size, useCircle: useCircle);
     }
 
     // 2. 캐릭터 설정이 없고 URL이 있는 경우 UrlAvatar 반환 (전이 단계 지원)
     if (characterSettings == null && photoUrl != null && photoUrl!.isNotEmpty) {
-      return UrlAvatar(
-        photoUrl: photoUrl!,
-        size: size,
-        useCircle: useCircle,
-      );
+      return UrlAvatar(photoUrl: photoUrl!, size: size, useCircle: useCircle);
     }
 
     // 3. 캐릭터 설정이 있는 경우
@@ -57,19 +50,13 @@ class CharacterAvatar extends StatelessWidget {
           return ClipOval(
             child: Transform.translate(
               offset: Offset(0, size * 0.40),
-              child: Transform.scale(
-                scale: 1.8,
-                child: avatar,
-              ),
+              child: Transform.scale(scale: 1.8, child: avatar),
             ),
           );
         } else {
           return Transform.translate(
             offset: Offset(0, size * 0.40),
-            child: Transform.scale(
-              scale: 1.8,
-              child: avatar,
-            ),
+            child: Transform.scale(scale: 1.8, child: avatar),
           );
         }
       }
@@ -103,7 +90,7 @@ class CharacterAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         shape: useCircle ? BoxShape.circle : BoxShape.rectangle,
         borderRadius: useCircle ? null : BorderRadius.circular(20),
       ),

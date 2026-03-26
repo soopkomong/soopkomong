@@ -68,7 +68,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 child: Container(
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEEEEE),
+                    color: AppColors.gray200,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: TextField(
@@ -80,16 +80,15 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     },
                     decoration: InputDecoration(
                       hintText: isEn ? 'Search parks...' : '검색어를 입력해주세요',
-                      hintStyle: const TextStyle(
-                        color: Color(0xFFAAAAAA),
-                        fontSize: 14,
+                      hintStyle: AppTextStyles.label.copyWith(
+                        color: AppColors.gray500,
                         height: 1.2,
                       ),
                       prefixIcon: const Padding(
                         padding: EdgeInsets.only(left: 20, right: 8),
                         child: Icon(
                           Icons.search,
-                          color: Color(0xFFAAAAAA),
+                          color: AppColors.gray500,
                           size: 22,
                         ),
                       ),
@@ -109,7 +108,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
               const SizedBox(height: 16),
               // 공원 리스트
               filteredAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary700),
+                ),
                 error: (err, stack) => Center(
                   child: Text(isEn ? 'An error occurred: $err' : '에러 발생: $err'),
                 ),
@@ -131,9 +132,8 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                       child: Center(
                         child: Text(
                           isEn ? 'No parks found.' : '해당하는 공원이 없습니다.',
-                          style: const TextStyle(
-                            color: Color(0xFF999999),
-                            fontSize: 14,
+                          style: AppTextStyles.label.copyWith(
+                            color: AppColors.gray500,
                           ),
                         ),
                       ),
@@ -159,7 +159,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                             context: context,
                             useRootNavigator: true,
                             isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
+                            backgroundColor: AppColors.transparent,
                             builder: (context) => ParkDetailSheet(
                               id: location.id.toString(),
                               name: location.name,

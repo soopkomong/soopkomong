@@ -1,7 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class AppBarIcon extends StatelessWidget {
   final String svgPath;
@@ -22,7 +22,7 @@ class AppBarIcon extends StatelessWidget {
       height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.6),
+        color: AppColors.white.withValues(alpha: 0.6),
         border: Border.all(color: AppColors.gray200, width: 1),
       ),
       child: ClipOval(
@@ -50,11 +50,11 @@ class AppBarIcon extends StatelessWidget {
                   right: -2,
                   top: -2,
                   child: Badge(
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
+                    backgroundColor: AppColors.error,
+                    textColor: AppColors.white,
                     label: Text(
                       '$badgeCount',
-                      style: const TextStyle(
+                      style: AppTextStyles.label.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
                       ),

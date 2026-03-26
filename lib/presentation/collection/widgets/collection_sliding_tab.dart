@@ -16,7 +16,8 @@ class CollectionSlidingTab extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CollectionSlidingTab> createState() => _CollectionSlidingTabState();
+  ConsumerState<CollectionSlidingTab> createState() =>
+      _CollectionSlidingTabState();
 }
 
 class _CollectionSlidingTabState extends ConsumerState<CollectionSlidingTab> {
@@ -73,10 +74,12 @@ class _CollectionSlidingTabState extends ConsumerState<CollectionSlidingTab> {
             },
           ),
           // 탭 버튼들
-          Row(children: [
-            _buildTab(0, isEn ? 'Parks' : '생태공원'),
-            _buildTab(1, isEn ? 'Soopkomong' : '숲코몽'),
-          ]),
+          Row(
+            children: [
+              _buildTab(0, isEn ? 'Parks' : '생태공원'),
+              _buildTab(1, isEn ? 'Soopkomong' : '숲코몽'),
+            ],
+          ),
         ],
       ),
     );
@@ -96,7 +99,7 @@ class _CollectionSlidingTabState extends ConsumerState<CollectionSlidingTab> {
           }
         },
         child: Container(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           alignment: Alignment.center,
           child: Text(
             title,

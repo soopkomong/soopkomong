@@ -46,7 +46,9 @@ class SoopkomonImage extends StatelessWidget {
         ),
         imageBuilder: (context, imageProvider) {
           if (onLoaded != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => onLoaded?.call(),
+            );
           }
           return Image(
             image: imageProvider,
@@ -59,7 +61,9 @@ class SoopkomonImage extends StatelessWidget {
         },
         errorWidget: (context, url, error) {
           if (onLoaded != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => onLoaded?.call(),
+            );
           }
           return errorWidget ??
               Image.asset(
@@ -84,7 +88,9 @@ class SoopkomonImage extends StatelessWidget {
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         if (wasSynchronouslyLoaded || frame != null) {
           if (onLoaded != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => onLoaded?.call());
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => onLoaded?.call(),
+            );
           }
         }
         return child;

@@ -28,9 +28,7 @@ class AuthErrorHandler {
       case 'wrong-password':
         return isEn ? 'Incorrect password' : '비밀번호가 틀렸습니다.';
       case 'email-already-in-use':
-        return isEn
-            ? 'This email is already in use'
-            : '이미 사용 중인 이메일입니다.';
+        return isEn ? 'This email is already in use' : '이미 사용 중인 이메일입니다.';
       case 'invalid-email':
         return isEn ? 'Invalid email format' : '유효하지 않은 이메일 형식입니다.';
       case 'operation-not-allowed':

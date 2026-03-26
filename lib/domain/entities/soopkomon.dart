@@ -94,11 +94,7 @@ class Soopkomon {
   }
 
   /// 상태 업데이트를 위한 copyWith
-  Soopkomon copyWith({
-    String? name,
-    int? currentTotalSteps,
-    bool? isHatched,
-  }) {
+  Soopkomon copyWith({String? name, int? currentTotalSteps, bool? isHatched}) {
     return Soopkomon(
       instanceId: instanceId,
       templateId: templateId,

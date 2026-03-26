@@ -3,7 +3,6 @@ import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
-
 enum NotificationType { friendRequest, notice, eggObtained, eggHatched }
 
 class NotificationTile extends StatelessWidget {
@@ -96,7 +95,7 @@ class NotificationTile extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 date,
-                style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+                style: AppTextStyles.label.copyWith(color: AppColors.gray400),
               ),
             ),
           ],
@@ -179,7 +178,7 @@ class NotificationTile extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          style: AppTextStyles.label.copyWith(fontWeight: FontWeight.bold),
         ),
       ),
     );

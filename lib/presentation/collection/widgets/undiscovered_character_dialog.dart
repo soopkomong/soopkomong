@@ -26,7 +26,7 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
   }) {
     return showDialog(
       context: context,
-      barrierColor: Colors.black54,
+      barrierColor: AppColors.black.withValues(alpha: 0.54),
       builder: (context) => UndiscoveredCharacterDialog(
         template: template,
         availableParks: availableParks,
@@ -40,7 +40,7 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
     final isEn = locale == AppLocale.en;
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 40),
       child: Padding(
@@ -53,7 +53,11 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
               alignment: Alignment.topRight,
               child: GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.close, size: 24, color: Colors.black54),
+                child: Icon(
+                  Icons.close,
+                  size: 24,
+                  color: AppColors.black.withValues(alpha: 0.54),
+                ),
               ),
             ),
 
@@ -67,7 +71,7 @@ class UndiscoveredCharacterDialog extends ConsumerWidget {
                 assetPath: template.actualImagePath,
                 remoteUrl: template.remoteImagePath,
                 fit: BoxFit.contain,
-                color: Colors.black.withValues(alpha: 0.7),
+                color: AppColors.black.withValues(alpha: 0.7),
                 colorBlendMode: BlendMode.srcIn,
                 errorWidget: Image.asset(
                   'assets/images/character_silhouette.png',

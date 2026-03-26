@@ -17,10 +17,10 @@ import 'core/router/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   debugPrint("DEBUG: Application main() started.");
-  
+
   // SharedPreferences 초기화
   final prefs = await SharedPreferences.getInstance();
-  
+
   debugPrint("DEBUG: [main] Workmanager initialization starting...");
   // Workmanager 초기화
   try {
@@ -32,18 +32,18 @@ void main() async {
   } catch (e) {
     debugPrint("DEBUG: [main] Workmanager initialization failed: $e");
   }
-  
+
   // 주기적인 백그라운드 작업 등록 (Android 전용, 15분 간격)
   if (Platform.isAndroid) {
-    debugPrint("DEBUG: [main] Android platform detected, registering periodic task...");
+    debugPrint(
+      "DEBUG: [main] Android platform detected, registering periodic task...",
+    );
     try {
       await Workmanager().registerPeriodicTask(
         "hatchingTask",
         "checkHatching",
         frequency: const Duration(minutes: 15),
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ),
+        constraints: Constraints(networkType: NetworkType.connected),
       );
       debugPrint("DEBUG: [main] Periodic task registered successfully.");
     } catch (e) {
@@ -52,17 +52,15 @@ void main() async {
   }
 
   final container = ProviderContainer(
-    overrides: [
-      sharedPreferencesProvider.overrideWithValue(prefs),
-    ],
+    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
   );
-  
+
   // AppInitializer 초기화 (Firebase, Dotenv 등)
   await AppInitializer.init();
-  
+
   // Google Sign In 초기화
   await GoogleSignIn.instance.initialize();
-  
+
   // 언어 설정 초기화
   await container.read(localeProvider.notifier).init();
 
@@ -79,9 +77,6 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      theme: AppTheme.light,
-      routerConfig: router,
-    );
+    return MaterialApp.router(theme: AppTheme.light, routerConfig: router);
   }
 }

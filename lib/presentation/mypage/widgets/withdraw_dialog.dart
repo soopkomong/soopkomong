@@ -35,7 +35,7 @@ class WithdrawDialog extends ConsumerWidget {
         ),
         TextButton(
           onPressed: () => _handleWithdrawFlow(context, ref, isEn),
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          style: TextButton.styleFrom(foregroundColor: AppColors.error),
           child: Text(isEn ? 'Confirm' : '확인'),
         ),
       ],
@@ -65,7 +65,9 @@ class WithdrawDialog extends ConsumerWidget {
         context: context,
         barrierDismissible: false,
         useRootNavigator: true,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary700),
+        ),
       );
 
       try {
@@ -91,9 +93,9 @@ class WithdrawDialog extends ConsumerWidget {
         if (context.mounted) {
           // 에러 발생 시 로딩 팝업 제거
           Navigator.of(context, rootNavigator: true).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Withdrawal failed: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Withdrawal failed: $e')));
         }
       }
     }
@@ -136,9 +138,9 @@ class _ReAuthDialog extends ConsumerWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
                     }
                   }
                 },
@@ -159,9 +161,9 @@ class _ReAuthDialog extends ConsumerWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
                     }
                   }
                 },
@@ -182,9 +184,9 @@ class _ReAuthDialog extends ConsumerWidget {
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
                     }
                   }
                 },

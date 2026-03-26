@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/utils/map_helper.dart';
 import 'package:soopkomong/core/utils/turf_helper.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
@@ -176,7 +177,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         final circleCoordinates = createCircleCoordinates(center, loc.radius);
 
         final bool isNight = _isNight();
-        final Color polygonColor = isNight ? Colors.pinkAccent : Colors.blue;
+        final Color polygonColor = isNight
+            ? AppColors.error
+            : AppColors.primary500;
         final double fillOpacity = isNight ? 0.3 : 0.2;
 
         polygonOptions.add(
@@ -346,7 +349,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -521,9 +524,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           const SizedBox(width: 12),
         ],
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: AppColors.black,
       ),
       body: Stack(
         children: [
@@ -547,7 +550,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
           ),
-
         ],
       ),
       // floatingActionButton: FloatingActionButton(

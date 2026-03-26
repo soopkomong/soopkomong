@@ -17,13 +17,24 @@ class AppColors {
   static const Color yellow = Color(0xFFFDE35D);
   static const Color orange = Color(0xFFFD8224);
   static const Color lightGreen = Color(0xFFCEF17B);
-  static const Color secondaryGreen = Color(0xFF228B22); // 기존 Green과 구분
+  static const Color secondaryGreen = Color(0xFF228B22);
   static const Color error = Color(0xFFFF4B4B);
 
   // Black & White & Grayscale
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color background = Color(0xFFFAFAFA); // fafafa 추가
+  static const Color background = Color(0xFFFAFAFA);
+  static const Color transparent = Colors.transparent;
+
+  // Basic Palette
+  static const Color red = Color(0xFFFF4B4B);
+  static const Color blue = Color(0xFF2196F3);
+  static const Color green = Color(0xFF4CAF50);
+  static const Color brown = Color(0xFF795548);
+  static const Color purple = Color(0xFF9C27B0);
+  static const Color lightBlue = Color(0xFF03A9F4);
+  static const Color grey = Color(0xFF9E9E9E);
+
   static const Color gray50 = Color(0xFFF2F2F2);
   static const Color gray100 = Color(0xFFE6E6E6);
   static const Color gray200 = Color(0xFFCCCCCC);

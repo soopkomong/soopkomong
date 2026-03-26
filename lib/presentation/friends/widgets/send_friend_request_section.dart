@@ -118,13 +118,15 @@ class _SendFriendRequestSectionState
                     hintText: isEn ? 'Enter friend ID' : '친구 ID를 입력해주세요',
                     hintStyle: AppTextStyles.body,
                     filled: true,
-                    fillColor: Colors.transparent,
+                    fillColor: AppColors.transparent,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  style: const TextStyle(fontSize: 16, color: AppColors.black),
+                  style: AppTextStyles.subTitleL.copyWith(
+                    color: AppColors.black,
+                  ),
                 ),
               ),
               if (_idController.text.isNotEmpty)

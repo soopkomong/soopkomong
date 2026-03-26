@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 
 class FriendListItem extends ConsumerWidget {
@@ -33,9 +33,7 @@ class FriendListItem extends ConsumerWidget {
                 children: [
                   Text(
                     friend.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    style: AppTextStyles.subTitleL.copyWith(
                       color: AppColors.black,
                     ),
                   ),
@@ -69,8 +67,7 @@ class FriendListItem extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Text(
                             '$visitedCount/$leafMax',
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: AppTextStyles.label.copyWith(
                               color: AppColors.gray600,
                             ),
                           ),
@@ -83,8 +80,7 @@ class FriendListItem extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Text(
                             '$collectedCount/$pawMax',
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: AppTextStyles.label.copyWith(
                               color: AppColors.gray600,
                             ),
                           ),
@@ -92,9 +88,11 @@ class FriendListItem extends ConsumerWidget {
                       );
                     },
                     loading: () => const SizedBox(height: 14),
-                    error: (err, stack) => const Text(
+                    error: (err, stack) => Text(
                       '데이터 로드 실패',
-                      style: TextStyle(fontSize: 10, color: Colors.red),
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.error,
+                      ),
                     ),
                   ),
                 ],

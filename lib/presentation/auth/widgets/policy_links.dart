@@ -58,7 +58,7 @@ class PolicyLinks extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -80,7 +80,7 @@ class PolicyLinks extends ConsumerWidget {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE0E0E0),
+                        color: AppColors.gray200,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -89,14 +89,12 @@ class PolicyLinks extends ConsumerWidget {
                   // 제목
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1A1A),
+                    style: AppTextStyles.headline.copyWith(
+                      color: AppColors.gray900,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Divider(color: Color(0xFFEEEEEE)),
+                  const Divider(color: AppColors.gray100),
                   const SizedBox(height: 16),
                   // 내용
                   Expanded(
@@ -104,9 +102,8 @@ class PolicyLinks extends ConsumerWidget {
                       controller: scrollController,
                       child: Text(
                         content,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF666666),
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.gray600,
                           height: 1.6,
                         ),
                       ),

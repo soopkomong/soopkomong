@@ -16,7 +16,7 @@ class OnboardingNotifier extends Notifier<bool> {
     await prefs.setBool(_key, true);
     state = true;
   }
-  
+
   /// 테스트 등을 위해 상태를 리셋하는 기능 (선택 사항)
   Future<void> resetOnboarding() async {
     final prefs = ref.read(sharedPreferencesProvider);

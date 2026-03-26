@@ -55,11 +55,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authStateChangesProvider);
       final userAsync = ref.read(userProvider);
-      
+
       final hasSeenOnboarding = ref.read(onboardingProvider);
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
       final isOnboarding = state.matchedLocation == AppRoute.onboarding.path;
-      final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
+      final isCustomizing =
+          state.matchedLocation == AppRoute.characterCustomize.path;
 
       // 1. Firebase Auth 수준에서 로그아웃임이 명확한 경우
       if (authState.hasValue && authState.value == null) {

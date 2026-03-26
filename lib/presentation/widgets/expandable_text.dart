@@ -82,10 +82,9 @@ class _ExpandableTextState extends ConsumerState<ExpandableText>
                           : (ref.watch(localeProvider) == AppLocale.en
                                 ? 'Read more'
                                 : '더보기'),
-                      style: const TextStyle(
-                        fontSize: 13,
+                      style: AppTextStyles.label.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey,
+                        color: AppColors.gray500,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -94,7 +93,7 @@ class _ExpandableTextState extends ConsumerState<ExpandableText>
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       size: 18,
-                      color: Colors.grey,
+                      color: AppColors.gray500,
                     ),
                   ],
                 ),
