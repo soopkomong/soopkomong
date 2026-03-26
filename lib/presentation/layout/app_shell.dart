@@ -73,9 +73,12 @@ class _MainPageState extends ConsumerState<MainPage> {
           children: [
             widget.navigationShell,
             SafeArea(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: AppBottomNavigationBar(navigationShell: widget.navigationShell),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: AppBottomNavigationBar(navigationShell: widget.navigationShell),
+                ),
               ),
             ),
           ],

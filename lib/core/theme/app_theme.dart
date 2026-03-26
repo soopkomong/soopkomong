@@ -63,6 +63,20 @@ class AppTheme {
         selectionColor: AppColors.primary100,
         selectionHandleColor: AppColors.gray500,
       ),
+
+      // 스낵바 전역 테마
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        elevation: 6,
+        backgroundColor: AppColors.gray800.withOpacity(0.9),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentTextStyle: AppTextStyles.body.copyWith(
+          color: Colors.white,
+          fontSize: 14,
+        ),
+      ),
     );
   }
 }

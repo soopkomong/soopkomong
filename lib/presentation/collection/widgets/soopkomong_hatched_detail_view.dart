@@ -76,7 +76,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
                 child: _buildStatCard(
                   isEn ? 'Type' : '속성',
                   isEn ? template.eggType.labelEn : template.eggType.label,
-                  template.eggType.color,
+                  template.eggType.iconPath,
                 ),
               ),
               const SizedBox(width: 12),
@@ -177,7 +177,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color? dotColor) {
+  Widget _buildStatCard(String label, String value, String? iconPath) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
@@ -195,14 +195,11 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (dotColor != null) ...[
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                  ),
+              if (iconPath != null) ...[
+                SvgPicture.asset(
+                  iconPath,
+                  width: 16,
+                  height: 16,
                 ),
                 const SizedBox(width: 6),
               ],

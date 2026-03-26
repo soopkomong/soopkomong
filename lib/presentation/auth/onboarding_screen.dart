@@ -23,19 +23,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       title: '공원에 가야 숲코몽 알을 발견할 수 있어요',
       description: '생태공원에 도착하는 순간,\n숲코몽 알이 기다리고 있어요!',
       imagePath: 'assets/images/onboarding/01.png',
-      backgroundColor: AppColors.primary100,
     ),
     OnboardingItem(
       title: '함께 걸으면 숲코몽이 태어나요',
       description: '알을 품고 일정 걸음 이상 걸으면\n숲코몽이 깨어나요!',
       imagePath: 'assets/images/onboarding/02.png',
-      backgroundColor: AppColors.primary100,
     ),
     OnboardingItem(
       title: '내가 가본 공원도 숲코몽도 모두 기록돼요',
       description: '도감에서 나만의 탐험 기록을 확인해요!',
       imagePath: 'assets/images/onboarding/03.png',
-      backgroundColor: AppColors.primary100,
     ),
   ];
 
@@ -49,7 +46,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     bool isLastPage = _currentPage == _items.length - 1;
 
-    // 강제로 상태바 아이콘을 어둡게 설정 (iOS/Android 공통)
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -66,102 +62,90 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            // 상단 캐릭터 영역 (배경색 포함)
-            Expanded(
-              flex: 5,
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPage = index;
-                  });
-                },
-                itemCount: _items.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    color: _items[index].backgroundColor,
-                    child: Column(
+        body: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              // 상단 페이지 인디케이터
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _items.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _currentPage == index
+                          ? AppColors.gray500
+                          : AppColors.gray200,
+                    ),
+                  ),
+                ),
+              ),
+
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPage = index;
+                    });
+                  },
+                  itemCount: _items.length,
+                  itemBuilder: (context, index) {
+                    return Column(
                       children: [
-                        const SizedBox(height: 100),
-                        Expanded(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40.0,
-                              ),
-                              child: Image.asset(
-                                _items[index].imagePath,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.image,
-                                    size: 100,
-                                    color: Colors.grey,
-                                  );
-                                },
-                              ),
+                        const SizedBox(height: 48),
+                        // 타이틀
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                          child: Text(
+                            _items[index].title,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.subTitleL.copyWith(
+                              color: AppColors.gray900,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            // 하단 텍스트 및 조작 영역
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 48),
-                    Text(
-                      _items[_currentPage].title,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.subTitleL.copyWith(
-                        color: AppColors.gray900,
-                        fontWeight: FontWeight.w800,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _items[_currentPage].description,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.gray500,
-                        height: 1.5,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const Spacer(),
-
-                    // 페이지 인디케이터
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        _items.length,
-                        (index) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _currentPage == index
-                                ? AppColors.gray600
-                                : AppColors.gray200,
+                        const SizedBox(height: 12),
+                        // 설명
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                          child: Text(
+                            _items[index].description,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.body,
                           ),
                         ),
-                      ),
-                    ),
+                        //Spacer를 활용해 이미지를 최대한 버튼 쪽으로 밀되, 오버플로우 방지
+                        const Spacer(),
+                        // 메인 이미지 영역
+                        Expanded(
+                          flex: 12,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                            ),
+                            child: Image.asset(
+                              _items[index].imagePath,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    );
+                  },
+                ),
+              ),
 
-                    const SizedBox(height: 32), // 인디케이터와 버튼 사이 고정 간격
-                    // 버튼
+              // 하단 버튼 영역 (바닥으로 최대한 밀착)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Column(
+                  children: [
                     SizedBox(
                       width: double.infinity,
                       height: 56,
@@ -172,21 +156,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 .read(onboardingProvider.notifier)
                                 .completeOnboarding();
                             if (mounted) {
-                              context.go(AppRoute.home.path);
+                              context.go(AppRoute.signIn.path);
                             }
                           } else {
                             _pageController.nextPage(
-                              duration: const Duration(
-                                milliseconds: 350,
-                              ), // 애니메이션 속도 약간 조절
-                              curve: Curves.easeOutCubic, // 더 부드러운 곡선
+                              duration: const Duration(milliseconds: 350),
+                              curve: Curves.easeOutCubic,
                             );
                           }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary700,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           elevation: 0,
                         ),
@@ -198,9 +180,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
+                    const SizedBox(height: 14),
                     // 로그인 링크
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -217,20 +197,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           },
                           child: Text(
                             '로그인하세요',
-                            style: AppTextStyles.body.copyWith(
+                            style: AppTextStyles.subTitleM.copyWith(
                               color: AppColors.primary700,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 48), // 하단바 영역 확보를 위한 넉넉한 여백
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -241,12 +220,10 @@ class OnboardingItem {
   final String title;
   final String description;
   final String imagePath;
-  final Color backgroundColor;
 
   const OnboardingItem({
     required this.title,
     required this.description,
     required this.imagePath,
-    required this.backgroundColor,
   });
 }

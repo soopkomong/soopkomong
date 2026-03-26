@@ -18,6 +18,7 @@ import 'package:soopkomong/presentation/providers/character_parts_provider.dart'
 
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 // import 'package:soopkomong/domain/entities/soopkomon.dart'; // 튜토리얼 구현 시 활성화
 
 class CharacterCustomizePage extends ConsumerStatefulWidget {
@@ -141,10 +142,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
       // 2. 모든 이미지 URL 생성 및 프리캐시
       // 기본 몸체
-      final List<String> allAssetPaths = [
-        'body_base.png',
-        'body_shadow.png',
-      ];
+      final List<String> allAssetPaths = ['body_base.png', 'body_shadow.png'];
 
       // 머리카락 (각 ID별로 메인, 하이라이트, 그림자 포함)
       final List<String> hairs = parts['hairs'] ?? [];
@@ -201,7 +199,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       final hairs = parts['hairs'] ?? ['01'];
       final clothes = parts['clothes'] ?? ['01'];
       final shoes = parts['shoes'] ?? [];
-      
+
       _selectedHair = (hairs.toList()..shuffle()).first;
       _selectedClothes = (clothes.toList()..shuffle()).first;
       // 신발 리스트가 비어있지 않을 때만 랜덤 선택
@@ -262,15 +260,21 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       appBar: AppBar(
         backgroundColor: const Color(0xFFF5F5F5),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: context.canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+                onPressed: () => context.pop(),
+              )
+            : null,
         actions: [
           partsAsync.when(
             data: (parts) => TextButton.icon(
               onPressed: () => _randomizeCharacter(parts),
-              icon: const Icon(Icons.autorenew, size: 20, color: Colors.black87),
+              icon: const Icon(
+                Icons.autorenew,
+                size: 20,
+                color: Colors.black87,
+              ),
               label: Text(
                 isEn ? 'Random' : '랜덤 꾸미기',
                 style: const TextStyle(
@@ -326,16 +330,12 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
               bodyShadowImagePath: 'body_shadow.png',
               baseColor: _selectedSkinColor,
               hairImagePath: 'hair_$_selectedHair.png',
-              hairHighlightImagePath:
-                  'hair_${_selectedHair}_highlight.png',
-              hairShadowImagePath:
-                  'hair_${_selectedHair}_shadow.png',
-              hairSubShadowImagePath:
-                  'hair_${_selectedHair}_sub_shadow.png',
+              hairHighlightImagePath: 'hair_${_selectedHair}_highlight.png',
+              hairShadowImagePath: 'hair_${_selectedHair}_shadow.png',
+              hairSubShadowImagePath: 'hair_${_selectedHair}_sub_shadow.png',
               hairColor: _selectedHairColor,
               faceImagePath: 'face_$_selectedFace.png',
-              clothesImagePath:
-                  'clothes_$_selectedClothes.png',
+              clothesImagePath: 'clothes_$_selectedClothes.png',
               clothesColor: _selectedClothesColor,
               shoesImagePath: _selectedShoes != null
                   ? 'shoes_$_selectedShoes.png'
@@ -487,14 +487,19 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
   }
 
   /// 아이템 선택 그리드 (각 탭별로 팔레트와 그리드를 포함)
-  Widget _buildItemGrid(bool isEn, AsyncValue<Map<String, List<String>>> partsAsync) {
+  Widget _buildItemGrid(
+    bool isEn,
+    AsyncValue<Map<String, List<String>>> partsAsync,
+  ) {
     return partsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(child: Text('Error: $err')),
       data: (parts) {
         final hairs = parts['hairs'] ?? [];
         final faces = parts['faces'] ?? [];
-        final clothes = (parts['clothes'] ?? []).where((id) => id != '01').toList();
+        final clothes = (parts['clothes'] ?? [])
+            .where((id) => id != '01')
+            .toList();
         final shoes = parts['shoes'] ?? [];
 
         return Container(
@@ -548,7 +553,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
                             clothes,
                             _selectedClothes,
                             (id) {
-                              if (id != null) setState(() => _selectedClothes = id);
+                              if (id != null)
+                                setState(() => _selectedClothes = id);
                             },
                             allowDeselect: true,
                             deselectId: '01',
@@ -691,18 +697,18 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           mainAxisSpacing: 16,
         ),
         itemBuilder: (context, index) {
-        final itemId = items[index];
-        final isSelected = itemId == selectedId;
+          final itemId = items[index];
+          final isSelected = itemId == selectedId;
 
-        return GestureDetector(
-          onTap: () {
-            // 이미 선택된 아이템을 다시 터치하면 deselectId(기본값)로 원복
-            if (isSelected) {
-              onSelect(deselectId);
-            } else {
-              onSelect(itemId);
-            }
-          },
+          return GestureDetector(
+            onTap: () {
+              // 이미 선택된 아이템을 다시 터치하면 deselectId(기본값)로 원복
+              if (isSelected) {
+                onSelect(deselectId);
+              } else {
+                onSelect(itemId);
+              }
+            },
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFF5F5F5),
@@ -895,7 +901,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: _isSaving ? Colors.grey : const Color(0xFF4CAF50),
+                      color: _isSaving ? Colors.grey : AppColors.primary700,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
