@@ -51,8 +51,10 @@ class _AppBottomNavigationBarState
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          width: 357,
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 357),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.92,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
           decoration: ShapeDecoration(
             color: Colors.white,
@@ -114,7 +116,8 @@ class _AppBottomNavigationBarState
             }),
           ),
         ),
-      ],
+      ),
+    ],
     );
   }
 }

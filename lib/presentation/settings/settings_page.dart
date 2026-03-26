@@ -8,6 +8,7 @@ import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/version_provider.dart';
 import 'package:soopkomong/presentation/mypage/widgets/withdraw_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
 import 'widgets/setting_tile.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -140,16 +141,33 @@ class _BottomActions extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEn ? 'Log Out' : '로그아웃'),
-        content: Text(isEn ? 'Would you like to log out?' : '로그아웃 하시겠습니까?'),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          isEn ? 'Log Out' : '로그아웃',
+          style: AppTextStyles.subTitleL.copyWith(color: AppColors.gray900),
+        ),
+        content: Text(
+          isEn ? 'Would you like to log out?' : '로그아웃 하시겠습니까?',
+          style: AppTextStyles.body.copyWith(color: AppColors.gray600),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(isEn ? 'No' : '아니오'),
+            child: Text(
+              isEn ? 'No' : '아니오',
+              style: AppTextStyles.body.copyWith(color: AppColors.gray500),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(isEn ? 'Yes' : '예'),
+            child: Text(
+              isEn ? 'Yes' : '예',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.primary600,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),

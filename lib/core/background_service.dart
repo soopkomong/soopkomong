@@ -47,7 +47,7 @@ Future<void> _checkBackgroundHatching(String userId, int currentSteps) async {
   final snapshot = await firestore
       .collection('users')
       .doc(userId)
-      .collection('soopkomons')
+      .collection('acquired_soopkomons')
       .where('isHatched', isEqualTo: false)
       .get();
 

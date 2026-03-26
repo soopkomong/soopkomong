@@ -7,6 +7,7 @@ import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soopkomong/core/utils/auth_error_handler.dart';
 
 /// 로그인 버튼 위젯 (카카오, 구글, 애플)
 class LoginButtons extends ConsumerWidget {
@@ -155,10 +156,9 @@ class LoginButtons extends ConsumerWidget {
       await ref.read(authRepositoryProvider).signInWithGoogle();
     } catch (e) {
       if (context.mounted) {
+        final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEn ? 'Google login failed: $e' : '구글 로그인 실패: $e'),
-          ),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } finally {
@@ -174,10 +174,9 @@ class LoginButtons extends ConsumerWidget {
       await ref.read(authRepositoryProvider).signInWithKakao();
     } catch (e) {
       if (context.mounted) {
+        final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEn ? 'Kakao login failed: $e' : '카카오 로그인 실패: $e'),
-          ),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } finally {
@@ -193,10 +192,9 @@ class LoginButtons extends ConsumerWidget {
       await ref.read(authRepositoryProvider).signInWithApple();
     } catch (e) {
       if (context.mounted) {
+        final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEn ? 'Apple login failed: $e' : '애플 로그인 실패: $e'),
-          ),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } finally {

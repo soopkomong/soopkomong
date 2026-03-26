@@ -53,41 +53,49 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
     redirect: (context, state) {
-      // 1. Firebase Auth 상태 및 사용자 데이터 가져오기
       final authState = ref.read(authStateChangesProvider);
       final userAsync = ref.read(userProvider);
-
+      
+      final hasSeenOnboarding = ref.read(onboardingProvider);
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
+      final isOnboarding = state.matchedLocation == AppRoute.onboarding.path;
+      final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
 
-      // 2. Firebase Auth 수준에서 로그아웃임이 명확한 경우
-      // (지연 없이 즉시 로그인 화면으로 보내기 위해 최우선 확인)
+      // 1. Firebase Auth 수준에서 로그아웃임이 명확한 경우
       if (authState.hasValue && authState.value == null) {
+        // 단, 온보딩을 안 봤다면 온보딩을 가장 먼저 띄움
+        if (!hasSeenOnboarding) {
+          return isOnboarding ? null : AppRoute.onboarding.path;
+        }
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // 3. 초기 로딩 중이면서 데이터가 아직 없는 경우 (로그인 프로세스 중 등)
+      // 2. 초기 로딩 중
       if (userAsync.isLoading && userAsync.value == null) {
-        return null; // 현재 위치 유지 (로딩 인디케이터 등 노출을 위해)
+        return null;
+      }
+
+      // 3. 앱 내부 상태 기반 검사 (최우선: 온보딩 시청 여부)
+      if (!hasSeenOnboarding) {
+        // 온보딩을 안 봤더라도 로그인 화면으로 직접 가려는 경우는 허용
+        if (isLoggingIn) return null;
+        return isOnboarding ? null : AppRoute.onboarding.path;
       }
 
       final user = userAsync.value;
-      final hasSeenOnboarding = ref.read(onboardingProvider);
 
-      // 4. 사용자 데이터가 없는 경우 (로그아웃 상태)
+      // 4. 온보딩 완료 후, 사용자 데이터가 없는 경우 (로그아웃 상태)
       if (user == null) {
-        // 로그아웃 상태에서는 항상 로그인 화면으로 이동
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // 5. 로그인 상태인 경우, 온보딩을 보지 않았다면 온보딩 화면으로 이동
-      if (!hasSeenOnboarding) {
-        return state.matchedLocation == AppRoute.onboarding.path
-            ? null
-            : AppRoute.onboarding.path;
+      // 5. 로그인 성공 후, 캐릭터가 없는 경우
+      if (!user.hasCharacter) {
+        return isCustomizing ? null : AppRoute.characterCustomize.path;
       }
 
-      // 6. 로그인 성공 및 온보딩 완료 후 로그인 화면이나 온보딩 화면에 머물러 있는 경우 홈으로
-      if (isLoggingIn || state.matchedLocation == AppRoute.onboarding.path) {
+      // 6. 모든 절차를 완료했는데 해당 진입 화면들에 남아있는 경우 홈으로 이동
+      if (isLoggingIn || isOnboarding || isCustomizing) {
         return AppRoute.home.path;
       }
 

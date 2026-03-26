@@ -284,14 +284,28 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    // 카카오 로그아웃 시도 (카카오로 로그인하지 않았을 경우 무시)
+    // 1. 카카오 로그아웃
     try {
       await kakao.UserApi.instance.logout();
-    } catch (_) {
-      // 카카오 로그인 상태가 아닌 경우 무시
+      log('Kakao logout successful');
+    } catch (e) {
+      log('Kakao logout failed (might not be logged in): $e');
     }
-    await _googleSignIn.signOut();
+
+    // 2. 구글 로그아웃 (단순 signOut() 외에 disconnect()를 추가하여 계정 선택 유도)
+    try {
+      await _googleSignIn.signOut();
+      await _googleSignIn.disconnect();
+      log('Google logout and disconnect successful');
+    } catch (e) {
+      log('Google logout/disconnect failed: $e');
+    }
+
+    // 3. Firebase 로그아웃
     await _firebaseAuth.signOut();
+
+    // 4. 로컬 저장소 캐시 정리 (추가)
+    await _prefs.remove('user_id');
   }
 
   @override
