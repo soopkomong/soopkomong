@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/firebase_options.dart';
+import 'package:soopkomong/domain/repositories/step_repository.dart';
 import 'package:soopkomong/data/repositories/step_repository_impl.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
@@ -22,14 +23,14 @@ void callbackDispatcher() {
       final stepRepo = StepRepositoryImpl(prefs);
       
       // 1. 걸음수 동기화 (건강 앱 등)
-      final totalSteps = await stepRepo.syncWithHealthApp();
-      debugPrint("[Workmanager] Synced Total Steps: $totalSteps");
+      final stepData = await stepRepo.syncWithHealthApp();
+      debugPrint("[Workmanager] Synced Today Steps: ${stepData.todaySteps}, Total: ${stepData.totalSteps}");
 
       // 2. 부화 조건 체크 및 Firestore 업데이트
       // 주의: 백그라운드에서는 Riverpod을 사용할 수 없으므로 직접 Repository/Firestore 접근
       final userId = prefs.getString('user_id'); // 로그인 시 저장해둬야 함
       if (userId != null) {
-        await _checkBackgroundHatching(userId, totalSteps);
+        await _checkBackgroundHatching(userId, stepData.totalSteps);
       }
 
       return Future.value(true);

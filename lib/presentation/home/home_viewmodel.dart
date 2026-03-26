@@ -6,6 +6,7 @@ import 'package:pedometer/pedometer.dart';
 import 'package:uuid/uuid.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/repositories/step_repository.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/step_provider.dart';
@@ -120,12 +121,11 @@ class HomeNotifier extends Notifier<HomeState> {
   Future<void> startTracking() async {
     // 앱 시작 시 초기 걸음수 로드 및 건강 앱 동기화
     final stepRepo = ref.read(stepRepositoryProvider);
-    final initialSteps = await stepRepo.getTotalSteps();
-    state = state.copyWith(stepCount: initialSteps);
+    final initialTodaySteps = await stepRepo.getTodaySteps();
+    state = state.copyWith(stepCount: initialTodaySteps);
     
-    await stepRepo.syncWithHealthApp();
-    final syncedSteps = await stepRepo.getTotalSteps();
-    state = state.copyWith(stepCount: syncedSteps);
+    final stepData = await stepRepo.syncWithHealthApp();
+    state = state.copyWith(stepCount: stepData.todaySteps);
 
     // 위치 추적과 걸음 수 추적 시작
     _startLocationTracking();
@@ -242,8 +242,8 @@ class HomeNotifier extends Notifier<HomeState> {
     _stepSubscription = Pedometer.stepCountStream.listen(
       (StepCount event) async {
         final stepRepo = ref.read(stepRepositoryProvider);
-        final totalSteps = await stepRepo.updateFromPedometer(event.steps);
-        _processNewStepCount(totalSteps);
+        final stepData = await stepRepo.updateFromPedometer(event.steps);
+        _processNewStepCount(stepData);
       },
       onError: (error) {
         debugPrint('[디버그] 걸음 수 스트림 에러: $error');
@@ -251,24 +251,26 @@ class HomeNotifier extends Notifier<HomeState> {
     );
   }
 
-  void _processNewStepCount(int newStepCount) {
-    if (newStepCount == state.stepCount) return;
+  void _processNewStepCount(StepData stepData) {
+    if (stepData.todaySteps == state.stepCount) return;
 
-    state = state.copyWith(stepCount: newStepCount);
+    state = state.copyWith(stepCount: stepData.todaySteps);
 
     if (state.currentParkId != null &&
         !state.isPetAcquiredInCurrentPark &&
         state.stepsAtParkEntry != null) {
-      final stepsInPark = newStepCount - state.stepsAtParkEntry!;
+      // 공원 진입 시 걸음수와의 차이 계산 (이 로직은 오늘 걸음수 기준으로 할지 누적 기준으로 할지 결정 필요)
+      // 여기서는 획득 로직의 일관성을 위해 일단 오늘 걸음수 기준으로 유지 (공원 내에서 100보 걷기)
+      final stepsInPark = stepData.todaySteps - state.stepsAtParkEntry!;
       if (stepsInPark >= 100) {
-        _acquirePet(state.currentParkId!);
+        _acquirePet(state.currentParkId!, stepData.totalSteps);
       }
     }
 
-    _checkHatchingCondition(newStepCount);
+    _checkHatchingCondition(stepData.totalSteps);
   }
 
-  Future<void> _acquirePet(int parkId) async {
+  Future<void> _acquirePet(int parkId, int currentTotalSteps) async {
     debugPrint('[디버그] _acquirePet 시도 - parkId: $parkId');
     final park = state.locations.firstWhere((loc) => loc.id == parkId);
     if (park.petIds.isEmpty) {
@@ -304,8 +306,8 @@ class HomeNotifier extends Notifier<HomeState> {
       discoveredSpotName: park.name,
       discoveredAddr: park.address,
       discoveredAt: DateTime.now(),
-      stepsAtDiscovery: state.stepCount,
-      currentTotalSteps: state.stepCount,
+      stepsAtDiscovery: currentTotalSteps, // 누적 걸음수를 베이스라인으로 저장
+      currentTotalSteps: currentTotalSteps,
     );
 
     ref
@@ -336,15 +338,15 @@ class HomeNotifier extends Notifier<HomeState> {
     );
   }
 
-  void updateStepCount(int count) {
-    _processNewStepCount(count);
+  void updateStepCount(StepData data) {
+    _processNewStepCount(data);
   }
 
-  void _checkHatchingCondition(int newStepCount) {
+  void _checkHatchingCondition(int currentTotalSteps) {
     final userPetsAsync = ref.read(userSoopkomonProvider);
     userPetsAsync.whenData((pets) {
       for (final pet in pets) {
-        if (!pet.isHatched && (newStepCount - pet.stepsAtDiscovery) >= 1000) {
+        if (!pet.isHatched && (currentTotalSteps - pet.stepsAtDiscovery) >= 1000) {
           _hatchPet(pet);
           break;
         }
