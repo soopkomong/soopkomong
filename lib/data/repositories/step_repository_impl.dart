@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 
 class StepRepositoryImpl implements StepRepository {
   static const String _keyTotalSteps = 'total_accumulated_steps';
+  static const String _keyTodaySteps = 'today_steps';
+  static const String _keyLastUpdateDate = 'last_step_update_date';
   static const String _keyLastPedometer = 'last_known_pedometer_value';
   
   final SharedPreferences _prefs;
@@ -18,11 +20,33 @@ class StepRepositoryImpl implements StepRepository {
   }
 
   @override
-  Future<int> updateFromPedometer(int pedometerValue) async {
+  Future<int> getTodaySteps() async {
+    await _checkAndResetDailySteps();
+    return _prefs.getInt(_keyTodaySteps) ?? 0;
+  }
+
+  /// 날짜가 변경되었는지 확인하고 필요시 오늘 걸음수를 초기화합니다.
+  Future<void> _checkAndResetDailySteps() async {
+    final now = DateTime.now();
+    final todayStr = "${now.year}-${now.month}-${now.day}";
+    final lastDateStr = _prefs.getString(_keyLastUpdateDate) ?? "";
+
+    if (todayStr != lastDateStr) {
+      debugPrint('[StepRepo] Date changed from $lastDateStr to $todayStr. Resetting today_steps.');
+      await _prefs.setInt(_keyTodaySteps, 0);
+      await _prefs.setString(_keyLastUpdateDate, todayStr);
+    }
+  }
+
+  @override
+  Future<StepData> updateFromPedometer(int pedometerValue) async {
+    await _checkAndResetDailySteps();
+
     int totalSteps = _prefs.getInt(_keyTotalSteps) ?? 0;
+    int todaySteps = _prefs.getInt(_keyTodaySteps) ?? 0;
     int lastPedometer = _prefs.getInt(_keyLastPedometer) ?? 0;
 
-    // 재부팅 감지: 현재 센서값이 마지막 저장값보다 작으면 누적을 중단하고 현재값을 새로운 기준으로 설정
+    // 재부팅 감지
     if (pedometerValue < lastPedometer) {
       debugPrint('[StepRepo] Reboot detected. Resetting pedometer baseline.');
       lastPedometer = 0; 
@@ -31,49 +55,62 @@ class StepRepositoryImpl implements StepRepository {
     int delta = pedometerValue - lastPedometer;
     if (delta > 0) {
       totalSteps += delta;
+      todaySteps += delta;
       await _prefs.setInt(_keyTotalSteps, totalSteps);
+      await _prefs.setInt(_keyTodaySteps, todaySteps);
     }
 
     await _prefs.setInt(_keyLastPedometer, pedometerValue);
-    return totalSteps;
+    return StepData(todaySteps: todaySteps, totalSteps: totalSteps);
   }
 
   @override
-  Future<int> syncWithHealthApp() async {
+  Future<StepData> syncWithHealthApp() async {
     try {
       final types = [HealthDataType.STEPS];
       
-      // 권한 요청
       bool requested = await _health.requestAuthorization(types);
-      if (!requested) return getTotalSteps();
+      if (!requested) {
+        return StepData(
+          todaySteps: await getTodaySteps(),
+          totalSteps: await getTotalSteps(),
+        );
+      }
 
-      // 오늘 0시부터 현재까지의 데이터 가져오기
       final now = DateTime.now();
       final midnight = DateTime(now.year, now.month, now.day);
       
       int? healthSteps = await _health.getTotalStepsInInterval(midnight, now);
       
       if (healthSteps != null) {
-        int currentTotal = await getTotalSteps();
+        await _checkAndResetDailySteps();
+        int currentToday = _prefs.getInt(_keyTodaySteps) ?? 0;
         
-        // 건강 앱 데이터가 더 크다면 업데이트 (워치 데이터 등이 포함되었을 가능성)
-        // 단, 오늘 하루치만 비교하는 것이 아니라 누적 시스템이므로 정합성 주의 필요
-        // 여기서는 간단하게 시스템 누적치와의 차이를 보정하는 로직을 사용하거나
-        // 건강 앱 데이터를 주 데이터원으로 삼는 방식으로 발전시킬 수 있음
-        debugPrint('[StepRepo] Health App Steps: $healthSteps');
-        
-        // 실제 운영 시에는 '오늘의 걸음수'와 '누적 걸음수'를 분리 관리하는 것이 더 정확함
-        // 일단은 현재 시스템에 맞춰 업데이트 로직 구성
+        if (healthSteps > currentToday) {
+          int diff = healthSteps - currentToday;
+          int currentTotal = _prefs.getInt(_keyTotalSteps) ?? 0;
+          
+          await _prefs.setInt(_keyTodaySteps, healthSteps);
+          await _prefs.setInt(_keyTotalSteps, currentTotal + diff);
+          
+          return StepData(todaySteps: healthSteps, totalSteps: currentTotal + diff);
+        }
       }
     } catch (e) {
       debugPrint('[StepRepo] Health Sync Error: $e');
     }
-    return getTotalSteps();
+    
+    return StepData(
+      todaySteps: await getTodaySteps(),
+      totalSteps: await getTotalSteps(),
+    );
   }
 
   @override
   Future<void> clearSteps() async {
     await _prefs.remove(_keyTotalSteps);
+    await _prefs.remove(_keyTodaySteps);
+    await _prefs.remove(_keyLastUpdateDate);
     await _prefs.remove(_keyLastPedometer);
   }
 }
