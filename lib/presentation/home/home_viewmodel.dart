@@ -130,6 +130,35 @@ class HomeNotifier extends Notifier<HomeState> {
     // 위치 추적과 걸음 수 추적 시작
     _startLocationTracking();
     _startPedometerTracking();
+    _listenToUserForTutorialEgg();
+  }
+
+  void _listenToUserForTutorialEgg() {
+    // 유저 상태 변화를 감시하여 튜토리얼 알 자동 지급
+    ref.listen(userProvider, (previous, next) {
+      final user = next.value;
+      if (user != null) {
+        _checkAndGrantTutorialEgg(user.id);
+      }
+    }, fireImmediately: true);
+  }
+
+  Future<void> _checkAndGrantTutorialEgg(String userId) async {
+    try {
+      final pets = await ref.read(userSoopkomonProvider.future);
+      final hasTutorialEgg = pets.any((p) => p.templateId == '000');
+      
+      if (!hasTutorialEgg) {
+        debugPrint('[디버그] 튜토리얼 알(000) 미보유 감지. 자동 지급 프로세스 시작 (UserID: $userId)');
+        final tutorialEgg = Soopkomon.tutorialEgg();
+        await ref.read(soopkomonRepositoryProvider).addSoopkomon(userId, tutorialEgg);
+        debugPrint('[디버그] 튜토리얼 알(000) 지급 완료.');
+      } else {
+        debugPrint('[디버그] 튜토리얼 알(000) 이미 보유 중.');
+      }
+    } catch (e) {
+      debugPrint('[디버그] 튜토리얼 알 체크 중 에러: $e');
+    }
   }
 
   Future<void> _startLocationTracking() async {

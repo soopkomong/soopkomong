@@ -112,6 +112,7 @@ flutter:
     - assets/images/
     - assets/images/onboarding/
     - assets/images/egg/
+    - assets/images/characters/
     - .env
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

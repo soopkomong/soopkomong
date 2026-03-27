@@ -1,5 +1,13 @@
 [
   {
+    "templateId": "000",
+    "grade": "T",
+    "name": "Sproutmong",
+    "description": "A special gift prepared for rookie explorers who are just entering the world of Soopkomon. This mysterious life will finally awaken when your warm steps are collected.",
+    "eggType": "tutorial",
+    "region": "capital"
+  },
+  {
     "templateId": "001",
     "grade": "A",
     "name": "Molemong",

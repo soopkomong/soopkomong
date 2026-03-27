@@ -442,7 +442,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           parkName: currentState.lastAcquiredParkName ?? '',
           eggPath:
               currentState.lastAcquiredPetEggPath ??
-              'assets/images/characters/egg_mystery.png',
+              'assets/images/egg/egg_mystery.png',
           isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }
@@ -487,7 +487,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           parkName: currentState.lastHatchedParkName ?? '',
           imagePath:
               currentState.lastHatchedPetImagePath ??
-              'assets/images/characters/01_big.png',
+              'assets/images/characters/000_big.png',
           isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }

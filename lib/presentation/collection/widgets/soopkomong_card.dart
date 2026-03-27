@@ -42,7 +42,13 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
               ? widget.template.eggImagePath
               : widget.template.actualImagePath);
 
-    final displayRemoteUrl = widget.template.remoteImagePath;
+    final displayRemoteUrl =
+        (widget.template.templateId == '000' && !isHatched)
+            ? null
+            : widget.template.remoteImagePath;
+    
+    // 000번이 아니거나 부화한 경우에는 파이어 스토리지 이미지를 우선하되,
+    // 000번 알 상태일 때만 로컬 에셋(egg_tuto.png)을 사용하도록 합니다.
 
     return GestureDetector(
       onTap:
@@ -87,10 +93,10 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
             child: Stack(
               children: [
                 Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.gray50,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
+                    decoration: BoxDecoration(
+                      color: AppColors.gray50,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                   child: Stack(
                     children: [
                       Center(
@@ -100,14 +106,10 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
                             assetPath: displayAssetPath,
                             remoteUrl: displayRemoteUrl,
                             fit: BoxFit.contain,
-                            color: isHatched || !isDiscovered
-                                ? (isDiscovered
-                                      ? null
-                                      : AppColors.black.withValues(alpha: 0.7))
-                                : null,
-                            colorBlendMode: isHatched || !isDiscovered
-                                ? (isDiscovered ? null : BlendMode.srcIn)
-                                : null,
+                            color: isDiscovered
+                                ? null
+                                : AppColors.black.withValues(alpha: 0.7),
+                            colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
                             errorWidget: Image.asset(
                               'assets/images/character_silhouette.png',
                               width: 80,

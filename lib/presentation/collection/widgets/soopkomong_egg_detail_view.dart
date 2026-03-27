@@ -75,7 +75,9 @@ class SoopkomongEggDetailView extends ConsumerWidget {
                         padding: const EdgeInsets.all(16.0),
                         child: SoopkomonImage(
                           assetPath: template.actualImagePath,
-                          remoteUrl: template.remoteImagePath,
+                          remoteUrl: template.templateId == '000'
+                              ? null
+                              : template.remoteImagePath,
                           color: AppColors.black,
                           colorBlendMode: BlendMode.srcIn,
                         ),

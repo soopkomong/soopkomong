@@ -67,11 +67,19 @@ class SoopkomonImage extends StatelessWidget {
           }
           return errorWidget ??
               Image.asset(
-                'assets/images/character_silhouette.png',
+                assetPath,
                 width: width,
                 height: height,
                 fit: fit,
-                color: Colors.grey.withValues(alpha: 0.5),
+                color: color,
+                colorBlendMode: colorBlendMode,
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  'assets/images/character_silhouette.png',
+                  width: width,
+                  height: height,
+                  fit: fit,
+                  color: Colors.grey.withValues(alpha: 0.5),
+                ),
               );
         },
       );

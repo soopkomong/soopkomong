@@ -44,6 +44,13 @@ enum SoopkomonEggType {
     'assets/images/egg/egg_mystery.png',
     AppColors.red,
     'assets/images/Fire.svg',
+  ),
+  tutorial(
+    '튜토리얼',
+    'Tutorial',
+    'assets/images/egg/egg_tuto.png',
+    AppColors.green,
+    'assets/images/Grass.svg',
   );
 
   final String label;
