@@ -141,7 +141,7 @@ class _TutorialGuidePageState extends ConsumerState<TutorialGuidePage>
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -191,7 +191,7 @@ class _TutorialGuidePageState extends ConsumerState<TutorialGuidePage>
                                           boxShadow: [
                                             BoxShadow(
                                               color: AppColors.primary100
-                                                  .withOpacity(0.5),
+                                                  .withValues(alpha: 0.5),
                                               blurRadius: 40,
                                               spreadRadius: 10,
                                             ),
@@ -223,7 +223,7 @@ class _TutorialGuidePageState extends ConsumerState<TutorialGuidePage>
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                               color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -269,7 +269,7 @@ class _TutorialGuidePageState extends ConsumerState<TutorialGuidePage>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary700.withOpacity(0.3),
+                        color: AppColors.primary700.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),

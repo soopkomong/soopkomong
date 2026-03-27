@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
@@ -133,7 +134,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .collection('users')
           .doc(currentUser.id)
           .get();
-      final myTemplateId = myDoc.data()?['templateId'] ?? '007';
+      final myTemplateId = myDoc.data()?['templateId'] ?? '007'; // TODO: 전역 상수로 관리하거나 기본 캐릭터 설정 로직 확인 필요
 
       // 친구 요청 문서 생성
       final request = FriendRequest(
@@ -159,32 +160,32 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
   Future<void> acceptFriendRequest(FriendRequest request) async {
     final currentUser = ref.read(authRepositoryProvider).currentUser;
 
-    print('-----------------------------------------');
-    print('🚀 [DEBUG] 1. 수락 프로세스 시작');
-    print('📍 [DEBUG] 요청 문서 ID: ${request.id}');
-    print('📍 [DEBUG] 보낸 사람 ID(Sender): ${request.senderId}');
-    print('📍 [DEBUG] 받는 사람 ID(Me): ${currentUser?.id}');
+    debugPrint('-----------------------------------------');
+    debugPrint('🚀 [DEBUG] 1. 수락 프로세스 시작');
+    debugPrint('📍 [DEBUG] 요청 문서 ID: ${request.id}');
+    debugPrint('📍 [DEBUG] 보낸 사람 ID(Sender): ${request.senderId}');
+    debugPrint('📍 [DEBUG] 받는 사람 ID(Me): ${currentUser?.id}');
 
     if (currentUser == null) {
-      print('❌ [DEBUG] 에러: 로그인된 사용자가 없습니다.');
+      debugPrint('❌ [DEBUG] 에러: 로그인된 사용자가 없습니다.');
       return;
     }
 
     // 본인에게 온 요청인지 확인 (ID 불일치 방지)
     if (request.receiverId != currentUser.id) {
-      print('❌ [DEBUG] 에러: 본인에게 온 요청이 아닙니다.');
+      debugPrint('❌ [DEBUG] 에러: 본인에게 온 요청이 아닙니다.');
       throw Exception('본인에게 온 친구 요청만 수락할 수 있습니다.');
     }
 
     if (request.id.isEmpty) {
-      print('❌ [DEBUG] 에러: request.id가 비어있습니다. Firestore 문서를 수정할 수 없습니다.');
+      debugPrint('❌ [DEBUG] 에러: request.id가 비어있습니다. Firestore 문서를 수정할 수 없습니다.');
       throw Exception('요청 ID가 유효하지 않습니다.');
     }
 
     try {
       final batch = FirebaseFirestore.instance.batch();
 
-      print('🛠️ [DEBUG] 2. Batch 작업 준비 중...');
+      debugPrint('🛠️ [DEBUG] 2. Batch 작업 준비 중...');
 
       // 1. 요청 상태 변경
       final requestRef = FirebaseFirestore.instance
@@ -200,7 +201,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
         'friends': FieldValue.arrayUnion([request.senderId]),
         'friendships.${request.senderId}': FieldValue.serverTimestamp(),
       });
-      print('📍 friendships.${request.senderId} 에 서버 시간 추가');
+      debugPrint('📍 friendships.${request.senderId} 에 서버 시간 추가');
 
       // 3. 상대방 친구 목록 및 날짜 추가
       final senderRef = FirebaseFirestore.instance
@@ -210,19 +211,19 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
         'friends': FieldValue.arrayUnion([currentUser.id]),
         'friendships.${currentUser.id}': FieldValue.serverTimestamp(),
       });
-      print('📍 friendships.${currentUser.id} 에 서버 시간 추가 (상대방 측)');
+      debugPrint('📍 friendships.${currentUser.id} 에 서버 시간 추가 (상대방 측)');
 
-      print('⚙️ [DEBUG] 3. Batch Commit 시도...');
+      debugPrint('⚙️ [DEBUG] 3. Batch Commit 시도...');
 
       await batch.commit();
 
-      print('✅ [DEBUG] 4. 수락 완료! Firestore 데이터 변경 성공');
-      print('-----------------------------------------');
+      debugPrint('✅ [DEBUG] 4. 수락 완료! Firestore 데이터 변경 성공');
+      debugPrint('-----------------------------------------');
     } catch (e, stack) {
-      print('❌ [DEBUG] 5. 수락 처리 중 치명적 에러 발생!');
-      print('❌ [DEBUG] 에러 내용: $e');
-      print('❌ [DEBUG] 스택 트레이스: $stack');
-      print('-----------------------------------------');
+      debugPrint('❌ [DEBUG] 5. 수락 처리 중 치명적 에러 발생!');
+      debugPrint('❌ [DEBUG] 에러 내용: $e');
+      debugPrint('❌ [DEBUG] 스택 트레이스: $stack');
+      debugPrint('-----------------------------------------');
       rethrow;
     }
   }
@@ -260,7 +261,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
       }
       await batch.commit();
     } catch (e) {
-      print('❌ [DEBUG] markAllPendingRequestsAsNotified 에러: $e');
+      debugPrint('❌ [DEBUG] markAllPendingRequestsAsNotified 에러: $e');
     }
   }
 
@@ -272,7 +273,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .doc(requestId)
           .update({'notified': true});
     } catch (e) {
-      print('❌ [DEBUG] markNotified 에러: $e');
+      debugPrint('❌ [DEBUG] markNotified 에러: $e');
     }
   }
 
@@ -284,7 +285,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
           .doc(requestId)
           .delete();
     } catch (e) {
-      print('❌ [DEBUG] 알림 삭제 중 에러 발생: $e');
+      debugPrint('❌ [DEBUG] 알림 삭제 중 에러 발생: $e');
       rethrow;
     }
   }
@@ -342,7 +343,7 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
       // UI 즉시 업데이트를 위해 리프레시
       ref.invalidateSelf();
     } catch (e) {
-      print('❌ [DEBUG] 친구 삭제 중 에러 발생: $e');
+      debugPrint('❌ [DEBUG] 친구 삭제 중 에러 발생: $e');
       rethrow;
     }
   }
