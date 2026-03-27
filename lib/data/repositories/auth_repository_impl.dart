@@ -72,6 +72,7 @@ class AuthRepositoryImpl implements AuthRepository {
       photoUrl: data?['photoUrl'] ?? user.photoURL,
       userCode: data?['user_code'],
       hasCharacter: data?['has_character'] ?? false,
+      hasName: data?['has_name'] ?? false,
       characterSettings: data?['character_settings'],
       totalSteps: data?['totalSteps'] ?? 0,
       lastStepUpdateAt: data?['lastStepUpdateAt'] != null
@@ -84,6 +85,7 @@ class AuthRepositoryImpl implements AuthRepository {
           ? (data?['deletedAt'] as Timestamp).toDate()
           : null,
       wasReentry: data?['wasReentry'] ?? false,
+      hasSeenTutorial: data?['has_seen_tutorial'] ?? false,
       friends: List<String>.from(data?['friends'] ?? []),
       providerId: user.providerData.isNotEmpty
           ? user.providerData[0].providerId
@@ -118,6 +120,8 @@ class AuthRepositoryImpl implements AuthRepository {
         'photoUrl': user.photoURL,
         'user_code': newCode,
         'has_character': false,
+        'has_name': false,
+        'has_seen_tutorial': false,
         'character_settings': null,
         'fcmToken': fcmToken,
         'createdAt': FieldValue.serverTimestamp(),
@@ -285,6 +289,7 @@ class AuthRepositoryImpl implements AuthRepository {
     // 2. Firestore 유저 문서 업데이트
     await _firestore.collection('users').doc(user.uid).update({
       'displayName': name,
+      'has_name': true,
     });
   }
 
@@ -339,6 +344,15 @@ class AuthRepositoryImpl implements AuthRepository {
 
     await _firestore.collection('users').doc(user.uid).update({
       'wasReentry': false,
+    });
+  }
+
+  @override
+  Future<void> completeTutorial() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return;
+    await _firestore.collection('users').doc(user.uid).update({
+      'has_seen_tutorial': true,
     });
   }
 }

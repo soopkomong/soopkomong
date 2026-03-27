@@ -19,6 +19,8 @@ import 'package:soopkomong/presentation/home/notifications_page.dart';
 import 'package:soopkomong/presentation/settings/settings_page.dart';
 import 'package:soopkomong/presentation/providers/onboarding_provider.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
+import 'package:soopkomong/presentation/auth/name_setting_page.dart';
+import 'package:soopkomong/presentation/auth/tutorial_guide_page.dart';
 
 export 'app_route.dart';
 
@@ -29,15 +31,12 @@ final RouteObserver<ModalRoute<void>> routeObserver =
 final routerProvider = Provider<GoRouter>((ref) {
   // authStateChangesProvider 및 userProvider를 리스닝하여 상태가 바뀔 때마다 라우터 새로고침 트리거
   final refreshNotifier = ValueNotifier<bool>(false);
-  ref.listen(authStateChangesProvider, (previous, next) {
-    if (previous?.value?.id != next.value?.id) {
-      refreshNotifier.value = !refreshNotifier.value;
-    }
+  // authStateChangesProvider 및 userProvider의 상태가 변할 때마다 라우터 새로고침 트리거
+  ref.listen(authStateChangesProvider, (_, _) {
+    refreshNotifier.value = !refreshNotifier.value;
   });
-  ref.listen<AsyncValue<AppUser?>>(userProvider, (previous, next) {
-    if (previous?.value?.id != next.value?.id) {
-      refreshNotifier.value = !refreshNotifier.value;
-    }
+  ref.listen(userProvider, (_, _) {
+    refreshNotifier.value = !refreshNotifier.value;
   });
   // 온보딩 완료 시 라우터 새로고침 트리거
   ref.listen<bool>(onboardingProvider, (_, _) {
@@ -61,26 +60,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnboarding = state.matchedLocation == AppRoute.onboarding.path;
       final isCustomizing =
           state.matchedLocation == AppRoute.characterCustomize.path;
+      final isNameSetting = state.matchedLocation == AppRoute.nameSetting.path;
+
+      // 0. 최우선: 온보딩 시청 여부 (로그인 여부와 상관없이 가장 먼저 보여줌)
+      if (!hasSeenOnboarding) {
+        if (isLoggingIn) return null; // 로그인 화면으로 가려 할 때만 허용
+        return isOnboarding ? null : AppRoute.onboarding.path;
+      }
 
       // 1. Firebase Auth 수준에서 로그아웃임이 명확한 경우
       if (authState.hasValue && authState.value == null) {
-        // 단, 온보딩을 안 봤다면 온보딩을 가장 먼저 띄움
-        if (!hasSeenOnboarding) {
-          return isOnboarding ? null : AppRoute.onboarding.path;
-        }
         return isLoggingIn ? null : AppRoute.signIn.path;
       }
 
-      // 2. 초기 로딩 중
-      if (userAsync.isLoading && userAsync.value == null) {
-        return null;
+      // 2. Firebase Auth와 Firestore 데이터 간의 사용자가 일치하는지 확인 (계정 전환 대비)
+      // authState에는 새 유저가 찍혔는데 userAsync에는 아직 옛날 유저 데이터가 남아있는 경우를 방지
+      if (authState.hasValue &&
+          userAsync.hasValue &&
+          authState.value != null &&
+          userAsync.value != null &&
+          authState.value!.id != userAsync.value!.id) {
+        return null; // 데이터 로딩을 기다림
       }
 
-      // 3. 앱 내부 상태 기반 검사 (최우선: 온보딩 시청 여부)
-      if (!hasSeenOnboarding) {
-        // 온보딩을 안 봤더라도 로그인 화면으로 직접 가려는 경우는 허용
-        if (isLoggingIn) return null;
-        return isOnboarding ? null : AppRoute.onboarding.path;
+      // 3. 초기 로딩 중
+      if (userAsync.isLoading && userAsync.value == null) {
+        return null;
       }
 
       final user = userAsync.value;
@@ -95,8 +100,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isCustomizing ? null : AppRoute.characterCustomize.path;
       }
 
-      // 6. 모든 절차를 완료했는데 해당 진입 화면들에 남아있는 경우 홈으로 이동
-      if (isLoggingIn || isOnboarding || isCustomizing) {
+      // 6. 이름 설정 여부 확인
+      if (!user.hasName) {
+        return isNameSetting ? null : AppRoute.nameSetting.path;
+      }
+
+      // 7. 튜토리얼 확인 여부
+      final isTutorial = state.matchedLocation == AppRoute.tutorialGuide.path;
+      if (!user.hasSeenTutorial) {
+        return isTutorial ? null : AppRoute.tutorialGuide.path;
+      }
+
+      // 8. 로그인 화면이나 설정 화면에 있는데 데이터가 다 있다면 홈으로 리다이렉트
+      if (isLoggingIn || isCustomizing || isNameSetting || isTutorial) {
         return AppRoute.home.path;
       }
 
@@ -184,6 +200,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoute.notifications.path,
         name: AppRoute.notifications.name,
         builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: AppRoute.nameSetting.path,
+        name: AppRoute.nameSetting.name,
+        builder: (context, state) => const NameSettingPage(),
+      ),
+      GoRoute(
+        path: AppRoute.tutorialGuide.path,
+        name: AppRoute.tutorialGuide.name,
+        builder: (context, state) => const TutorialGuidePage(),
       ),
       GoRoute(
         path: AppRoute.settings.path,

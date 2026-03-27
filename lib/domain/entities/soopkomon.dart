@@ -5,15 +5,16 @@ class Soopkomon {
   final String name; // 캐릭터에게 붙여준 이름 (기본값은 템플릿 이름)
 
   // 0. 이미지 경로 (템플릿 ID 기반 자동 완성)
-  String get imagePath => 'assets/images/characters/${templateId}_big.png';
-  /* 튜토리얼 구현 시 부화 여부에 따른 이미지 처리 예정
+  // 0. 이미지 경로
   String get imagePath {
     if (!isHatched) {
-      return 'assets/images/characters/egg_big.png';
+      if (templateId == '000') {
+        return 'assets/images/egg/egg_tuto.png';
+      }
+      return 'assets/images/egg/egg_mystery.png';
     }
-    return 'assets/images/characters/${templateId}_big.png';
+    return 'assets/images/character/${templateId}_big.png';
   }
-  */
 
   // 1. 발견 정보
   final String discoveredSpotId; // 발견된 장소의 고유 ID (contentId)
@@ -76,7 +77,6 @@ class Soopkomon {
       isHatched: false,
     );
   }
-  */
 
   /// Firestore 데이터에서 객체 생성
   factory Soopkomon.fromMap(Map<String, dynamic> map, String id) {

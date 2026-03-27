@@ -10,5 +10,6 @@ abstract class AuthRepository {
   Future<void> withdraw();
   Future<void> updateDisplayName(String name);
   Future<void> clearReentryFlag();
+  Future<void> completeTutorial();
   AppUser? get currentUser;
 }
