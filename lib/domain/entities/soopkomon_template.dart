@@ -50,6 +50,8 @@ class SoopkomonTemplate {
         return 3000;
       case 'C':
         return 1000;
+      case 'T': // 튜토리얼용 특별 등급
+        return 500;
       default:
         return 1000;
     }
