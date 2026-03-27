@@ -778,10 +778,10 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
         'face': _selectedFace,
         'clothes': _selectedClothes,
         'shoes': _selectedShoes,
-        'skinColor': _selectedSkinColor.value,
-        'hairColor': _selectedHairColor.value,
-        'clothesColor': _selectedClothesColor.value,
-        'shoesColor': _selectedShoesColor.value,
+        'skinColor': _selectedSkinColor.toARGB32(),
+        'hairColor': _selectedHairColor.toARGB32(),
+        'clothesColor': _selectedClothesColor.toARGB32(),
+        'shoesColor': _selectedShoesColor.toARGB32(),
       };
 
       final characterRepo = ref.read(characterRepositoryProvider);
