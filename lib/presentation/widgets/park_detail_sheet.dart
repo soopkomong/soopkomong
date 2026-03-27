@@ -57,8 +57,6 @@ class ParkDetailSheet extends ConsumerStatefulWidget {
 
 class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
   bool _isLoading = false;
-  late final WebViewController _webViewController;
-  bool _isWebViewLoading = true;
   int _currentImageIndex = 0;
   late final PageController _imagePageController;
 
@@ -67,121 +65,55 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
     return widget.imageUrls.where((url) => url.isNotEmpty).toList();
   }
 
+  late final WebViewController _webViewController;
+
   @override
   void initState() {
     super.initState();
     _imagePageController = PageController();
-    // 웹뷰 컨트롤러 초기화
-    if (widget.naviLat != null && widget.naviLng != null) {
-      final String htmlString =
-          '''
-      <!DOCTYPE html>
-      <html>
-      <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-          <style>
-              body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #EEEEEE; }
-              #staticMap { width: 100%; height: 100%; }
-              #errorLog { position: absolute; top:0; left:0; padding: 8px; color: red; font-size: 12px; z-index: 9999; word-wrap: break-word; max-width: 100%; }
-          </style>
-      </head>
-      <body>
-          <div id="errorLog"></div>
-          <div id="staticMap"></div>
-          
-          <script>
-            // 전역 라우팅 에러 캐치
-            window.onerror = function(msg, url, lineNo, columnNo, error) {
-                document.getElementById('errorLog').innerHTML += "JS Error: " + msg + "<br/>";
-                return false;
-            };
-            
-            function onKakaoError() {
-                document.getElementById('errorLog').innerHTML += "JS Error: 카카오 지도 스크립트 로드 차단 (도메인 또는 키 문제)<br/>";
-            }
-            
-            function onKakaoLoaded() {
-                kakao.maps.load(function() {
-                    try {
-                      var position = new kakao.maps.LatLng(${widget.naviLat}, ${widget.naviLng});
-                      var mapContainer = document.getElementById('staticMap');
-                      var mapOption = { 
-                          center: position, 
-                          level: 3,
-                          draggable: false, /* 드래그 금지 */
-                          scrollwheel: false, /* 확대축소 금지 */
-                          disableDoubleClickZoom: true
-                      };    
-                      
-                      // 지도 생성
-                      var map = new kakao.maps.Map(mapContainer, mapOption);
-                      
-                      // 순수 HTML/SVG를 활용한 커스텀 마커 + 텍스트 오버레이 (이미지 로드 차단 방지)
-                      var svgMarker = '<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 14.8843C7.5 22.162 13.8667 28.1804 16.6848 30.4878C17.0881 30.818 17.2922 30.9851 17.5931 31.0699C17.8274 31.1358 18.1722 31.1358 18.4065 31.0699C18.708 30.985 18.9106 30.8195 19.3154 30.488C22.1335 28.1806 28.4999 22.1627 28.4999 14.8849C28.4999 12.1308 27.3937 9.48908 25.4246 7.54158C23.4554 5.59409 20.7849 4.5 18.0001 4.5C15.2153 4.5 12.5445 5.59425 10.5754 7.54175C8.60625 9.48924 7.5 12.1301 7.5 14.8843Z" fill="#FD8224"/><path d="M23.5928 9.84786C23.5861 9.73318 23.5375 9.62496 23.4563 9.54373C23.375 9.4625 23.2668 9.41393 23.1521 9.40723C18.6914 9.14532 15.1184 10.4883 13.5949 13.0078C13.0669 13.8697 12.8066 14.869 12.8473 15.8789C12.8738 16.5248 13.0052 17.162 13.2363 17.7656C13.2499 17.8028 13.2727 17.8359 13.3025 17.8619C13.3323 17.8879 13.3682 17.9059 13.4069 17.9142C13.4456 17.9226 13.4857 17.921 13.5236 17.9097C13.5615 17.8984 13.5959 17.8776 13.6236 17.8494L18.6041 12.7928C18.6477 12.7492 18.6994 12.7147 18.7563 12.6911C18.8132 12.6675 18.8741 12.6554 18.9357 12.6554C18.9973 12.6554 19.0583 12.6675 19.1152 12.6911C19.1721 12.7147 19.2238 12.7492 19.2674 12.7928C19.3109 12.8363 19.3455 12.888 19.3691 12.9449C19.3926 13.0018 19.4048 13.0628 19.4048 13.1244C19.4048 13.186 19.3926 13.247 19.3691 13.3039C19.3455 13.3608 19.3109 13.4125 19.2674 13.4561L13.8246 18.9809L12.9932 19.8123C12.9067 19.8965 12.8551 20.0101 12.8486 20.1306C12.842 20.2511 12.8811 20.3697 12.958 20.4627C13.0001 20.5115 13.0518 20.551 13.1099 20.5789C13.168 20.6068 13.2312 20.6224 13.2956 20.6248C13.36 20.6271 13.4242 20.6162 13.4841 20.5927C13.5441 20.5691 13.5986 20.5334 13.6441 20.4879L14.6279 19.5041C15.4564 19.9049 16.2926 20.1234 17.1217 20.1527C17.1869 20.1551 17.252 20.1563 17.3168 20.1563C18.261 20.1587 19.1872 19.8986 19.9922 19.4051C22.5117 17.8816 23.8553 14.3092 23.5928 9.84786Z" fill="white"/></svg>';
-                      var overlayContent = '<div style="display:flex; flex-direction:column; align-items:center;">' +
-                                           '  <div style="background:white; padding:4px 10px; border-radius:20px; border:1px solid #ddd; box-shadow:0px 2px 4px rgba(0,0,0,0.1); font-size:13px; font-weight:bold; color:#333; margin-bottom:4px; white-space:nowrap;">${widget.naviLoc}</div>' +
-                                           '  <div>' + svgMarker + '</div>' +
-                                           '</div>';
-                                           
-                      var customOverlay = new kakao.maps.CustomOverlay({
-                          position: position,
-                          content: overlayContent,
-                          yAnchor: 1 // 1: 오버레이의 하단이 좌표에 일치하도록 설정
-                      });
-                      customOverlay.setMap(map);
-                      
-                      // iOS 웹뷰 및 바텀시트 애니메이션(대략 300~400ms) 도중 크기 0x0 상태에서 마커 증발 방지
-                      // 총 1.5초 동안 주기적으로 갱신하여 언제 렌더링되든 완벽히 중앙에 꽂히도록 강제 보정
-                      var retryCount = 0;
-                      var layoutInterval = setInterval(function() {
-                          map.relayout();
-                          map.setCenter(position);
-                          
-                          // 혹시 레이아웃 변경 전에 그려져서 좌표 바깥으로 날아간 오버레이 재부착
-                          customOverlay.setMap(null);
-                          customOverlay.setMap(map);
-                          
-                          retryCount++;
-                          if (retryCount >= 10) { // 150ms * 10 = 1.5초 후 종료
-                              clearInterval(layoutInterval);
-                          }
-                      }, 150);
-                      
-                    } catch (e) {
-                        document.getElementById('errorLog').innerHTML += "Map Init Error: " + e.message + "<br/>";
-                    }
-                });
-            }
-          </script>
-          
-          <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${dotenv.env['KAKAO_JS_APP_KEY']}&autoload=false" onload="onKakaoLoaded()" onerror="onKakaoError()"></script>
-      </body>
-      </html>
-      ''';
+    
+    final html = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        #map { width: 100vw; height: 100vh; }
+      </style>
+      <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=\${dotenv.env['KAKAO_JS_APP_KEY']}"></script>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script>
+        var mapContainer = document.getElementById('map');
+        var mapOption = {
+            center: new kakao.maps.LatLng(\${widget.naviLat ?? 37.566826}, \${widget.naviLng ?? 126.9786567}),
+            level: 3
+        };
+        var map = new kakao.maps.Map(mapContainer, mapOption);
+        
+        // 커스텀 마커 SVG 이미지 사용
+        var imageSrc = 'https://raw.githubusercontent.com/kakao-maps/marker-resource/master/marker_red.png'; // 기본 마커 대체용
+        var imageSize = new kakao.maps.Size(32, 32); 
+        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize); 
+        
+        var markerPosition  = new kakao.maps.LatLng(\${widget.naviLat ?? 37.566826}, \${widget.naviLng ?? 126.9786567}); 
+        var marker = new kakao.maps.Marker({
+            position: markerPosition,
+            image: markerImage
+        });
+        marker.setMap(map);
+      </script>
+    </body>
+    </html>
+    ''';
 
-      _webViewController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(const Color(0xFFEEEEEE))
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageFinished: (String url) {
-              if (mounted) {
-                setState(() {
-                  _isWebViewLoading = false;
-                });
-              }
-            },
-            onWebResourceError: (WebResourceError error) {
-              debugPrint('WebView Error: ${error.description}');
-            },
-          ),
-        )
-        ..setOnConsoleMessage((message) {
-          debugPrint('WebView Console: ${message.message}');
-        })
-        ..loadHtmlString(htmlString, baseUrl: "http://localhost/");
-    }
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(Colors.transparent)
+      ..loadHtmlString(html, baseUrl: 'http://localhost');
   }
 
   @override
@@ -610,8 +542,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // 🔹 카카오 Static Map 썸네일 또는 일반 이미지
-                      if (widget.naviLat != null && widget.naviLng != null)
+                        // 카카오맵 웹뷰 영역
                         Container(
                           width: double.infinity,
                           height: 199.33,
@@ -621,34 +552,19 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                           ),
                           clipBehavior: Clip.hardEdge,
                           child: Stack(
-                            alignment: Alignment.center,
                             children: [
-                              Positioned.fill(
-                                child: WebViewWidget(
-                                  controller: _webViewController,
+                              // 웹뷰 (안드로이드/iOS 용 카카오맵)
+                              WebViewWidget(controller: _webViewController),
+                              // 맵 위치 이동을 막기 위해 위에 투명 덮개를 얹음
+                              GestureDetector(
+                                onVerticalDragUpdate: (_) {},
+                                onHorizontalDragUpdate: (_) {},
+                                onTap: () {},
+                                child: Container(
+                                  color: AppColors.transparent,
                                 ),
                               ),
-                              if (_isWebViewLoading)
-                                const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
                             ],
-                          ),
-                        )
-                      else
-                        Container(
-                          width: double.infinity,
-                          height: 199.33,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                widget.imageUrl.isNotEmpty
-                                    ? widget.imageUrl
-                                    : "https://picsum.photos/800/600",
-                              ),
-                              fit: BoxFit.fill,
-                            ),
                           ),
                         ),
 
