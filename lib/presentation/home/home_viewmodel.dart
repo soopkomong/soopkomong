@@ -308,6 +308,7 @@ class HomeNotifier extends Notifier<HomeState> {
       discoveredAt: DateTime.now(),
       stepsAtDiscovery: currentTotalSteps, // 누적 걸음수를 베이스라인으로 저장
       currentTotalSteps: currentTotalSteps,
+      grade: template.grade,
     );
 
     ref
@@ -347,7 +348,7 @@ class HomeNotifier extends Notifier<HomeState> {
     userPetsAsync.whenData((pets) {
       for (final pet in pets) {
         if (!pet.isHatched &&
-            (currentTotalSteps - pet.stepsAtDiscovery) >= 1000) {
+            (currentTotalSteps - pet.stepsAtDiscovery) >= pet.requiredSteps) {
           _hatchPet(pet);
           break;
         }

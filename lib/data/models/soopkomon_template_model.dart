@@ -5,6 +5,7 @@ import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 class SoopkomonTemplateModel extends SoopkomonTemplate {
   SoopkomonTemplateModel({
     required super.templateId,
+    required super.grade,
     required super.name,
     required super.description,
     required super.eggType,
@@ -14,6 +15,7 @@ class SoopkomonTemplateModel extends SoopkomonTemplate {
   factory SoopkomonTemplateModel.fromJson(Map<String, dynamic> json) {
     return SoopkomonTemplateModel(
       templateId: json['templateId'] as String? ?? '',
+      grade: json['grade'] as String? ?? 'C',
       name: json['name'] as String? ?? '알 수 없음',
       description: json['description'] as String? ?? '',
       eggType: SoopkomonEggType.fromValue(
@@ -26,6 +28,7 @@ class SoopkomonTemplateModel extends SoopkomonTemplate {
   Map<String, dynamic> toJson() {
     return {
       'templateId': templateId,
+      'grade': grade,
       'name': name,
       'description': description,
       'eggType': eggType.name,
@@ -36,6 +39,7 @@ class SoopkomonTemplateModel extends SoopkomonTemplate {
   SoopkomonTemplate toEntity() {
     return SoopkomonTemplate(
       templateId: templateId,
+      grade: grade,
       name: name,
       description: description,
       eggType: eggType,

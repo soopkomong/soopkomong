@@ -12,6 +12,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:soopkomong/core/background_service.dart';
 import 'package:soopkomong/presentation/providers/common_providers.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/utils/firestore_uploader.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
@@ -77,6 +78,33 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(theme: AppTheme.light, routerConfig: router);
+    return MaterialApp.router(
+      theme: AppTheme.light,
+      routerConfig: router,
+      builder: (context, child) {
+        return Scaffold(
+          body: child,
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              try {
+                await FirestoreUploader.uploadAllData();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('데이터 업로드 완료!')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('업로드 실패: $e')),
+                  );
+                }
+              }
+            },
+            child: const Icon(Icons.cloud_upload),
+          ),
+        );
+      },
+    );
   }
 }
