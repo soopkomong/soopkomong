@@ -22,7 +22,7 @@ class SoopkomongEggDetailView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final int currentStepsValue = soopkomon?.traveledSteps ?? 0;
-    const int targetSteps = 3000;
+    final int targetSteps = template.requiredSteps;
     final double progress = (currentStepsValue / targetSteps).clamp(0.0, 1.0);
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
