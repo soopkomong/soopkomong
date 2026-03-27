@@ -53,11 +53,15 @@
 		</array>
 		<key>MBXAccessToken</key>
 		<string>pk.eyJ1IjoiZXVuc2VvbmciLCJhIjoiY21tMXZwN2Y4MDBzbjJyb3ZuNHI4cjdsbiJ9.WMTq7b0HvD1yV3CHwfj56Q</string>
-		<key>NSAppTransportSecurity</key>
-		<dict>
-			<key>NSAllowsLocalNetworking</key>
-			<true/>
-		</dict>
+		        <key>NSAppTransportSecurity</key>
+        <dict>
+                <key>NSAllowsLocalNetworking</key>
+                <true/>
+                <key>NSAllowsArbitraryLoads</key>
+                <true/>
+                <key>NSAllowsArbitraryLoadsInWebContent</key>
+                <true/>
+        </dict>
 		<key>NSHealthShareUsageDescription</key>
 		<string>오늘 총 걸음 수를 확인하여 수집한 캐릭터의 부화를 돕기 위해 건강 데이터에 접근합니다.</string>
 		<key>NSHealthUpdateUsageDescription</key>
