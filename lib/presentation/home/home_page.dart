@@ -180,8 +180,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         final bool isNight = _isNight();
         final Color polygonColor = isNight
             ? AppColors.error
-            : AppColors.primary500;
-        final double fillOpacity = isNight ? 0.3 : 0.2;
+            : AppColors.lightBlue;
+        final double fillOpacity = isNight ? 0.1 : 0.1;
 
         polygonOptions.add(
           PolygonAnnotationOptions(
@@ -476,9 +476,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   .declineFriendRequest(next.id);
             },
             onClose: () {
-              ref
-                  .read(friendsViewModelProvider.notifier)
-                  .markNotified(next.id);
+              ref.read(friendsViewModelProvider.notifier).markNotified(next.id);
             },
           );
         }
