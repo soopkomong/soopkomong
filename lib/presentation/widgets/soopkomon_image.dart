@@ -109,7 +109,7 @@ class SoopkomonImage extends StatelessWidget {
         }
         return errorWidget ??
             Image.asset(
-              'assets/images/character_silhouette.png',
+              'assets/images/characters/000_big.png',
               width: width,
               height: height,
               fit: fit,

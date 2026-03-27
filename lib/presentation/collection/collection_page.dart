@@ -320,10 +320,17 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
             ? locations.where((l) => l.isVisited).length
             : userCharacters.map((c) => c.templateId).toSet().length,
         totalCount: tabIndex == 0 ? locations.length : templates.length,
+        type: tabIndex == 0
+            ? CollectionBadgeType.park
+            : CollectionBadgeType.soopkomong,
       );
     }
 
     // 로딩 중이거나 에러 발생 시 기본값 표시
-    return const CollectionProgressBadge(currentCount: 0, totalCount: 0);
+    return const CollectionProgressBadge(
+      currentCount: 0,
+      totalCount: 0,
+      type: CollectionBadgeType.park,
+    );
   }
 }

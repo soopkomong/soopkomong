@@ -6,6 +6,12 @@ import 'package:soopkomong/firebase_options.dart';
 import 'package:soopkomong/data/repositories/step_repository_impl.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
+import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
+import 'package:soopkomong/domain/usecases/check_hatching_usecase.dart';
+import 'package:geolocator/geolocator.dart' as geo;
+import 'package:uuid/uuid.dart';
+import 'package:soopkomong/domain/entities/soopkomon.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -28,10 +34,109 @@ void callbackDispatcher() {
       );
 
       // 2. 부화 조건 체크 및 Firestore 업데이트
-      // 주의: 백그라운드에서는 Riverpod을 사용할 수 없으므로 직접 Repository/Firestore 접근
+      // 주의: 백그라운드에서는 Riverpod을 사용할 수 없으므로 직접 의존성을 주입하여 UseCase 실행
       final userId = prefs.getString('user_id'); // 로그인 시 저장해둬야 함
       if (userId != null) {
-        await _checkBackgroundHatching(userId, stepData.totalSteps);
+        final remoteDataSource = RemoteLocationDataSourceImpl(firestore: FirebaseFirestore.instance);
+        final soopkomonRepo = SoopkomonRepositoryImpl(remoteDataSource: remoteDataSource);
+        final checkHatchingUseCase = CheckHatchingUseCase(soopkomonRepo);
+        
+        final notifications = await checkHatchingUseCase.execute(userId, stepData.totalSteps);
+        
+        for (var msg in notifications) {
+          await _showNotification('숲코몽 부화', msg);
+        }
+
+        // 3. 생태 공원 진입 감지 및 100걸음 걷기 체크 (백그라운드 "최선 노력" 보장 방식)
+        bool serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
+        if (serviceEnabled) {
+          var permission = await geo.Geolocator.checkPermission();
+          if (permission == geo.LocationPermission.always || permission == geo.LocationPermission.whileInUse) {
+            try {
+              final position = await geo.Geolocator.getCurrentPosition(
+                locationSettings: const geo.LocationSettings(
+                  accuracy: geo.LocationAccuracy.medium,
+                  timeLimit: Duration(seconds: 15),
+                ),
+              );
+
+              final locations = await remoteDataSource.getRemoteLocations();
+
+              int? detectedParkId;
+              String? detectedParkName;
+              List<String> parkPetIds = [];
+
+              for (final loc in locations) {
+                final distance = geo.Geolocator.distanceBetween(
+                  position.latitude, position.longitude, loc.lat, loc.lng
+                );
+                if (distance <= loc.radius) {
+                  detectedParkId = loc.id;
+                  detectedParkName = loc.name;
+                  parkPetIds = loc.petIds;
+                  break;
+                }
+              }
+
+              if (detectedParkId != null) {
+                final savedParkId = prefs.getInt('bg_park_id');
+                final savedEntrySteps = prefs.getInt('bg_park_entry_steps');
+
+                if (savedParkId == detectedParkId && savedEntrySteps != null) {
+                  final stepsInPark = stepData.todaySteps - savedEntrySteps;
+                  if (stepsInPark >= 100 && parkPetIds.isNotEmpty) {
+                    final targetTemplateId = parkPetIds.first;
+                    final userPets = await soopkomonRepo.getUserSoopkomons(userId).first;
+                    final alreadyHas = userPets.any((p) => p.templateId == targetTemplateId);
+
+                    if (!alreadyHas) {
+                      final templateQuery = await FirebaseFirestore.instance
+                          .collection('soopkomon_templates')
+                          .where('templateId', isEqualTo: targetTemplateId)
+                          .limit(1)
+                          .get();
+
+                      if (templateQuery.docs.isNotEmpty) {
+                        final templateData = templateQuery.docs.first.data();
+                        final newPet = Soopkomon(
+                          instanceId: const Uuid().v4(),
+                          templateId: targetTemplateId,
+                          name: templateData['name'] ?? '숲코몽',
+                          discoveredSpotId: detectedParkId.toString(),
+                          discoveredSpotName: detectedParkName ?? '생태공원',
+                          discoveredAddr: templateData['eggImagePath'] ?? '',
+                          discoveredAt: DateTime.now(),
+                          stepsAtDiscovery: stepData.totalSteps,
+                          currentTotalSteps: stepData.totalSteps,
+                          grade: templateData['grade'] ?? 'C',
+                        );
+
+                        await soopkomonRepo.addSoopkomon(userId, newPet);
+                        await _showNotification(
+                          '숲코몽 획득!',
+                          '$detectedParkName에서 100보를 걷고 ${newPet.name} 숲코몽을 발견했어요!'
+                        );
+
+                        prefs.remove('bg_park_id');
+                        prefs.remove('bg_park_entry_steps');
+                      }
+                    }
+                  }
+                } else {
+                  // 새로 진입한 경우
+                  prefs.setInt('bg_park_id', detectedParkId);
+                  prefs.setInt('bg_park_entry_steps', stepData.todaySteps);
+                }
+              } else {
+                // 공원을 벗어난 경우 삭제
+                prefs.remove('bg_park_id');
+                prefs.remove('bg_park_entry_steps');
+              }
+            } catch (locError) {
+              debugPrint("[Workmanager] Location fetch error: $locError");
+            }
+          }
+        }
       }
 
       return Future.value(true);
@@ -40,59 +145,6 @@ void callbackDispatcher() {
       return Future.value(false);
     }
   });
-}
-
-Future<void> _checkBackgroundHatching(String userId, int currentSteps) async {
-  final firestore = FirebaseFirestore.instance;
-
-  // 부화하지 않은 펫들 가져오기
-  final snapshot = await firestore
-      .collection('users')
-      .doc(userId)
-      .collection('acquired_soopkomons')
-      .where('isHatched', isEqualTo: false)
-      .get();
-
-  for (var doc in snapshot.docs) {
-    final data = doc.data();
-    final stepsAtDiscovery = data['stepsAtDiscovery'] as int;
-    final grade = data['grade'] as String? ?? 'C';
-
-    // 등급별 필요 걸음수 계산
-    int requiredSteps = 1000;
-    switch (grade.toUpperCase()) {
-      case 'S':
-        requiredSteps = 10000;
-        break;
-      case 'A':
-        requiredSteps = 5000;
-        break;
-      case 'B':
-        requiredSteps = 3000;
-        break;
-      case 'C':
-        requiredSteps = 1000;
-        break;
-    }
-
-    if ((currentSteps - stepsAtDiscovery) >= requiredSteps) {
-      // 부화 처리
-      await doc.reference.update({
-        'isHatched': true,
-        'currentTotalSteps': currentSteps,
-      });
-
-      // 데이터에서 공원 이름과 숲코몽 이름 추출 (기본값 설정)
-      final parkName = data['discoveredSpotName'] ?? '생태공원';
-      final petName = data['name'] ?? '숲코몽';
-
-      // 알림 발송 - 사용자의 요청에 따른 형식 ("00동 공원 숲코몽 부화")
-      await _showNotification(
-        '$parkName 숲코몽 부화',
-        '$parkName에 $petName 숲코몽이 태어났어요! 도감에서 자세한 정보를 확인하세요!',
-      );
-    }
-  }
 }
 
 Future<void> _showNotification(String title, String body) async {
