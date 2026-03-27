@@ -97,7 +97,6 @@ class FriendProfilePage extends ConsumerWidget {
                   Center(
                     child: CharacterAvatar(
                       characterSettings: friend.characterSettings,
-                      templateId: friend.characterTemplateId,
                       size: 250,
                       useCircle: false,
                     ),

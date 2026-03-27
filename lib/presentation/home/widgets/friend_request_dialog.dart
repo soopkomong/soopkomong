@@ -9,6 +9,7 @@ class FriendRequestDialog extends StatelessWidget {
   final bool isEn;
   final VoidCallback onConfirm;
   final VoidCallback? onReject;
+  final VoidCallback? onClose;
 
   const FriendRequestDialog({
     super.key,
@@ -17,6 +18,7 @@ class FriendRequestDialog extends StatelessWidget {
     required this.isEn,
     required this.onConfirm,
     this.onReject,
+    this.onClose,
   });
 
   static Future<void> show(
@@ -26,6 +28,7 @@ class FriendRequestDialog extends StatelessWidget {
     required bool isEn,
     required VoidCallback onConfirm,
     VoidCallback? onReject,
+    VoidCallback? onClose,
   }) {
     return showDialog(
       context: context,
@@ -36,6 +39,7 @@ class FriendRequestDialog extends StatelessWidget {
         isEn: isEn,
         onConfirm: onConfirm,
         onReject: onReject,
+        onClose: onClose,
       ),
     );
   }
@@ -59,7 +63,10 @@ class FriendRequestDialog extends StatelessWidget {
               top: -4,
               right: -4,
               child: GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  Navigator.pop(context);
+                  onClose?.call();
+                },
                 child: const Icon(
                   Icons.close_rounded,
                   color: AppColors.gray800,
@@ -102,8 +109,7 @@ class FriendRequestDialog extends StatelessWidget {
                         child: TextButton(
                           onPressed: () {
                             Navigator.pop(context);
-                            // TODO: 친구 신청 수락 로직 구현
-                            // onConfirm();
+                            onConfirm();
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: AppColors.primary700,
@@ -126,8 +132,7 @@ class FriendRequestDialog extends StatelessWidget {
                         child: TextButton(
                           onPressed: () {
                             Navigator.pop(context);
-                            // TODO: 친구 신청 거절 로직 구현
-                            // onReject?.call();
+                            onReject?.call();
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: AppColors.gray100,

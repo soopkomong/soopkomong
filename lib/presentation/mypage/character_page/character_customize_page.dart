@@ -3,8 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/presentation/mypage/character_page/widgets/character_create_popup.dart';
 import 'package:soopkomong/presentation/widgets/character_parts_avatar.dart';
@@ -15,6 +13,7 @@ import 'package:soopkomong/core/router/app_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:soopkomong/presentation/providers/character_parts_provider.dart';
+import 'package:soopkomong/presentation/providers/character_provider.dart';
 
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -773,56 +772,24 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
       final croppedBytes = Uint8List.fromList(img.encodePng(croppedImage));
       if (croppedBytes.isEmpty) throw Exception('이미지 압축에 실패했습니다.');
 
-      // 3. Firebase Storage 관리
-      final storage = FirebaseStorage.instance;
-
-      // 기존 이미지 삭제 시도 (Firebase Storage 이미지인 경우에만)
-      if (user.photoUrl != null &&
-          user.photoUrl!.contains('firebasestorage.googleapis.com')) {
-        try {
-          await storage.refFromURL(user.photoUrl!).delete();
-        } catch (e) {
-          debugPrint('기존 이미지 삭제 실패(무시가능): $e');
-        }
-      }
-
-      // 새 이미지 업로드
-      final fileName =
-          'profiles/${user.id}_${DateTime.now().millisecondsSinceEpoch}.png';
-      final uploadTask = await storage.ref(fileName).putData(croppedBytes);
-      final photoUrl = await uploadTask.ref.getDownloadURL();
-
-      // 4. Firestore 업데이트
+      // 3. Storage 및 Firestore 업데이트 (Repository 패턴 적용)
       final characterSettings = {
         'hair': _selectedHair,
         'face': _selectedFace,
         'clothes': _selectedClothes,
         'shoes': _selectedShoes,
-        'hairColor': _selectedHairColor.toARGB32(),
-        'skinColor': _selectedSkinColor.toARGB32(),
-        'clothesColor': _selectedClothesColor.toARGB32(),
-        'shoesColor': _selectedShoesColor.toARGB32(),
+        'skinColor': _selectedSkinColor.value,
+        'hairColor': _selectedHairColor.value,
+        'clothesColor': _selectedClothesColor.value,
+        'shoesColor': _selectedShoesColor.value,
       };
 
-      final updateData = {
-        'has_character': true,
-        'photoUrl': photoUrl,
-        'character_settings': characterSettings,
-      };
-
-      // 5. 처음 생성하는 경우 알(000) 하나 지급 (튜토리얼 구현 시 활성화 예정)
-      /*
-      if (!user.hasCharacter) {
-        updateData['acquiredCharacters'] = FieldValue.arrayUnion([
-          Soopkomon.tutorialEgg().toMap(),
-        ]);
-      }
-      */
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.id)
-          .set(updateData, SetOptions(merge: true));
+      final characterRepo = ref.read(characterRepositoryProvider);
+      await characterRepo.saveCharacterSettings(
+        user,
+        characterSettings,
+        croppedBytes,
+      );
 
       if (mounted) {
         // 성공 시 홈으로 이동 (라우터의 리다이렉트 로직에 의해 이름이 없으면 이름 설정으로 이동함)
