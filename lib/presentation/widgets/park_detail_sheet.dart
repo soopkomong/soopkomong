@@ -13,6 +13,9 @@ import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 
 class ParkDetailSheet extends ConsumerStatefulWidget {
   final String id;
@@ -79,33 +82,61 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         body { margin: 0; padding: 0; overflow: hidden; }
-        #map { width: 100vw; height: 100vh; }
       </style>
-      <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=\${dotenv.env['KAKAO_JS_APP_KEY']}"></script>
+      <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${dotenv.env['KAKAO_JS_APP_KEY']}"></script>
     </head>
     <body>
-      <div id="map"></div>
+      <div id="map" style="width:100vw; height:100vh;"></div>
       <script>
-        var mapContainer = document.getElementById('map');
-        var mapOption = {
-            center: new kakao.maps.LatLng(\${widget.naviLat ?? 37.566826}, \${widget.naviLng ?? 126.9786567}),
-            level: 3
+        var markerPosition = new kakao.maps.LatLng(${widget.naviLat ?? 37.566826}, ${widget.naviLng ?? 126.9786567}); 
+
+        // 이미지 지도를 표시할 div 
+        var mapContainer = document.getElementById('map'), 
+            mapOption = { 
+                center: markerPosition, // 지도의 중심좌표 
+                level: 4, // 지도의 확대 레벨
+                draggable: false,       // 정적 지도(StaticMap) 효과 달성
+                scrollwheel: false,     // 마우스 휠 방지
+                disableDoubleClick: true,
+                disableDoubleClickZoom: true
+            }; 
+            
+        // 일반 동적 지도를 생성해야 웹뷰 반응형 사이즈(100vw/vh)를 실시간 갱신하여 회색 화면을 방지할 수 있습니다.
+        var map = new kakao.maps.Map(mapContainer, mapOption); 
+        
+        // 윈도우 리사이즈 시 지도 중심을 무조건 갱신하여 정중앙을 유지합니다
+        window.onresize = function() {
+            map.relayout();
+            map.setCenter(markerPosition);
         };
-        var map = new kakao.maps.Map(mapContainer, mapOption);
         
-        // 커스텀 마커 SVG 이미지 사용
-        var imageSrc = 'https://raw.githubusercontent.com/kakao-maps/marker-resource/master/marker_red.png'; // 기본 마커 대체용
-        var imageSize = new kakao.maps.Size(32, 32); 
-        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize); 
+        // Pin.svg의 원본 벡터 텍스트를 DOM에 물리적으로 직접 삽입하여 CSP/보안 거부 문제 완전 차단
+        var svgStr = '<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 14.8843C7.5 22.162 13.8667 28.1804 16.6848 30.4878C17.0881 30.818 17.2922 30.9851 17.5931 31.0699C17.8274 31.1358 18.1722 31.1358 18.4065 31.0699C18.708 30.985 18.9106 30.8195 19.3154 30.488C22.1335 28.1806 28.4999 22.1627 28.4999 14.8849C28.4999 12.1308 27.3937 9.48908 25.4246 7.54158C23.4554 5.59409 20.7849 4.5 18.0001 4.5C15.2153 4.5 12.5445 5.59425 10.5754 7.54175C8.60625 9.48924 7.5 12.1301 7.5 14.8843Z" fill="#FD8224"/><path d="M23.5928 9.84786C23.5861 9.73318 23.5375 9.62496 23.4563 9.54373C23.375 9.4625 23.2668 9.41393 23.1521 9.40723C18.6914 9.14532 15.1184 10.4883 13.5949 13.0078C13.0669 13.8697 12.8066 14.869 12.8473 15.8789C12.8738 16.5248 13.0052 17.162 13.2363 17.7656C13.2499 17.8028 13.2727 17.8359 13.3025 17.8619C13.3323 17.8879 13.3682 17.9059 13.4069 17.9142C13.4456 17.9226 13.4857 17.921 13.5236 17.9097C13.5615 17.8984 13.5959 17.8776 13.6236 17.8494L18.6041 12.7928C18.6477 12.7492 18.6994 12.7147 18.7563 12.6911C18.8132 12.6675 18.8741 12.6554 18.9357 12.6554C18.9973 12.6554 19.0583 12.6675 19.1152 12.6911C19.1721 12.7147 19.2238 12.7492 19.2674 12.7928C19.3109 12.8363 19.3455 12.888 19.3691 12.9449C19.3926 13.0018 19.4048 13.0628 19.4048 13.1244C19.4048 13.186 19.3926 13.247 19.3691 13.3039C19.3455 13.3608 19.3109 13.4125 19.2674 13.4561L13.8246 18.9809L12.9932 19.8123C12.9067 19.8965 12.8551 20.0101 12.8486 20.1306C12.842 20.2511 12.8811 20.3697 12.958 20.4627C13.0001 20.5115 13.0518 20.551 13.1099 20.5789C13.168 20.6068 13.2312 20.6224 13.2956 20.6248C13.36 20.6271 13.4242 20.6162 13.4841 20.5927C13.5441 20.5691 13.5986 20.5334 13.6441 20.4879L14.6279 19.5041C15.4564 19.9049 16.2926 20.1234 17.1217 20.1527C17.1869 20.1551 17.252 20.1563 17.3168 20.1563C18.261 20.1587 19.1872 19.8986 19.9922 19.4051C22.5117 17.8816 23.8553 14.3092 23.5928 9.84786Z" fill="white"/></svg>';
         
-        var markerPosition  = new kakao.maps.LatLng(\${widget.naviLat ?? 37.566826}, \${widget.naviLng ?? 126.9786567}); 
-        var marker = new kakao.maps.Marker({
+        // JS 에러 방지를 위해 요소 생성 방식으로 처리
+        var overlayWrap = document.createElement('div');
+        overlayWrap.style.cssText = 'display:flex; flex-direction:column; align-items:center;';
+        
+        var textNode = document.createElement('div');
+        textNode.style.cssText = 'margin-bottom: 5px; padding:5px 8px; background:rgba(0,0,0,0.7); color:#fff; border-radius:5px; font-size:12px; font-weight:bold; text-align:center; white-space:nowrap; box-shadow:0px 1px 2px rgba(0,0,0,0.3);';
+        textNode.innerText = ${jsonEncode(widget.name)};
+        
+        var markerNode = document.createElement('div');
+        // SVG viewBox 내부의 하단 여백(약 5px) 및 브라우저 line-height를 상쇄하여 마커의 '뾰족한 끝부분'이 정확히 화면 정중앙에 닿도록 보정합니다.
+        markerNode.style.cssText = 'position: relative; top: 5px; line-height: 0;';
+        markerNode.innerHTML = svgStr;
+        
+        overlayWrap.appendChild(textNode);
+        overlayWrap.appendChild(markerNode);
+        
+        var customOverlay = new kakao.maps.CustomOverlay({
             position: markerPosition,
-            image: markerImage
+            content: overlayWrap,
+            yAnchor: 1 // 마커 꼭지점을 좌표와 딱 맞게 정렬
         });
-        marker.setMap(map);
+        
+        customOverlay.setMap(map);
       </script>
-    </body>
     </html>
     ''';
 
@@ -600,6 +631,40 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                     widget.address,
                                     style: AppTextStyles.subTitleM.copyWith(
                                       color: AppColors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () async {
+                                    await Clipboard.setData(
+                                      ClipboardData(text: widget.address),
+                                    );
+                                    if (!mounted) return;
+                                    
+                                    final currentLocale = ref.read(localeProvider);
+                                    final message = currentLocale == AppLocale.en
+                                        ? 'Address copied'
+                                        : '주소가 복사되었습니다';
+                                    
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          message,
+                                          style: AppTextStyles.body.copyWith(color: AppColors.white),
+                                        ),
+                                        behavior: SnackBarBehavior.floating,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                  child: SvgPicture.asset(
+                                    'assets/images/Copy.svg',
+                                    width: 24,
+                                    height: 24,
+                                    colorFilter: const ColorFilter.mode(
+                                      AppColors.gray500,
+                                      BlendMode.srcIn,
                                     ),
                                   ),
                                 ),
