@@ -20,10 +20,12 @@ class AppUser {
 
   final String? userCode;
   final bool hasCharacter; // 캐릭터 생성 여부
+  final bool hasName; // 이름 설정 여부
   final Map<String, dynamic>? characterSettings; // 캐릭터 파츠 설정 (머리, 얼굴, 옷 등)
   final bool wasReentry; // 탈퇴 후 14일 이내 재로그인 여부
   final DateTime? createdAt; // 가입일
   final DateTime? deletedAt; // 탈퇴 신청일
+  final bool hasSeenTutorial;
 
   AppUser({
     required this.id,
@@ -32,6 +34,8 @@ class AppUser {
     this.photoUrl,
     this.userCode,
     this.hasCharacter = false,
+    this.hasName = false,
+    this.hasSeenTutorial = false,
     this.characterSettings,
     this.totalSteps = 0,
     this.lastStepUpdateAt,

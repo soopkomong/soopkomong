@@ -825,8 +825,8 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           .set(updateData, SetOptions(merge: true));
 
       if (mounted) {
-        // 성공 시 마이페이지로 이동 (앱 라우터의 AppRoute 사용)
-        context.goNamed(AppRoute.mypage.name);
+        // 성공 시 홈으로 이동 (라우터의 리다이렉트 로직에 의해 이름이 없으면 이름 설정으로 이동함)
+        context.goNamed(AppRoute.home.name);
       }
     } catch (e) {
       if (mounted) {
