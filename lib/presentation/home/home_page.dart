@@ -28,6 +28,9 @@ import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 
 /// [Presentation Layer] - View
 class HomePage extends ConsumerStatefulWidget {
@@ -180,8 +183,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         final bool isNight = _isNight();
         final Color polygonColor = isNight
             ? AppColors.error
-            : AppColors.primary500;
-        final double fillOpacity = isNight ? 0.3 : 0.2;
+            : AppColors.lightBlue;
+        final double fillOpacity = isNight ? 0.1 : 0.1;
 
         polygonOptions.add(
           PolygonAnnotationOptions(
@@ -376,6 +379,49 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  Future<void> _migrateLocationsToFirestore() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final isEn = ref.read(localeProvider) == AppLocale.en;
+
+    try {
+      final firestore = FirebaseFirestore.instance;
+
+      // 1. locations.json 업로드
+      final String locationsJson = await rootBundle.loadString('assets/locations.json');
+      final Map<String, dynamic> locationsData = json.decode(locationsJson);
+      final List locationsList = locationsData['locations'];
+
+      final locationsRef = firestore.collection('locations');
+      for (var loc in locationsList) {
+        await locationsRef.doc(loc['id'].toString()).set(loc);
+      }
+
+      // 2. en_locations.json 업로드
+      final String enLocationsJson = await rootBundle.loadString('assets/en_locations.json');
+      final List enLocationsList = json.decode(enLocationsJson);
+
+      final enLocationsRef = firestore.collection('en_locations');
+      for (var loc in enLocationsList) {
+        await enLocationsRef.doc(loc['id'].toString()).set(loc);
+      }
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(isEn ? "Data migration complete!" : "데이터 마이그레이션 완료!"),
+          backgroundColor: AppColors.primary600,
+        ),
+      );
+    } catch (e) {
+      debugPrint("Migration error: $e");
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(isEn ? "Migration failed: $e" : "마이그레이션 실패: $e"),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeViewModelProvider);
@@ -476,9 +522,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   .declineFriendRequest(next.id);
             },
             onClose: () {
-              ref
-                  .read(friendsViewModelProvider.notifier)
-                  .markNotified(next.id);
+              ref.read(friendsViewModelProvider.notifier).markNotified(next.id);
             },
           );
         }
@@ -562,16 +606,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: Colors.white,
-      //   child: const Icon(Icons.add_location_alt, color: Colors.green),
-      //   onPressed: () {
-      //     final currentSteps = ref.read(homeViewModelProvider).stepCount;
-      //     ref
-      //         .read(homeViewModelProvider.notifier)
-      //         .updateStepCount(currentSteps + 100);
-      //   },
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.white,
+        mini: true,
+        child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primary600),
+        onPressed: () => _migrateLocationsToFirestore(),
+      ),
     );
   }
 }
