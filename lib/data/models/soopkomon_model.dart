@@ -11,6 +11,7 @@ class SoopkomonModel extends Soopkomon {
     required super.discoveredAt,
     required super.stepsAtDiscovery,
     super.currentTotalSteps = 0,
+    super.grade = 'C',
   });
 
   factory SoopkomonModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +27,7 @@ class SoopkomonModel extends Soopkomon {
       ),
       stepsAtDiscovery: json['stepsAtDiscovery'] as int? ?? 0,
       currentTotalSteps: json['currentTotalSteps'] as int? ?? 0,
+      grade: json['grade'] as String? ?? 'C',
     );
   }
 
@@ -40,6 +42,7 @@ class SoopkomonModel extends Soopkomon {
       'discoveredAt': discoveredAt.toIso8601String(),
       'stepsAtDiscovery': stepsAtDiscovery,
       'currentTotalSteps': currentTotalSteps,
+      'grade': grade,
     };
   }
 
@@ -54,6 +57,7 @@ class SoopkomonModel extends Soopkomon {
       discoveredAt: discoveredAt,
       stepsAtDiscovery: stepsAtDiscovery,
       currentTotalSteps: currentTotalSteps,
+      grade: grade,
     );
   }
 }

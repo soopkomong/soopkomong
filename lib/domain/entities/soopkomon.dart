@@ -25,6 +25,7 @@ class Soopkomon {
   final int stepsAtDiscovery; // 발견 당시 유저의 누적 걸음수
   int currentTotalSteps; // 유저의 현재 최신 누적 걸음수 (업데이트용)
   final bool isHatched; // 부화 여부
+  final String grade; // 캐릭터 등급 (S, A, B, C)
 
   Soopkomon({
     required this.instanceId,
@@ -37,10 +38,27 @@ class Soopkomon {
     required this.stepsAtDiscovery,
     this.currentTotalSteps = 0,
     this.isHatched = false,
+    this.grade = 'C',
   });
 
   // 3. 실시간 계산 필드 (Getter)
   int get traveledSteps => currentTotalSteps - stepsAtDiscovery;
+
+  /// 🔹 등급별 부화에 필요한 걸음수
+  int get requiredSteps {
+    switch (grade.toUpperCase()) {
+      case 'S':
+        return 10000;
+      case 'A':
+        return 5000;
+      case 'B':
+        return 3000;
+      case 'C':
+        return 1000;
+      default:
+        return 1000;
+    }
+  }
 
   /* 튜토리얼 구현 시 사용할 초기 알 객체
   /// 신규 유저를 위한 초기 '알' 객체 생성 (튜토리얼용 000번)
@@ -75,6 +93,7 @@ class Soopkomon {
       stepsAtDiscovery: map['stepsAtDiscovery'] ?? 0,
       currentTotalSteps: map['currentTotalSteps'] ?? 0,
       isHatched: map['isHatched'] ?? false,
+      grade: map['grade'] ?? 'C',
     );
   }
 
@@ -90,6 +109,7 @@ class Soopkomon {
       'stepsAtDiscovery': stepsAtDiscovery,
       'currentTotalSteps': currentTotalSteps,
       'isHatched': isHatched,
+      'grade': grade,
     };
   }
 
@@ -106,6 +126,7 @@ class Soopkomon {
       stepsAtDiscovery: stepsAtDiscovery,
       currentTotalSteps: currentTotalSteps ?? this.currentTotalSteps,
       isHatched: isHatched ?? this.isHatched,
+      grade: grade,
     );
   }
 }

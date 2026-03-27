@@ -56,8 +56,26 @@ Future<void> _checkBackgroundHatching(String userId, int currentSteps) async {
   for (var doc in snapshot.docs) {
     final data = doc.data();
     final stepsAtDiscovery = data['stepsAtDiscovery'] as int;
+    final grade = data['grade'] as String? ?? 'C';
 
-    if ((currentSteps - stepsAtDiscovery) >= 1000) {
+    // 등급별 필요 걸음수 계산
+    int requiredSteps = 1000;
+    switch (grade.toUpperCase()) {
+      case 'S':
+        requiredSteps = 10000;
+        break;
+      case 'A':
+        requiredSteps = 5000;
+        break;
+      case 'B':
+        requiredSteps = 3000;
+        break;
+      case 'C':
+        requiredSteps = 1000;
+        break;
+    }
+
+    if ((currentSteps - stepsAtDiscovery) >= requiredSteps) {
       // 부화 처리
       await doc.reference.update({
         'isHatched': true,
