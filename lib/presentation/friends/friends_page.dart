@@ -7,7 +7,7 @@ import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart';
-import 'package:soopkomong/presentation/providers/user_provider.dart';
+import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/friend_request_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -163,8 +163,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                             const TextSpan(text: ' '),
                             TextSpan(
                               text:
-                                  (ref.watch(userDocumentProvider).value?.data()
-                                      as Map<String, dynamic>?)?['user_code'] ??
+                                  ref.watch(userProvider).value?.userCode ??
                                   '-',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -177,8 +176,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                       GestureDetector(
                         onTap: () {
                           final userCode =
-                              (ref.read(userDocumentProvider).value?.data()
-                                  as Map<String, dynamic>?)?['user_code'];
+                              ref.read(userProvider).value?.userCode;
                           if (userCode == null) return;
 
                           Clipboard.setData(ClipboardData(text: userCode));

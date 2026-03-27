@@ -113,11 +113,15 @@ class NotificationTile extends StatelessWidget {
           child: const Icon(Icons.notifications, color: Colors.white, size: 20),
         );
       case NotificationType.eggObtained:
+        String eggPath = 'assets/images/egg/egg_mystery.png';
+        if (characterTemplateId == '000') {
+          eggPath = 'assets/images/egg/egg_tuto.png';
+        }
         return _buildCircleIcon(
           size: 40,
           backgroundColor: AppColors.primary100,
           child: Image.asset(
-            'assets/images/egg/egg_mystery.png',
+            eggPath,
             width: 24,
             height: 24,
             errorBuilder: (_, _, _) =>

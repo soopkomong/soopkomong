@@ -6,6 +6,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/repositories/auth_repository.dart';
+import 'package:soopkomong/data/models/app_user_dto.dart';
 import 'package:soopkomong/core/services/fcm_service.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,32 +66,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return null;
     }
 
-    return AppUser(
-      id: user.uid,
-      email: user.email,
-      displayName: data?['displayName'],
-      photoUrl: data?['photoUrl'] ?? user.photoURL,
-      userCode: data?['user_code'],
-      hasCharacter: data?['has_character'] ?? false,
-      hasName: data?['has_name'] ?? false,
-      characterSettings: data?['character_settings'],
-      totalSteps: data?['totalSteps'] ?? 0,
-      lastStepUpdateAt: data?['lastStepUpdateAt'] != null
-          ? (data?['lastStepUpdateAt'] as Timestamp).toDate()
-          : null,
-      createdAt: data?['createdAt'] != null
-          ? (data?['createdAt'] as Timestamp).toDate()
-          : null,
-      deletedAt: data?['deletedAt'] != null
-          ? (data?['deletedAt'] as Timestamp).toDate()
-          : null,
-      wasReentry: data?['wasReentry'] ?? false,
-      hasSeenTutorial: data?['has_seen_tutorial'] ?? false,
-      friends: List<String>.from(data?['friends'] ?? []),
-      providerId: user.providerData.isNotEmpty
-          ? user.providerData[0].providerId
-          : null,
-    );
+    return AppUserDto.fromFirebaseContext(user, doc);
   }
 
   Future<DocumentSnapshot> _syncUserToFirestore(User? user) async {

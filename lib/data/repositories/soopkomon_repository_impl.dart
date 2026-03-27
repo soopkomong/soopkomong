@@ -7,6 +7,7 @@ import 'package:soopkomong/data/models/location_model.dart';
 import 'package:soopkomong/data/models/soopkomon_template_model.dart';
 import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/data/models/soopkomon_dto.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/domain/repositories/soopkomon_repository.dart';
 
@@ -122,19 +123,34 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {
-            return Soopkomon.fromMap(doc.data(), doc.id);
+            return SoopkomonDto.fromMap(doc.data(), doc.id);
           }).toList();
         });
   }
 
   @override
+  Future<List<Soopkomon>> getUnhatchedSoopkomons(String userId) async {
+    final snapshot = await _remoteDataSource.firestore
+        .collection('users')
+        .doc(userId)
+        .collection('acquired_soopkomons')
+        .where('isHatched', isEqualTo: false)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return SoopkomonDto.fromMap(doc.data(), doc.id);
+    }).toList();
+  }
+
+  @override
   Future<void> addSoopkomon(String userId, Soopkomon soopkomon) async {
+    final dto = SoopkomonDto.fromEntity(soopkomon);
     await _remoteDataSource.firestore
         .collection('users')
         .doc(userId)
         .collection('acquired_soopkomons')
         .doc(soopkomon.instanceId)
-        .set(soopkomon.toMap());
+        .set(dto.toMap());
   }
 
   @override

@@ -13,7 +13,7 @@ class Soopkomon {
       }
       return 'assets/images/egg/egg_mystery.png';
     }
-    return 'assets/images/character/${templateId}_big.png';
+    return 'assets/images/characters/${templateId}_big.png';
   }
 
   // 1. 발견 정보
@@ -56,16 +56,17 @@ class Soopkomon {
         return 3000;
       case 'C':
         return 1000;
+      case 'T': // 튜토리얼용 특별 등급
+        return 500;
       default:
         return 1000;
     }
   }
 
-  /* 튜토리얼 구현 시 사용할 초기 알 객체
   /// 신규 유저를 위한 초기 '알' 객체 생성 (튜토리얼용 000번)
   factory Soopkomon.tutorialEgg() {
     return Soopkomon(
-      instanceId: 'tutorial_egg_${DateTime.now().millisecondsSinceEpoch}',
+      instanceId: 'tutorial_egg_000',
       templateId: '000',
       name: '신비한 알',
       discoveredSpotId: 'tutorial_start',
@@ -74,47 +75,19 @@ class Soopkomon {
       discoveredAt: DateTime.now(),
       stepsAtDiscovery: 0,
       currentTotalSteps: 0,
-      isHatched: false,
+      grade: 'T',
     );
   }
 
-  /// Firestore 데이터에서 객체 생성
-  factory Soopkomon.fromMap(Map<String, dynamic> map, String id) {
-    return Soopkomon(
-      instanceId: id,
-      templateId: map['templateId'] ?? '',
-      name: map['name'] ?? '',
-      discoveredSpotId: map['discoveredSpotId'] ?? '',
-      discoveredSpotName: map['discoveredSpotName'] ?? '',
-      discoveredAddr: map['discoveredAddr'] ?? '',
-      discoveredAt: map['discoveredAt'] != null
-          ? (map['discoveredAt'] as dynamic).toDate()
-          : DateTime.now(),
-      stepsAtDiscovery: map['stepsAtDiscovery'] ?? 0,
-      currentTotalSteps: map['currentTotalSteps'] ?? 0,
-      isHatched: map['isHatched'] ?? false,
-      grade: map['grade'] ?? 'C',
-    );
-  }
 
-  /// Firestore 저장을 위한 Map 변환
-  Map<String, dynamic> toMap() {
-    return {
-      'templateId': templateId,
-      'name': name,
-      'discoveredSpotId': discoveredSpotId,
-      'discoveredSpotName': discoveredSpotName,
-      'discoveredAddr': discoveredAddr,
-      'discoveredAt': discoveredAt, // Firestore Timestamp 자동 변환됨
-      'stepsAtDiscovery': stepsAtDiscovery,
-      'currentTotalSteps': currentTotalSteps,
-      'isHatched': isHatched,
-      'grade': grade,
-    };
-  }
 
   /// 상태 업데이트를 위한 copyWith
-  Soopkomon copyWith({String? name, int? currentTotalSteps, bool? isHatched}) {
+  Soopkomon copyWith({
+    String? name,
+    int? currentTotalSteps,
+    bool? isHatched,
+    String? grade,
+  }) {
     return Soopkomon(
       instanceId: instanceId,
       templateId: templateId,
@@ -126,7 +99,7 @@ class Soopkomon {
       stepsAtDiscovery: stepsAtDiscovery,
       currentTotalSteps: currentTotalSteps ?? this.currentTotalSteps,
       isHatched: isHatched ?? this.isHatched,
-      grade: grade,
+      grade: grade ?? this.grade,
     );
   }
 }

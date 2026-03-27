@@ -155,9 +155,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             await ref
                                 .read(onboardingProvider.notifier)
                                 .completeOnboarding();
-                            if (mounted) {
-                              context.go(AppRoute.signIn.path);
-                            }
+                            if (!context.mounted) return;
+                            context.go(AppRoute.signIn.path);
                           } else {
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 350),

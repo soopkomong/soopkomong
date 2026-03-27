@@ -48,41 +48,35 @@ class SoopkomongEggDetailView extends ConsumerWidget {
             ),
             // 말풍선 실루엣
             Positioned(
-              top: 0,
+              top: -20,
               right: -65,
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: [
-                  // 말풍선 몸체
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.black, width: 2.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(2, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+              child: CustomPaint(
+                painter: SpeechBubblePainter(
+                  color: AppColors.white,
+                  strokeColor: AppColors.gray400,
+                  strokeWidth: 2.5,
+                ),
+                child: SizedBox(
+                  width: 85,
+                  height: 90,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 14.0, right: 2.0),
+                      child: SizedBox(
+                        width: 46,
+                        height: 46,
                         child: SoopkomonImage(
                           assetPath: template.actualImagePath,
-                          remoteUrl: template.remoteImagePath,
+                          remoteUrl: template.templateId == '000'
+                              ? null
+                              : template.remoteImagePath,
                           color: AppColors.black,
                           colorBlendMode: BlendMode.srcIn,
                         ),
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -184,4 +178,65 @@ class SoopkomongEggDetailView extends ConsumerWidget {
       ],
     );
   }
+}
+
+class SpeechBubblePainter extends CustomPainter {
+  final Color color;
+  final Color strokeColor;
+  final double strokeWidth;
+
+  SpeechBubblePainter({
+    required this.color,
+    required this.strokeColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // 타원 영역 (말풍선 몸통, 원형에 가까운 비율로)
+    final bubbleRect = Rect.fromLTWH(0, 0, w, h * 0.85);
+    final ovalPath = Path()..addOval(bubbleRect);
+
+    // 꼬리 영역 (직선 대신 부드러운 베지어 곡선 사용, 길이를 줄임)
+    final tailPath = Path();
+    tailPath.moveTo(w * 0.35, h * 0.75); // 타원의 7시 방향 안쪽
+    // 꼬리 끝 지점으로 휘어지는 밖의 곡선 (꼬리를 덜 뻗어나가게 조절)
+    tailPath.quadraticBezierTo(w * 0.2, h * 0.85, w * 0.1, h * 0.9);
+    // 꼬리 끝에서 타원으로 돌아오는 안쪽 곡선
+    tailPath.quadraticBezierTo(w * 0.15, h * 0.75, w * 0.1, h * 0.55);
+    tailPath.close();
+
+    // 몸통과 꼬리를 하나의 Path로 합침
+    final bubblePath = Path.combine(PathOperation.union, ovalPath, tailPath);
+
+    // 그림자
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.1)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.save();
+    canvas.translate(2, 4);
+    canvas.drawPath(bubblePath, shadowPaint);
+    canvas.restore();
+
+    // 채우기
+    final paintFill = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // 테두리
+    final paintStroke = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeJoin = StrokeJoin.round;
+
+    canvas.drawPath(bubblePath, paintFill);
+    canvas.drawPath(bubblePath, paintStroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

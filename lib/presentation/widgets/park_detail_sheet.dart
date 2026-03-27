@@ -12,7 +12,6 @@ import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ParkDetailSheet extends ConsumerStatefulWidget {
@@ -71,7 +70,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
   void initState() {
     super.initState();
     _imagePageController = PageController();
-    
+
     final html = '''
     <!DOCTYPE html>
     <html>
@@ -542,31 +541,29 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                        // 카카오맵 웹뷰 영역
-                        Container(
-                          width: double.infinity,
-                          height: 199.33,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: AppColors.gray100,
-                          ),
-                          clipBehavior: Clip.hardEdge,
-                          child: Stack(
-                            children: [
-                              // 웹뷰 (안드로이드/iOS 용 카카오맵)
-                              WebViewWidget(controller: _webViewController),
-                              // 맵 위치 이동을 막기 위해 위에 투명 덮개를 얹음
-                              GestureDetector(
-                                onVerticalDragUpdate: (_) {},
-                                onHorizontalDragUpdate: (_) {},
-                                onTap: () {},
-                                child: Container(
-                                  color: AppColors.transparent,
-                                ),
-                              ),
-                            ],
-                          ),
+                      // 카카오맵 웹뷰 영역
+                      Container(
+                        width: double.infinity,
+                        height: 199.33,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.gray100,
                         ),
+                        clipBehavior: Clip.hardEdge,
+                        child: Stack(
+                          children: [
+                            // 웹뷰 (안드로이드/iOS 용 카카오맵)
+                            WebViewWidget(controller: _webViewController),
+                            // 맵 위치 이동을 막기 위해 위에 투명 덮개를 얹음
+                            GestureDetector(
+                              onVerticalDragUpdate: (_) {},
+                              onHorizontalDragUpdate: (_) {},
+                              onTap: () {},
+                              child: Container(color: AppColors.transparent),
+                            ),
+                          ],
+                        ),
+                      ),
 
                       const SizedBox(height: 12),
 

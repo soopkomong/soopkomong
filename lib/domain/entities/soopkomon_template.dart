@@ -32,7 +32,12 @@ class SoopkomonTemplate {
       'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${templateId}_big.png?alt=media';
 
   /// 알 이미지 경로는 타입을 통해 결정됨
-  String get eggImagePath => eggType.imagePath;
+  String get eggImagePath {
+    if (templateId == '000') {
+      return 'assets/images/egg/egg_tuto.png';
+    }
+    return eggType.imagePath;
+  }
 
   /// 🔹 등급별 부화에 필요한 걸음수
   int get requiredSteps {
@@ -45,6 +50,8 @@ class SoopkomonTemplate {
         return 3000;
       case 'C':
         return 1000;
+      case 'T': // 튜토리얼용 특별 등급
+        return 500;
       default:
         return 1000;
     }

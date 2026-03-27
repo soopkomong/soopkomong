@@ -14,6 +14,7 @@ import 'package:soopkomong/domain/entities/location.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/home/widgets/step_count_card.dart';
 import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
+import 'package:soopkomong/presentation/core/extensions/egg_type_extension.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -442,7 +443,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           parkName: currentState.lastAcquiredParkName ?? '',
           eggPath:
               currentState.lastAcquiredPetEggPath ??
-              'assets/images/characters/egg_mystery.png',
+              'assets/images/egg/egg_mystery.png',
           isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }
@@ -465,10 +466,19 @@ class _HomePageState extends ConsumerState<HomePage> {
             photoUrl: next.senderPhotoUrl,
             isEn: ref.read(localeProvider) == AppLocale.en,
             onConfirm: () {
-              // TODO: 친구 신청 수락 액션
+              ref
+                  .read(friendsViewModelProvider.notifier)
+                  .acceptFriendRequest(next);
             },
             onReject: () {
-              // TODO: 친구 신청 거절 액션
+              ref
+                  .read(friendsViewModelProvider.notifier)
+                  .declineFriendRequest(next.id);
+            },
+            onClose: () {
+              ref
+                  .read(friendsViewModelProvider.notifier)
+                  .markNotified(next.id);
             },
           );
         }
@@ -487,7 +497,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           parkName: currentState.lastHatchedParkName ?? '',
           imagePath:
               currentState.lastHatchedPetImagePath ??
-              'assets/images/characters/01_big.png',
+              'assets/images/characters/000_big.png',
           isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }

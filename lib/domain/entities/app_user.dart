@@ -17,6 +17,7 @@ class AppUser {
 
   // 친구 목록 (ID 리스트)
   final List<String> friends;
+  final Map<String, DateTime> friendships;
 
   final String? userCode;
   final bool hasCharacter; // 캐릭터 생성 여부
@@ -44,6 +45,7 @@ class AppUser {
     this.wasReentry = false,
     this.acquiredCharacters = const [],
     this.friends = const [],
+    this.friendships = const {},
     this.providerId,
   });
 }

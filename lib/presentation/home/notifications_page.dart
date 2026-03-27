@@ -89,7 +89,6 @@ class NotificationsPage extends ConsumerWidget {
                             : '${req.senderName}님이 친구 신청을 보냈습니다.',
                         date: req.formattedTimestamp,
                         type: NotificationType.friendRequest,
-                        characterTemplateId: req.senderTemplateId,
                         avatarUrl: req.senderPhotoUrl,
                         margin: EdgeInsets.zero,
                         statusText: req.status == FriendRequestStatus.pending

@@ -22,6 +22,9 @@ abstract class SoopkomonRepository {
   /// 특정 사용자가 획득한 캐릭터 목록 로드 (실시간)
   Stream<List<Soopkomon>> getUserSoopkomons(String userId);
 
+  /// 특정 사용자가 보유한 부화 대기 중인 숲코몽 목록 조회
+  Future<List<Soopkomon>> getUnhatchedSoopkomons(String userId);
+
   /// 새로운 캐릭터 획득 기록
   Future<void> addSoopkomon(String userId, Soopkomon soopkomon);
 
