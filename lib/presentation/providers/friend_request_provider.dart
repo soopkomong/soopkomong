@@ -21,3 +21,18 @@ final friendRequestProvider = StreamProvider<List<FriendRequest>>((ref) {
     error: (e, st) => Stream.error(e, st),
   );
 });
+
+/// 사용자의 모든 친구 신청 내역(알림 페이지용 - 수락/거절/대기)을 제공하는 스트림 프로바이더입니다.
+final friendRequestHistoryProvider = StreamProvider<List<FriendRequest>>((ref) {
+  final userAsync = ref.watch(userProvider);
+
+  return userAsync.when(
+    data: (user) {
+      if (user == null) return Stream.value([]);
+      final friendRepo = ref.read(friendRepositoryProvider);
+      return friendRepo.getFriendRequestHistory(user.id);
+    },
+    loading: () => const Stream.empty(),
+    error: (e, st) => Stream.error(e, st),
+  );
+});
