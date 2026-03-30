@@ -1,31 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
+import 'package:soopkomong/domain/repositories/friend_repository.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/friend_provider.dart';
 
-// 실시간으로 친구 요청 목록 제공하는 StreamProvider
-// 실시간으로 '대기 중'인 친구 요청 목록만 제공 (친구 목록 페이지용)
+/// 친구 신청 목록 리스트를 관리하는 스트림 프로바이더입니다.
+///
+/// [Presentation Layer] - Provider
 final friendRequestProvider = StreamProvider<List<FriendRequest>>((ref) {
-  return ref.watch(userProvider).when(
+  final userAsync = ref.watch(userProvider);
+
+  return userAsync.when(
     data: (user) {
       if (user == null) return Stream.value([]);
       final friendRepo = ref.read(friendRepositoryProvider);
       return friendRepo.getPendingFriendRequests(user.id);
     },
-    loading: () => Stream.value([]),
-    error: (e, st) => Stream.error(e, st),
-  );
-});
-
-// 모든 상태의 친구 요청 목록 제공 (알림 페이지 이력용)
-final friendRequestHistoryProvider = StreamProvider<List<FriendRequest>>((ref) {
-  return ref.watch(userProvider).when(
-    data: (user) {
-      if (user == null) return Stream.value([]);
-      final friendRepo = ref.read(friendRepositoryProvider);
-      return friendRepo.getFriendRequestHistory(user.id);
-    },
-    loading: () => Stream.value([]),
+    // 인증 정보 로딩 중에는 빈 스트림을 반환하여 로딩 상태를 유지합니다.
+    // UI(HomePage 등)에서는 .value ?? [] 를 사용하여 무한 로딩을 방지할 수 있습니다.
+    loading: () => const Stream.empty(),
     error: (e, st) => Stream.error(e, st),
   );
 });
