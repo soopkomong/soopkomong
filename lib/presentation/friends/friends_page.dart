@@ -16,6 +16,7 @@ import 'package:soopkomong/presentation/friends/widgets/friend_list_item.dart';
 import 'package:soopkomong/presentation/friends/widgets/send_friend_request_section.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({super.key});
@@ -59,9 +60,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('프로필 로드 실패: $e')));
+        AppToast.show(context, '프로필 로드 실패: $e');
       }
     }
   }
@@ -268,27 +267,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                                           request,
                                                         );
                                                     if (context.mounted) {
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                            '친구 요청을 수락했습니다.',
-                                                          ),
-                                                        ),
-                                                      );
+                                                      AppToast.show(context, '친구 요청을 수락했습니다.');
                                                     }
                                                   } catch (e) {
                                                     if (context.mounted) {
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(
-                                                            '수락 실패: $e',
-                                                          ),
-                                                        ),
-                                                      );
+                                                      AppToast.show(context, '수락 실패: $e');
                                                     }
                                                   }
                                                 },
@@ -329,27 +312,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                                           request.id,
                                                         );
                                                     if (context.mounted) {
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                            '친구 요청을 거절했습니다.',
-                                                          ),
-                                                        ),
-                                                      );
+                                                      AppToast.show(context, '친구 요청을 거절했습니다.');
                                                     }
                                                   } catch (e) {
                                                     if (context.mounted) {
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(
-                                                            '거절 실패: $e',
-                                                          ),
-                                                        ),
-                                                      );
+                                                      AppToast.show(context, '거절 실패: $e');
                                                     }
                                                   }
                                                 },

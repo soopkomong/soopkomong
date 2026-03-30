@@ -76,6 +76,7 @@ class SoopkomonRepositoryImpl implements SoopkomonRepository {
             final enData = enMap[id]!;
             loc['title'] = enData['title'];
             loc['summary'] = enData['summary'];
+            loc['address'] = enData['address'] ?? loc['address'];
             loc['Information'] =
                 enData['information'] ??
                 enData['Information'] ??

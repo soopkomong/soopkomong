@@ -6,6 +6,7 @@ import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key});
@@ -169,13 +170,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   Future<void> _saveProfile() async {
     final newNickname = _nicknameController.text.trim();
     if (newNickname.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('닉네임을 입력해주세요.'),
-          behavior: SnackBarBehavior.floating,
-          elevation: 4,
-        ),
-      );
+      AppToast.show(context, '닉네임을 입력해주세요.');
       return;
     }
 
@@ -187,23 +182,11 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         } else {
           context.go(AppRoute.mypage.path);
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('프로필이 수정되었습니다.'),
-            behavior: SnackBarBehavior.floating,
-            elevation: 4,
-          ),
-        );
+        AppToast.show(context, '프로필이 수정되었습니다.');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('수정 실패: $e'),
-            behavior: SnackBarBehavior.floating,
-            elevation: 4,
-          ),
-        );
+        AppToast.show(context, '수정 실패: $e');
       }
     }
   }

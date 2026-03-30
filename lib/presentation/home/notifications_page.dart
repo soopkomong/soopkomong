@@ -9,6 +9,7 @@ import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/presentation/home/widgets/notification_tile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -110,13 +111,6 @@ class NotificationsPage extends ConsumerWidget {
   }
 
   void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        backgroundColor: AppColors.gray800,
-      ),
-    );
+    AppToast.show(context, message);
   }
 }

@@ -28,9 +28,6 @@ import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
 
 /// [Presentation Layer] - View
 class HomePage extends ConsumerStatefulWidget {
@@ -50,6 +47,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final Map<String, int> _markerIndexMap = {};
   bool _isAddingMarkers = false;
   bool _isMapReady = false; // 지도 플랫폼 채널 준비 상태 플래그
+  bool _didInitialMove = false; // 앱 실행 후 초기 위치 이동 여부
 
   @override
   void initState() {
@@ -256,8 +254,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             northeast: Point(coordinates: Position(180, 90)),
             infiniteBounds: true,
           ),
-          minZoom: 14.5,
-          maxZoom: 22.0,
+          minZoom: 13.0,
+          maxZoom: 21.0,
         ),
       );
     } catch (e) {
@@ -273,8 +271,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       try {
         await mapboxMap.gestures.updateSettings(
           GesturesSettings(
-            scrollEnabled: false,
-            pinchPanEnabled: false,
+            scrollEnabled: false, // 이동 비활성화
+            pinchPanEnabled: false, // 두 손가락 이동 비활성화
+            rotateEnabled: true, // 회전 활성화
+            pitchEnabled: false, // 3D 기울기 비활성화
             focalPoint: ScreenCoordinate(
               x: size.width / 2.0,
               y: size.height / 2.0,
@@ -302,6 +302,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     await _applyDayNightTheme(mapboxMap);
+
+    // 지도가 준비됐을 때 이미 위치 정보가 있다면 즉시 이동 (초기 1회)
+    if (!_didInitialMove) {
+      final state = ref.read(homeViewModelProvider);
+      if (state.currentPosition != null) {
+        _didInitialMove = true;
+        _moveToCurrentLocation(forceDefaultZoom: true);
+      }
+    }
   }
 
   Future<void> _applyDayNightTheme(MapboxMap mapbox) async {
@@ -338,6 +347,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             coordinates: Position(position.longitude, position.latitude),
           ),
           zoom: targetZoom,
+          bearing: 0.0, // 회전 초기화
+          pitch: 0.0, // 기울기 초기화
         ),
       );
     }
@@ -377,49 +388,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       },
     );
-  }
-
-  Future<void> _migrateLocationsToFirestore() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final isEn = ref.read(localeProvider) == AppLocale.en;
-
-    try {
-      final firestore = FirebaseFirestore.instance;
-
-      // 1. locations.json 업로드
-      final String locationsJson = await rootBundle.loadString('assets/locations.json');
-      final Map<String, dynamic> locationsData = json.decode(locationsJson);
-      final List locationsList = locationsData['locations'];
-
-      final locationsRef = firestore.collection('locations');
-      for (var loc in locationsList) {
-        await locationsRef.doc(loc['id'].toString()).set(loc);
-      }
-
-      // 2. en_locations.json 업로드
-      final String enLocationsJson = await rootBundle.loadString('assets/en_locations.json');
-      final List enLocationsList = json.decode(enLocationsJson);
-
-      final enLocationsRef = firestore.collection('en_locations');
-      for (var loc in enLocationsList) {
-        await enLocationsRef.doc(loc['id'].toString()).set(loc);
-      }
-
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(isEn ? "Data migration complete!" : "데이터 마이그레이션 완료!"),
-          backgroundColor: AppColors.primary600,
-        ),
-      );
-    } catch (e) {
-      debugPrint("Migration error: $e");
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(isEn ? "Migration failed: $e" : "마이그레이션 실패: $e"),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
   }
 
   @override
@@ -464,16 +432,17 @@ class _HomePageState extends ConsumerState<HomePage> {
       (_, _) => _moveToCurrentLocation(forceDefaultZoom: true),
     );
 
+    // 앱 실행 후 최초 1회만 내 위치로 자동 이동
     ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (
       prev,
       next,
     ) {
-      if (next != null && mapboxMap != null) {
-        mapboxMap?.setCamera(
-          CameraOptions(
-            center: Point(coordinates: Position(next.longitude, next.latitude)),
-          ),
-        );
+      if (!_didInitialMove &&
+          next != null &&
+          mapboxMap != null &&
+          _isMapReady) {
+        _didInitialMove = true;
+        _moveToCurrentLocation(forceDefaultZoom: true);
       }
     });
 
@@ -588,10 +557,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             key: const ValueKey("mapWidget"),
             styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
             onMapCreated: _onMapCreated,
-            viewport: FollowPuckViewportState(
-              zoom: _defaultZoomLevel,
-              pitch: 0.0,
-            ),
+            viewport: null, // 자동 추적 비활성화 (버튼 누를 때만 이동)
             cameraOptions: CameraOptions(
               center: Point(coordinates: Position(127.7669, 35.9078)),
               zoom: _defaultZoomLevel,
@@ -604,13 +570,38 @@ class _HomePageState extends ConsumerState<HomePage> {
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
           ),
+          // 내 위치 및 줌 초기화 버튼
+          Positioned(
+            bottom: 135, // 바텀바에서 충분히 떨어지도록 높이 수정
+            right: 30,
+            child: GestureDetector(
+              onTap: () =>
+                  ref.read(mapZoomResetProvider.notifier).triggerReset(),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: AppColors.gray100, width: 1),
+                ),
+
+                child: const Icon(
+                  Icons.my_location,
+                  color: AppColors.primary600,
+                  size: 26,
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.white,
-        mini: true,
-        child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primary600),
-        onPressed: () => _migrateLocationsToFirestore(),
       ),
     );
   }

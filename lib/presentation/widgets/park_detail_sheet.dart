@@ -16,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 class ParkDetailSheet extends ConsumerStatefulWidget {
   final String id;
@@ -647,16 +648,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         ? 'Address copied'
                                         : '주소가 복사되었습니다';
                                     
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          message,
-                                          style: AppTextStyles.body.copyWith(color: AppColors.white),
-                                        ),
-                                        behavior: SnackBarBehavior.floating,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
+                                    AppToast.show(context, message);
                                   },
                                   child: SvgPicture.asset(
                                     'assets/images/Copy.svg',

@@ -46,7 +46,9 @@ class SettingsPage extends ConsumerWidget {
                 title: isEn ? 'Privacy Policy' : '개인정보 처리 방침',
                 onTap: () => launchUrl(
                   Uri.parse(
-                    'https://shine-science-804.notion.site/2026-03-24-32d694d9a11d806cba95cccb781d4a13',
+                    isEn
+                        ? 'https://shine-science-804.notion.site/Privacy-Policy-Effective-Date-March-24-2026-333694d9a11d8023a8becfca169a6b6d?source=copy_link'
+                        : 'https://shine-science-804.notion.site/2026-03-24-32d694d9a11d806cba95cccb781d4a13',
                   ),
                 ),
               ),
@@ -55,7 +57,9 @@ class SettingsPage extends ConsumerWidget {
                 title: isEn ? 'Terms of Service' : '이용 약관',
                 onTap: () => launchUrl(
                   Uri.parse(
-                    'https://shine-science-804.notion.site/2026-03-24-32d694d9a11d80c0980efa43bec9f0c7?pvs=74',
+                    isEn
+                        ? 'https://shine-science-804.notion.site/Terms-of-Service-Effective-Date-March-24-2026-333694d9a11d809b8a13c38797a6828b?source=copy_link'
+                        : 'https://shine-science-804.notion.site/2026-03-24-32d694d9a11d80c0980efa43bec9f0c7?pvs=74',
                   ),
                 ),
               ),
