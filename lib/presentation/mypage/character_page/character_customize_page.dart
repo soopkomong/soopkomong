@@ -14,6 +14,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:soopkomong/presentation/providers/character_parts_provider.dart';
 import 'package:soopkomong/presentation/providers/character_provider.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
@@ -798,13 +799,7 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
     } catch (e) {
       if (mounted) {
         final isEn = ref.read(localeProvider) == AppLocale.en;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEn ? 'Save failed: $e' : '저장 실패: $e'),
-            behavior: SnackBarBehavior.floating,
-            elevation: 4,
-          ),
-        );
+        AppToast.show(context, isEn ? 'Save failed: $e' : '저장 실패: $e');
       }
     } finally {
       if (mounted) {

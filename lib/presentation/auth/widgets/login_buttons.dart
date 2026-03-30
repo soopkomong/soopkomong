@@ -8,6 +8,7 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soopkomong/core/utils/auth_error_handler.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 /// 로그인 버튼 위젯 (카카오, 구글, 애플)
 class LoginButtons extends ConsumerWidget {
@@ -157,9 +158,7 @@ class LoginButtons extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        AppToast.show(context, errorMessage);
       }
     } finally {
       ref.read(authLoadingProvider.notifier).set(false);
@@ -175,9 +174,7 @@ class LoginButtons extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        AppToast.show(context, errorMessage);
       }
     } finally {
       ref.read(authLoadingProvider.notifier).set(false);
@@ -193,9 +190,7 @@ class LoginButtons extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         final errorMessage = AuthErrorHandler.getErrorMessage(e, isEn);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        AppToast.show(context, errorMessage);
       }
     } finally {
       ref.read(authLoadingProvider.notifier).set(false);

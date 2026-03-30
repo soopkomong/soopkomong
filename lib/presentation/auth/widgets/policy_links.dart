@@ -4,10 +4,21 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 개인정보처리방침 & 약관동의 링크 위젯
 class PolicyLinks extends ConsumerWidget {
   const PolicyLinks({super.key});
+
+  static const String _privacyPolicyUrl =
+      'https://shine-science-804.notion.site/2026-03-24-32d694d9a11d806cba95cccb781d4a13';
+  static const String _privacyPolicyUrlEn =
+      'https://shine-science-804.notion.site/Privacy-Policy-Effective-Date-March-24-2026-333694d9a11d8023a8becfca169a6b6d?source=copy_link';
+
+  static const String _termsOfServiceUrl =
+      'https://shine-science-804.notion.site/2026-03-24-32d694d9a11d80c0980efa43bec9f0c7?pvs=74';
+  static const String _termsOfServiceUrlEn =
+      'https://shine-science-804.notion.site/Terms-of-Service-Effective-Date-March-24-2026-333694d9a11d809b8a13c38797a6828b?source=copy_link';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,15 +27,7 @@ class PolicyLinks extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         GestureDetector(
-          onTap: () {
-            _showPolicyDialog(
-              context,
-              isEn ? 'Privacy Policy' : '개인정보처리방침',
-              isEn
-                  ? 'Privacy policy content is being prepared.'
-                  : '개인정보처리방침 내용이 준비 중입니다.',
-            );
-          },
+          onTap: () => _launchURL(isEn ? _privacyPolicyUrlEn : _privacyPolicyUrl),
           child: Text(
             isEn ? 'Privacy Policy' : '개인정보처리방침',
             style: AppTextStyles.label.copyWith(color: AppColors.black),
@@ -35,15 +38,7 @@ class PolicyLinks extends ConsumerWidget {
           child: Text('|', style: AppTextStyles.label),
         ),
         GestureDetector(
-          onTap: () {
-            _showPolicyDialog(
-              context,
-              isEn ? 'Terms of Service' : '약관동의',
-              isEn
-                  ? 'Terms of service content is being prepared.'
-                  : '이용약관 내용이 준비 중입니다.',
-            );
-          },
+          onTap: () => _launchURL(isEn ? _termsOfServiceUrlEn : _termsOfServiceUrl),
           child: Text(
             isEn ? 'Terms of Service' : '약관동의',
             style: AppTextStyles.label.copyWith(color: AppColors.black),
@@ -53,68 +48,15 @@ class PolicyLinks extends ConsumerWidget {
     );
   }
 
-  /// 정책, 약관 내용을 보여주는 바텀시트 다이얼로그
-  void _showPolicyDialog(BuildContext context, String title, String content) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 핸들 바
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.gray200,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // 제목
-                  Text(
-                    title,
-                    style: AppTextStyles.headline.copyWith(
-                      color: AppColors.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(color: AppColors.gray100),
-                  const SizedBox(height: 16),
-                  // 내용
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      child: Text(
-                        content,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.gray600,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  /// 외부 URL 링크 연결
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Could not launch $url: $e');
+    }
   }
 }

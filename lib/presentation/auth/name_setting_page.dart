@@ -7,6 +7,7 @@ import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 class NameSettingPage extends ConsumerStatefulWidget {
   const NameSettingPage({super.key});
@@ -41,12 +42,7 @@ class _NameSettingPageState extends ConsumerState<NameSettingPage> {
     final isEn = ref.read(localeProvider) == AppLocale.en;
 
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isEn ? 'Please enter a nickname' : '닉네임을 입력해주세요.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppToast.show(context, isEn ? 'Please enter a nickname' : '닉네임을 입력해주세요.');
       return;
     }
 
@@ -60,12 +56,7 @@ class _NameSettingPageState extends ConsumerState<NameSettingPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEn ? 'Save failed: $e' : '저장 실패: $e'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppToast.show(context, isEn ? 'Save failed: $e' : '저장 실패: $e');
       }
     } finally {
       if (mounted) {

@@ -68,6 +68,7 @@ dependencies:
   health: ^13.3.1
   shared_preferences: ^2.5.4
   flutter_slidable: ^3.1.2
+  fluttertoast: ^9.0.0
 
 dev_dependencies:
   flutter_test:
