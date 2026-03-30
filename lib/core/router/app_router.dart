@@ -50,9 +50,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isNameSetting = state.matchedLocation == AppRoute.nameSetting.path;
       final isTutorial = state.matchedLocation == AppRoute.tutorialGuide.path;
 
+      debugPrint('DEBUG: [Router] 목적지: ${state.matchedLocation}, 온보딩 완료여부: $hasSeenOnboarding, 인증상태: ${authState.value != null}');
+
       // 0. 최우선: 온보딩 시청 여부
       if (!hasSeenOnboarding) {
-        if (isOnboarding) return null;
+        if (isOnboarding) {
+          debugPrint('DEBUG: [Router] 온보딩이 필요하며, 이미 온보딩 페이지입니다. 이동 중단(null).');
+          return null;
+        }
+        debugPrint('DEBUG: [Router] 온보딩이 필요합니다. /onboarding으로 리다이렉트합니다.');
         return AppRoute.onboarding.path;
       }
 

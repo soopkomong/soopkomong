@@ -151,13 +151,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: () async {
+                          debugPrint(
+                            'DEBUG: 온보딩 버튼 클릭. 현재 페이지: $_currentPage, 마지막 페이지 여부: $isLastPage',
+                          );
                           if (isLastPage) {
+                            debugPrint(
+                              'DEBUG: 온보딩 완료 처리 시작...',
+                            );
                             await ref
                                 .read(onboardingProvider.notifier)
                                 .completeOnboarding();
+                            debugPrint(
+                              'DEBUG: 온보딩 완료 처리 대기(await) 종료.',
+                            );
+
+                            // onboardingProvider 상태 변화로 인해 GoRouter가 자동 리다이렉트하겠지만,
+                            // 명시적으로 이동하여 더 빠른 사용자 피드백을 제공합니다.
                             if (!context.mounted) return;
+                            debugPrint(
+                              'DEBUG: context.go를 통해 로그인 페이지로 이동 시도',
+                            );
                             context.go(AppRoute.signIn.path);
                           } else {
+                            debugPrint('DEBUG: 온보딩 다음 페이지로 애니메이션 이동.');
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 350),
                               curve: Curves.easeOutCubic,
