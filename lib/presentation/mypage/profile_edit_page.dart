@@ -8,6 +8,8 @@ import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
 import 'package:soopkomong/core/utils/app_toast.dart';
 
+import 'package:soopkomong/presentation/widgets/common_back_button.dart';
+
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key});
 
@@ -44,15 +46,19 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(AppRoute.mypage.path);
-            }
-          },
+        leadingWidth: 70,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: CommonBackButton(
+            iconData: Icons.close,
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoute.mypage.path);
+              }
+            },
+          ),
         ),
         title: const Text(
           '프로필 수정',

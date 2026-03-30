@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
@@ -15,6 +18,9 @@ class FriendListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+    
     final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
 
     return InkWell(
@@ -59,10 +65,14 @@ class FriendListItem extends ConsumerWidget {
 
                       return Row(
                         children: [
-                          Image.asset(
-                            'assets/images/Sprout.png',
-                            width: 20,
-                            height: 20,
+                          SvgPicture.asset(
+                            'assets/images/Leaf.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.black,
+                              BlendMode.srcIn,
+                            ),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -89,7 +99,7 @@ class FriendListItem extends ConsumerWidget {
                     },
                     loading: () => const SizedBox(height: 14),
                     error: (err, stack) => Text(
-                      '데이터 로드 실패',
+                      isEn ? 'Failed to load data' : '데이터 로드 실패',
                       style: AppTextStyles.label.copyWith(
                         color: AppColors.error,
                       ),

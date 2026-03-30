@@ -29,86 +29,86 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final refreshNotifier = RouterRefreshNotifier();
-  
-  // 인증 상태, 사용자 데이터, 온보딩 상태 변경 시 라우터 새로고침
-  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.notify());
-  ref.listen(userProvider, (_, _) => refreshNotifier.notify());
-  ref.listen(onboardingProvider, (_, _) => refreshNotifier.notify());
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
+    refreshListenable: notifier,
     redirect: (context, state) {
       final authState = ref.read(authStateChangesProvider);
       final userAsync = ref.read(userProvider);
       final hasSeenOnboarding = ref.read(onboardingProvider);
 
-      final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
-      final isOnboarding = state.matchedLocation == AppRoute.onboarding.path;
-      final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
-      final isNameSetting = state.matchedLocation == AppRoute.nameSetting.path;
-      final isTutorial = state.matchedLocation == AppRoute.tutorialGuide.path;
-
-      debugPrint('DEBUG: [Router] 목적지: ${state.matchedLocation}, 온보딩 완료여부: $hasSeenOnboarding, 인증상태: ${authState.value != null}');
-
-      // 0. 최우선: 온보딩 시청 여부
-      if (!hasSeenOnboarding) {
-        if (isOnboarding) {
-          debugPrint('DEBUG: [Router] 온보딩이 필요하며, 이미 온보딩 페이지입니다. 이동 중단(null).');
-          return null;
-        }
-        debugPrint('DEBUG: [Router] 온보딩이 필요합니다. /onboarding으로 리다이렉트합니다.');
-        return AppRoute.onboarding.path;
-      }
-
-      // 1. Firebase Auth 수준에서 로그아웃임이 명확한 경우
-      if (authState.hasValue && authState.value == null) {
-        if (isLoggingIn || isOnboarding) return null;
-        return AppRoute.signIn.path;
-      }
-
-      // 2. 초기 로딩 중 (사용자 데이터가 아직 없는 경우)
-      if (userAsync.isLoading && userAsync.value == null) {
-        return null; // 로딩 완료 후 refreshNotifier에 의해 다시 리다이렉트됨
-      }
+      final matchedLocation = state.matchedLocation;
+      final isLoggingIn = matchedLocation == AppRoute.signIn.path;
+      final isOnboarding = matchedLocation == AppRoute.onboarding.path;
+      final isCustomizing = matchedLocation == AppRoute.characterCustomize.path;
+      final isNameSetting = matchedLocation == AppRoute.nameSetting.path;
+      final isTutorial = matchedLocation == AppRoute.tutorialGuide.path;
 
       final user = userAsync.value;
 
-      // 3. 사용자 데이터가 없는 경우 (로그아웃 상태로 간주)
-      if (user == null) {
-        if (isLoggingIn || isOnboarding) return null;
+      debugPrint(
+        '디버그: [Router] 리다이렉트 시작 - 경로: $matchedLocation, 인증: ${authState.hasValue ? (authState.value != null ? "로그인됨" : "로그아웃됨") : "로딩중"}, 유저: ${user != null ? "데이터 있음" : (userAsync.isLoading ? "로딩중" : "데이터 없음")}',
+      );
+
+      // (A) 최우선: 유효한 유저 데이터가 확인된 경우 (로그인 성공)
+      // 인증 스트림(authState)이 로딩 중이거나 일시적으로 null일 수 있으므로 user 데이터가 있다면 이를 최우선으로 신뢰함
+      if (user != null) {
+        if (isLoggingIn || isOnboarding) {
+          debugPrint('디버그: [Router] 유저 데이터 확인됨. 홈으로 이동');
+          return AppRoute.home.path;
+        }
+        // 단계별 설정 체크
+        if (!user.hasCharacter) {
+          if (isCustomizing) return null;
+          return AppRoute.characterCustomize.path;
+        }
+        if (!user.hasName) {
+          if (isNameSetting) return null;
+          return AppRoute.nameSetting.path;
+        }
+        if (!user.hasSeenTutorial) {
+          if (isTutorial) return null;
+          return AppRoute.tutorialGuide.path;
+        }
+        if (isCustomizing || isNameSetting || isTutorial) {
+          return AppRoute.home.path;
+        }
+        return null;
+      }
+
+      // (B) 온보딩 시청 여부 (로그인 전에 먼저 체크)
+      if (!hasSeenOnboarding) {
+        if (isOnboarding) return null;
+        debugPrint('디버그: [Router] 온보딩 화면으로 이동');
+        return AppRoute.onboarding.path;
+      }
+
+      // (C) 명확한 로그아웃 상태 확인 (인증 정보가 비워진 경우)
+      if (authState.hasValue && authState.value == null) {
+        if (isLoggingIn) return null;
+        debugPrint('디버그: [Router] 인증 정보 없음. 로그인 화면으로 이동');
         return AppRoute.signIn.path;
       }
 
-      // 4. 로그인 성공 후, 단계별 설정 확인
-      
-      // 캐릭터 설정 여부
-      if (!user.hasCharacter) {
-        if (isCustomizing) return null;
-        return AppRoute.characterCustomize.path;
+      // (D) 에러 발생 시 처리
+      if (authState.hasError || userAsync.hasError) {
+        debugPrint('디버그: [Router] 에러 발생. 로그인 화면으로 이동');
+        if (isLoggingIn) return null;
+        return AppRoute.signIn.path;
       }
 
-      // 이름 설정 여부
-      if (!user.hasName) {
-        if (isNameSetting) return null;
-        return AppRoute.nameSetting.path;
+      // (E) 정말 아무 것도 없는 초기 로딩 상태 대기
+      if (userAsync.isLoading || authState.isLoading) {
+        debugPrint('디버그: [Router] 초기 로딩 중... $matchedLocation 대기');
+        return null;
       }
 
-      // 튜토리얼 확인 여부
-      if (!user.hasSeenTutorial) {
-        if (isTutorial) return null;
-        return AppRoute.tutorialGuide.path;
-      }
-
-      // 5. 모든 설정이 완료된 상태에서 인증 관련 페이지 방지
-      if (isLoggingIn || isOnboarding || isCustomizing || isNameSetting || isTutorial) {
-        return AppRoute.home.path;
-      }
-
+      debugPrint('디버그: [Router] 최종 가드 통과. 경로: $matchedLocation');
       return null;
     },
-    refreshListenable: refreshNotifier,
     observers: [routeObserver],
 
     routes: [
@@ -222,8 +222,32 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// 라우터 리프레시를 관리하는 ChangeNotifier
-class RouterRefreshNotifier extends ChangeNotifier {
-  void notify() => notifyListeners();
+/// 라우터 리프레시를 관리하는 Notifier
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    // 인증 상태 변화 감시
+    _ref.listen(authStateChangesProvider, (prev, next) {
+      debugPrint('디버그: [RouterNotifier] 인증 상태 변경 감지');
+      notifyListeners();
+    }, fireImmediately: true); // 즉시 실행하여 초기 상태 반영 보장
+
+    // 유저 데이터 변화 감시
+    _ref.listen(userProvider, (prev, next) {
+      debugPrint('디버그: [RouterNotifier] 유저 데이터 변경 감지');
+      notifyListeners();
+    }, fireImmediately: true);
+
+    // 온보딩 상태 변화 감시
+    _ref.listen(onboardingProvider, (prev, next) {
+      debugPrint('디버그: [RouterNotifier] 온보딩 상태 변경 감지');
+      notifyListeners();
+    }, fireImmediately: true);
+  }
 }
 
