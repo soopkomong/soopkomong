@@ -33,5 +33,13 @@ service cloud.firestore {
       allow delete: if request.auth != null && 
         (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
     }
+
+    // 캐릭터 파츠 데이터
+    match /character_parts/{allPaths=**} {
+      // 모든 인증된 사용자는 캐릭터 구성을 위해 파츠 데이터를 읽을 수 있음
+      allow read: if request.auth != null;
+      // 쓰기는 시스템 관리자만 가능해야 함 (일단 막아둠)
+      allow write: if false;
+    }
   }
 }

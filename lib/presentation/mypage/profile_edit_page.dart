@@ -40,136 +40,149 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider).value;
-    if (user == null) return const Scaffold();
+    final userAsync = ref.watch(userProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.white,
-      appBar: AppBar(
-        leadingWidth: 70,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: CommonBackButton(
-            iconData: Icons.close,
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go(AppRoute.mypage.path);
-              }
-            },
+    return userAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) =>
+          Scaffold(body: Center(child: Text('데이터를 불러오지 못했습니다: $err'))),
+      data: (user) {
+        if (user == null) {
+          return const Scaffold(
+            body: Center(child: Text('사용자 정보를 찾을 수 없습니다.')),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.white,
+          appBar: AppBar(
+            leadingWidth: 70,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: CommonBackButton(
+                iconData: Icons.close,
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(AppRoute.mypage.path);
+                  }
+                },
+              ),
+            ),
+            title: const Text('프로필 수정', style: AppTextStyles.title),
           ),
-        ),
-        title: const Text(
-          '프로필 수정',
-          style: AppTextStyles.title,
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 40),
-            // Avatar Center
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary50,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.white, width: 4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: UrlAvatar(
-                      photoUrl: user.photoUrl ?? '',
-                      size: 152,
-                      useCircle: true,
-                    ),
-                  ),
-                  // Pencil Icon
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        context.pushNamed(AppRoute.characterCustomize.name);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 40),
+                // Avatar Center
+                Center(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 160,
+                        height: 160,
                         decoration: BoxDecoration(
-                          color: AppColors.gray400,
+                          color: AppColors.primary50,
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.white, width: 2),
+                          border: Border.all(color: AppColors.white, width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.edit,
-                          color: AppColors.white,
-                          size: 20,
+                        child: UrlAvatar(
+                          photoUrl: user.photoUrl ?? '',
+                          size: 152,
+                          useCircle: true,
                         ),
                       ),
+                      // Pencil Icon
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: GestureDetector(
+                          onTap: () {
+                            context.pushNamed(AppRoute.characterCustomize.name);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.gray400,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              color: AppColors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 48),
+                // Nickname Label
+                const Text('닉네임', style: AppTextStyles.subTitleL),
+                const SizedBox(height: 12),
+                // Nickname Input
+                TextField(
+                  controller: _nicknameController,
+                  decoration: const InputDecoration(
+                    hintText: '닉네임을 입력하세요',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(color: AppColors.gray100),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(color: AppColors.gray100),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(color: AppColors.primary700),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 48),
-            // Nickname Label
-            const Text('닉네임', style: AppTextStyles.subTitleL),
-            const SizedBox(height: 12),
-            // Nickname Input
-            TextField(
-              controller: _nicknameController,
-              decoration: const InputDecoration(
-                hintText: '닉네임을 입력하세요',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.gray100),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.gray100),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.primary700),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: _saveProfile,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary700,
-              foregroundColor: AppColors.white,
-              minimumSize: const Size(double.infinity, 54),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            child: const Text('저장하기', style: AppTextStyles.subTitleL),
           ),
-        ),
-      ),
+          bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _saveProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary700,
+                  foregroundColor: AppColors.white,
+                  minimumSize: const Size(double.infinity, 54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text('저장하기', style: AppTextStyles.subTitleL),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

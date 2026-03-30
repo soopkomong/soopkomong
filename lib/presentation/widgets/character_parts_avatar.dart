@@ -108,8 +108,11 @@ class CharacterPartsAvatar extends StatelessWidget {
       colorBlendMode: colorBlendMode,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
-      placeholder: (context, url) =>
-          Container(width: size, height: size, color: AppColors.white.withValues(alpha: 0.1)),
+      placeholder: (context, url) => Container(
+        width: size,
+        height: size,
+        color: AppColors.white.withValues(alpha: 0.1),
+      ),
       errorWidget: (context, url, error) => const SizedBox.shrink(),
     );
   }
