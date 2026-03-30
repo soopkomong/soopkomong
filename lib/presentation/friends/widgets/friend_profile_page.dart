@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
@@ -12,7 +11,10 @@ import 'package:soopkomong/presentation/widgets/character_avatar.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_park_section.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_soopkomong_section.dart';
 
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/widgets/common_back_button.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_delete_dialog.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class FriendProfilePage extends ConsumerWidget {
   const FriendProfilePage({super.key, required this.friend});
@@ -21,7 +23,10 @@ class FriendProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormat = DateFormat('yyyy년 M월 d일');
+    final locale = ref.watch(localeProvider);
+    final isEn = locale == AppLocale.en;
+    
+    final dateFormat = isEn ? DateFormat.yMMMd('en') : DateFormat('yyyy년 M월 d일');
     final numberFormat = NumberFormat('#,###');
 
     final friendsAsync = ref.watch(friendsViewModelProvider);
@@ -34,28 +39,9 @@ class FriendProfilePage extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leadingWidth: 70,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Center(
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.gray100),
-              ),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: AppColors.black,
-                  size: 18,
-                ),
-                onPressed: () => context.pop(),
-              ),
-            ),
-          ),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 20),
+          child: CommonBackButton(),
         ),
         actions: [
           if (isFriend)
@@ -128,14 +114,16 @@ class FriendProfilePage extends ConsumerWidget {
                       child: Column(
                         children: [
                           _buildInfoRow(
-                            isFriend ? '친구가 된 날' : '요청 받은 날',
+                            isFriend
+                                ? (isEn ? 'Friended at' : '친구가 된 날')
+                                : (isEn ? 'Requested at' : '요청 받은 날'),
                             dateFormat.format(
                               friend.friendedAt ?? DateTime.now(),
                             ),
                           ),
                           const SizedBox(height: 12),
                           _buildInfoRow(
-                            '총 걸음 수',
+                            isEn ? 'Total Steps' : '총 걸음 수',
                             numberFormat.format(friend.totalSteps),
                           ),
                         ],
@@ -203,10 +191,14 @@ class FriendProfilePage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildProgressBadge(
-                iconWidget: Image.asset(
-                  'assets/images/Sprout.png',
-                  width: 24,
-                  height: 24,
+                iconWidget: SvgPicture.asset(
+                  'assets/images/Leaf.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.black,
+                    BlendMode.srcIn,
+                  ),
                 ),
                 current: visitedCount,
                 total: leafMax,
@@ -215,8 +207,9 @@ class FriendProfilePage extends ConsumerWidget {
               _buildProgressBadge(
                 iconWidget: Image.asset(
                   'assets/images/Sprout.png',
-                  width: 24,
-                  height: 24,
+                  width: 30,
+                  height: 30,
+                  fit: BoxFit.contain,
                 ),
                 current: collectedCount,
                 total: pawMax,

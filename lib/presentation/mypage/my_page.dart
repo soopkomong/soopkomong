@@ -10,6 +10,8 @@ import 'package:soopkomong/presentation/mypage/widgets/profile_card.dart';
 import 'package:soopkomong/presentation/mypage/widgets/visited_parks_section.dart';
 import 'package:soopkomong/presentation/mypage/widgets/collected_characters_section.dart';
 
+import 'package:soopkomong/presentation/widgets/common_back_button.dart';
+
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
 
@@ -23,16 +25,18 @@ class MyPage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          color: AppColors.black,
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(AppRoute.home.path);
-            }
-          },
+        leadingWidth: 70,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: CommonBackButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoute.home.path);
+              }
+            },
+          ),
         ),
         title: Text(
           isEn ? 'My Page' : '마이페이지',

@@ -11,6 +11,8 @@ import 'package:soopkomong/presentation/home/widgets/notification_tile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:soopkomong/core/utils/app_toast.dart';
 
+import 'package:soopkomong/presentation/widgets/common_back_button.dart';
+
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
 
@@ -30,8 +32,12 @@ class NotificationsPage extends ConsumerWidget {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        foregroundColor: Colors.black,
         centerTitle: true,
+        leadingWidth: 70,
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 20),
+          child: CommonBackButton(),
+        ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
