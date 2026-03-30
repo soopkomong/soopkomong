@@ -32,9 +32,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = RouterRefreshNotifier();
   
   // 인증 상태, 사용자 데이터, 온보딩 상태 변경 시 라우터 새로고침
-  ref.listen(authStateChangesProvider, (_, __) => refreshNotifier.notify());
-  ref.listen(userProvider, (_, __) => refreshNotifier.notify());
-  ref.listen(onboardingProvider, (_, __) => refreshNotifier.notify());
+  ref.listen(authStateChangesProvider, (_, _) => refreshNotifier.notify());
+  ref.listen(userProvider, (_, _) => refreshNotifier.notify());
+  ref.listen(onboardingProvider, (_, _) => refreshNotifier.notify());
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,

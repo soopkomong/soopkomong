@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
-import 'package:soopkomong/domain/repositories/friend_repository.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/friend_provider.dart';
 

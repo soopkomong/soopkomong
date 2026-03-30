@@ -641,7 +641,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                     await Clipboard.setData(
                                       ClipboardData(text: widget.address),
                                     );
-                                    if (!mounted) return;
+                                    if (!context.mounted) return;
                                     
                                     final currentLocale = ref.read(localeProvider);
                                     final message = currentLocale == AppLocale.en

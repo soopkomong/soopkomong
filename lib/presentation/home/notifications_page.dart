@@ -18,7 +18,7 @@ class NotificationsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
-    final friendRequestsAsync = ref.watch(friendRequestHistoryProvider);
+    final friendRequestsAsync = ref.watch(friendRequestProvider);
     final requests = friendRequestsAsync.value ?? [];
 
     return Scaffold(
