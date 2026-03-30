@@ -1,3 +1,5 @@
+import 'soopkomon_enums.dart';
+
 /// 유저가 획득한 숲코몽의 인스턴스 정보를 담는 엔티티
 class Soopkomon {
   final String instanceId; // 개별 캐릭터의 고유 식별값 (UUID 등)
@@ -11,7 +13,7 @@ class Soopkomon {
       if (templateId == '000') {
         return 'assets/images/egg/egg_tuto.png';
       }
-      return 'assets/images/egg/egg_mystery.png';
+      return eggType?.imagePath ?? 'assets/images/egg/egg_mystery.png';
     }
     return 'assets/images/characters/${templateId}_big.png';
   }
@@ -27,6 +29,7 @@ class Soopkomon {
   int currentTotalSteps; // 유저의 현재 최신 누적 걸음수 (업데이트용)
   final bool isHatched; // 부화 여부
   final String grade; // 캐릭터 등급 (S, A, B, C)
+  final SoopkomonEggType? eggType; // 부화 전 알 이미지 결정을 위한 타입
 
   Soopkomon({
     required this.instanceId,
@@ -40,6 +43,7 @@ class Soopkomon {
     this.currentTotalSteps = 0,
     this.isHatched = false,
     this.grade = 'C',
+    this.eggType,
   });
 
   // 3. 실시간 계산 필드 (Getter)
@@ -87,6 +91,7 @@ class Soopkomon {
     int? currentTotalSteps,
     bool? isHatched,
     String? grade,
+    SoopkomonEggType? eggType,
   }) {
     return Soopkomon(
       instanceId: instanceId,
@@ -100,6 +105,7 @@ class Soopkomon {
       currentTotalSteps: currentTotalSteps ?? this.currentTotalSteps,
       isHatched: isHatched ?? this.isHatched,
       grade: grade ?? this.grade,
+      eggType: eggType ?? this.eggType,
     );
   }
 }

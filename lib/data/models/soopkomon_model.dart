@@ -1,4 +1,5 @@
 import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 
 class SoopkomonModel extends Soopkomon {
   SoopkomonModel({
@@ -12,6 +13,7 @@ class SoopkomonModel extends Soopkomon {
     required super.stepsAtDiscovery,
     super.currentTotalSteps = 0,
     super.grade = 'C',
+    super.eggType,
   });
 
   factory SoopkomonModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,9 @@ class SoopkomonModel extends Soopkomon {
       stepsAtDiscovery: json['stepsAtDiscovery'] as int? ?? 0,
       currentTotalSteps: json['currentTotalSteps'] as int? ?? 0,
       grade: json['grade'] as String? ?? 'C',
+      eggType: json['eggType'] != null
+          ? SoopkomonEggType.fromValue(json['eggType'] as String)
+          : null,
     );
   }
 
@@ -43,6 +48,7 @@ class SoopkomonModel extends Soopkomon {
       'stepsAtDiscovery': stepsAtDiscovery,
       'currentTotalSteps': currentTotalSteps,
       'grade': grade,
+      'eggType': eggType?.name,
     };
   }
 
@@ -58,6 +64,7 @@ class SoopkomonModel extends Soopkomon {
       stepsAtDiscovery: stepsAtDiscovery,
       currentTotalSteps: currentTotalSteps,
       grade: grade,
+      eggType: eggType,
     );
   }
 }

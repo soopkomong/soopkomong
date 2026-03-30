@@ -59,7 +59,18 @@ final userSoopkomonProvider = StreamProvider<List<Soopkomon>>((ref) {
   return userAsync.when(
     data: (user) {
       if (user == null) return Stream.value([]);
-      return repository.getUserSoopkomons(user.id);
+      return repository.getUserSoopkomons(user.id).asyncMap((soopkomons) async {
+        final templates = await ref.read(soopkomonTemplatesProvider.future);
+        final templateMap = {for (var t in templates) t.templateId: t};
+
+        return soopkomons.map((s) {
+          final template = templateMap[s.templateId];
+          if (template != null) {
+            return s.copyWith(eggType: template.eggType);
+          }
+          return s;
+        }).toList();
+      });
     },
     loading: () => Stream.value([]),
     error: (err, stack) => Stream.value([]),
@@ -72,7 +83,19 @@ final friendSoopkomonProvider = StreamProvider.family<List<Soopkomon>, String>((
   userId,
 ) {
   final repository = ref.watch(soopkomonRepositoryProvider);
-  return repository.getUserSoopkomons(userId);
+
+  return repository.getUserSoopkomons(userId).asyncMap((soopkomons) async {
+    final templates = await ref.read(soopkomonTemplatesProvider.future);
+    final templateMap = {for (var t in templates) t.templateId: t};
+
+    return soopkomons.map((s) {
+      final template = templateMap[s.templateId];
+      if (template != null) {
+        return s.copyWith(eggType: template.eggType);
+      }
+      return s;
+    }).toList();
+  });
 });
 
 /// 6. 필터링된 공원 리스트 (조합 프로바이더)

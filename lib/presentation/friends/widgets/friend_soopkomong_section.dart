@@ -59,34 +59,49 @@ class FriendSoopkomongSection extends ConsumerWidget {
                             ),
                             padding: const EdgeInsets.all(12),
                             child: Center(
-                              child: CachedNetworkImage(
-                                imageUrl:
-                                    'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${character.templateId}_big.png?alt=media',
-                                width: 86,
-                                height: 86,
-                                fit: BoxFit.contain,
-                                placeholder: (context, url) => const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primary400,
+                              child: character.isHatched
+                                ? CachedNetworkImage(
+                                    imageUrl:
+                                        'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${character.templateId}_big.png?alt=media',
+                                    width: 86,
+                                    height: 86,
+                                    fit: BoxFit.contain,
+                                    placeholder: (context, url) =>
+                                        const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.primary400,
+                                          ),
+                                        ),
+                                    errorWidget: (context, url, error) => Image
+                                        .asset(
+                                      character.imagePath,
+                                      width: 86,
+                                      height: 86,
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Image.asset(
+                                                'assets/images/character_silhouette.png',
+                                                width: 86,
+                                                height: 86,
+                                                fit: BoxFit.contain,
+                                              ),
+                                    ),
+                                  )
+                                : Image.asset(
+                                    character.imagePath,
+                                    width: 86,
+                                    height: 86,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(
+                                          Icons.egg,
+                                          color: AppColors.gray300,
+                                        ),
                                   ),
-                                ),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  character.imagePath,
-                                  width: 86,
-                                  height: 86,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Image.asset(
-                                        'assets/images/character_silhouette.png',
-                                        width: 86,
-                                        height: 86,
-                                        fit: BoxFit.contain,
-                                      ),
-                                ),
-                              ),
                             ),
                           ),
                           // 이미지 우상단 흰색 원형 표시
@@ -105,7 +120,10 @@ class FriendSoopkomongSection extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(character.name, style: AppTextStyles.subTitleM),
+                      Text(
+                        character.isHatched ? character.name : '???',
+                        style: AppTextStyles.subTitleM,
+                      ),
                     ],
                   );
                 },
