@@ -18,7 +18,7 @@ import 'package:soopkomong/presentation/layout/app_shell.dart';
 import 'package:soopkomong/presentation/home/notifications_page.dart';
 import 'package:soopkomong/presentation/settings/settings_page.dart';
 import 'package:soopkomong/presentation/providers/onboarding_provider.dart';
-import 'package:soopkomong/domain/entities/app_user.dart';
+
 import 'package:soopkomong/presentation/auth/name_setting_page.dart';
 import 'package:soopkomong/presentation/auth/tutorial_guide_page.dart';
 
@@ -29,24 +29,12 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  // authStateChangesProvider 및 userProvider를 리스닝하여 상태가 바뀔 때마다 라우터 새로고침 트리거
-  final refreshNotifier = ValueNotifier<bool>(false);
-  // authStateChangesProvider 및 userProvider의 상태가 변할 때마다 라우터 새로고침 트리거
-  ref.listen(authStateChangesProvider, (_, _) {
-    refreshNotifier.value = !refreshNotifier.value;
-  });
-  ref.listen(userProvider, (_, _) {
-    refreshNotifier.value = !refreshNotifier.value;
-  });
-  // 온보딩 완료 시 라우터 새로고침 트리거
-  ref.listen<bool>(onboardingProvider, (_, _) {
-    refreshNotifier.value = !refreshNotifier.value;
-  });
-  final notifier = ValueNotifier<AppUser?>(ref.read(userProvider).value);
-  ref.listen<AsyncValue<AppUser?>>(userProvider, (_, next) {
-    notifier.value = next.value;
-  });
-  ref.onDispose(notifier.dispose);
+  final refreshNotifier = RouterRefreshNotifier();
+  
+  // 인증 상태, 사용자 데이터, 온보딩 상태 변경 시 라우터 새로고침
+  ref.listen(authStateChangesProvider, (_, __) => refreshNotifier.notify());
+  ref.listen(userProvider, (_, __) => refreshNotifier.notify());
+  ref.listen(onboardingProvider, (_, __) => refreshNotifier.notify());
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -54,65 +42,61 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authStateChangesProvider);
       final userAsync = ref.read(userProvider);
-
       final hasSeenOnboarding = ref.read(onboardingProvider);
+
       final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
       final isOnboarding = state.matchedLocation == AppRoute.onboarding.path;
-      final isCustomizing =
-          state.matchedLocation == AppRoute.characterCustomize.path;
+      final isCustomizing = state.matchedLocation == AppRoute.characterCustomize.path;
       final isNameSetting = state.matchedLocation == AppRoute.nameSetting.path;
+      final isTutorial = state.matchedLocation == AppRoute.tutorialGuide.path;
 
-      // 0. 최우선: 온보딩 시청 여부 (로그인 여부와 상관없이 가장 먼저 보여줌)
+      // 0. 최우선: 온보딩 시청 여부
       if (!hasSeenOnboarding) {
-        if (isLoggingIn) return null; // 로그인 화면으로 가려 할 때만 허용
-        return isOnboarding ? null : AppRoute.onboarding.path;
+        if (isOnboarding) return null;
+        return AppRoute.onboarding.path;
       }
 
       // 1. Firebase Auth 수준에서 로그아웃임이 명확한 경우
       if (authState.hasValue && authState.value == null) {
-        return isLoggingIn ? null : AppRoute.signIn.path;
+        if (isLoggingIn || isOnboarding) return null;
+        return AppRoute.signIn.path;
       }
 
-      // 2. Firebase Auth와 Firestore 데이터 간의 사용자가 일치하는지 확인 (계정 전환 대비)
-      // authState에는 새 유저가 찍혔는데 userAsync에는 아직 옛날 유저 데이터가 남아있는 경우를 방지
-      if (authState.hasValue &&
-          userAsync.hasValue &&
-          authState.value != null &&
-          userAsync.value != null &&
-          authState.value!.id != userAsync.value!.id) {
-        return null; // 데이터 로딩을 기다림
-      }
-
-      // 3. 초기 로딩 중
+      // 2. 초기 로딩 중 (사용자 데이터가 아직 없는 경우)
       if (userAsync.isLoading && userAsync.value == null) {
-        return null;
+        return null; // 로딩 완료 후 refreshNotifier에 의해 다시 리다이렉트됨
       }
 
       final user = userAsync.value;
 
-      // 4. 온보딩 완료 후, 사용자 데이터가 없는 경우 (로그아웃 상태)
+      // 3. 사용자 데이터가 없는 경우 (로그아웃 상태로 간주)
       if (user == null) {
-        return isLoggingIn ? null : AppRoute.signIn.path;
+        if (isLoggingIn || isOnboarding) return null;
+        return AppRoute.signIn.path;
       }
 
-      // 5. 로그인 성공 후, 캐릭터가 없는 경우
+      // 4. 로그인 성공 후, 단계별 설정 확인
+      
+      // 캐릭터 설정 여부
       if (!user.hasCharacter) {
-        return isCustomizing ? null : AppRoute.characterCustomize.path;
+        if (isCustomizing) return null;
+        return AppRoute.characterCustomize.path;
       }
 
-      // 6. 이름 설정 여부 확인
+      // 이름 설정 여부
       if (!user.hasName) {
-        return isNameSetting ? null : AppRoute.nameSetting.path;
+        if (isNameSetting) return null;
+        return AppRoute.nameSetting.path;
       }
 
-      // 7. 튜토리얼 확인 여부
-      final isTutorial = state.matchedLocation == AppRoute.tutorialGuide.path;
+      // 튜토리얼 확인 여부
       if (!user.hasSeenTutorial) {
-        return isTutorial ? null : AppRoute.tutorialGuide.path;
+        if (isTutorial) return null;
+        return AppRoute.tutorialGuide.path;
       }
 
-      // 8. 로그인 화면이나 설정 화면에 있는데 데이터가 다 있다면 홈으로 리다이렉트
-      if (isLoggingIn || isCustomizing || isNameSetting || isTutorial) {
+      // 5. 모든 설정이 완료된 상태에서 인증 관련 페이지 방지
+      if (isLoggingIn || isOnboarding || isCustomizing || isNameSetting || isTutorial) {
         return AppRoute.home.path;
       }
 
@@ -231,3 +215,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         Scaffold(body: Center(child: Text('Error: ${state.error}'))),
   );
 });
+
+/// 라우터 리프레시를 관리하는 ChangeNotifier
+class RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
