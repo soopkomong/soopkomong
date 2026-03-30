@@ -334,14 +334,23 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _moveToCurrentLocation({bool forceDefaultZoom = false}) async {
     final state = ref.read(homeViewModelProvider);
     final position = state.currentPosition;
-    if (position == null) return;
+    
+    debugPrint('[내 위치] 이동 시도: position=$position, mapboxMap=${mapboxMap != null}');
+    
+    if (position == null) {
+      debugPrint('[내 위치] 현재 위치 정보가 없어 이동할 수 없습니다.');
+      return;
+    }
 
     if (mapboxMap != null) {
       final currentCamera = await mapboxMap!.getCameraState();
       final targetZoom = forceDefaultZoom
           ? _defaultZoomLevel
           : currentCamera.zoom;
-      mapboxMap?.setCamera(
+          
+      debugPrint('[내 위치] 카메라 이동 시작: lat=${position.latitude}, lng=${position.longitude}, zoom=$targetZoom');
+      
+      mapboxMap?.flyTo(
         CameraOptions(
           center: Point(
             coordinates: Position(position.longitude, position.latitude),
@@ -350,7 +359,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           bearing: 0.0, // 회전 초기화
           pitch: 0.0, // 기울기 초기화
         ),
+        MapAnimationOptions(duration: 1000, startDelay: 0),
       );
+    } else {
+      debugPrint('[내 위치] 지도 컨트롤러가 준비되지 않았습니다.');
     }
   }
 
@@ -575,8 +587,10 @@ class _HomePageState extends ConsumerState<HomePage> {
             bottom: 135, // 바텀바에서 충분히 떨어지도록 높이 수정
             right: 30,
             child: GestureDetector(
-              onTap: () =>
-                  ref.read(mapZoomResetProvider.notifier).triggerReset(),
+              onTap: () {
+                debugPrint('[내 위치] 버튼 클릭됨');
+                ref.read(mapZoomResetProvider.notifier).triggerReset();
+              },
               child: Container(
                 width: 48,
                 height: 48,
