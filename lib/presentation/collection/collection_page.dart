@@ -31,7 +31,10 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
   @override
   void initState() {
     super.initState();
-    _selectedTabIndex = widget.initialTab;
+    // 0: 생태공원, 1: 숲코몽 (유효성 검사 추가)
+    _selectedTabIndex = (widget.initialTab >= 0 && widget.initialTab <= 1)
+        ? widget.initialTab
+        : 0;
     _pageController = PageController(initialPage: _selectedTabIndex);
   }
 
@@ -45,22 +48,30 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
   void didUpdateWidget(covariant CollectionPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialTab != widget.initialTab) {
+      final newIndex = (widget.initialTab >= 0 && widget.initialTab <= 1)
+          ? widget.initialTab
+          : 0;
       setState(() {
-        _selectedTabIndex = widget.initialTab;
-        _pageController.jumpToPage(widget.initialTab);
+        _selectedTabIndex = newIndex;
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(newIndex);
+        }
       });
     }
   }
 
   void _onTabChanged(int index) {
+    if (_selectedTabIndex == index) return;
     setState(() {
       _selectedTabIndex = index;
     });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   void _showParkDetailBottomSheet(BuildContext context, Location park) {
@@ -276,8 +287,10 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         final userCharacters = userCharactersAsync.value ?? [];
 
         // 최적화: 유저 캐릭터 리스트를 맵으로 변환하여 O(1) 조회 가능하게 함
+        // 안전 조치: null 아이템 제외 및 유효한 templateId만 포함
         final Map<String, Soopkomon> userCharacterMap = {
-          for (var char in userCharacters) char.templateId: char,
+          for (var char in userCharacters.whereType<Soopkomon>())
+            if (char.templateId.isNotEmpty) char.templateId: char,
         };
 
         return SliverGrid(
@@ -309,12 +322,12 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     AsyncValue<List<SoopkomonTemplate>> templatesAsync,
     int tabIndex,
   ) {
-    // 모든 필요 데이터가 준비되었을 때만 계산
-    if (locationsAsync.hasValue && templatesAsync.hasValue) {
-      final locations = locationsAsync.value!;
-      final templates = templatesAsync.value!;
-      final userCharacters = userCharactersAsync.value ?? [];
+    // 모든 필요 데이터가 준비되었을 때만 계산 (안전한 추출로 변경)
+    final locations = locationsAsync.value;
+    final templates = templatesAsync.value;
+    final userCharacters = userCharactersAsync.value ?? [];
 
+    if (locations != null && templates != null) {
       return CollectionProgressBadge(
         currentCount: tabIndex == 0
             ? locations.where((l) => l.isVisited).length

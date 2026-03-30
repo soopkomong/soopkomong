@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
+import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 
 class SoopkomonDto extends Soopkomon {
   SoopkomonDto({
@@ -14,6 +15,7 @@ class SoopkomonDto extends Soopkomon {
     super.currentTotalSteps = 0,
     super.isHatched = false,
     super.grade = 'C',
+    super.eggType,
   });
 
   factory SoopkomonDto.fromEntity(Soopkomon entity) {
@@ -29,6 +31,7 @@ class SoopkomonDto extends Soopkomon {
       currentTotalSteps: entity.currentTotalSteps,
       isHatched: entity.isHatched,
       grade: entity.grade,
+      eggType: entity.eggType,
     );
   }
 
@@ -56,6 +59,9 @@ class SoopkomonDto extends Soopkomon {
       currentTotalSteps: map['currentTotalSteps'] ?? 0,
       isHatched: map['isHatched'] ?? false,
       grade: map['grade'] ?? 'C',
+      eggType: map['eggType'] != null
+          ? SoopkomonEggType.fromValue(map['eggType'] as String)
+          : null,
     );
   }
 
@@ -72,6 +78,7 @@ class SoopkomonDto extends Soopkomon {
       'currentTotalSteps': currentTotalSteps,
       'isHatched': isHatched,
       'grade': grade,
+      'eggType': eggType?.name,
     };
   }
 }

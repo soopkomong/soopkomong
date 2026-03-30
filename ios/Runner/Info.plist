@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>
@@ -66,6 +68,10 @@
 		<string>오늘 총 걸음 수를 확인하여 수집한 캐릭터의 부화를 돕기 위해 건강 데이터에 접근합니다.</string>
 		<key>NSHealthUpdateUsageDescription</key>
 		<string>오늘 총 걸음 수를 확인하여 수집한 캐릭터의 부화를 돕기 위해 건강 데이터에 접근합니다.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>현재 위치를 기반으로 안내하기 위해 위치 권한이 필요합니다.</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>현재 위치를 기반으로 안내하기 위해 위치 권한이 필요합니다.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>현재 위치를 기반으로 안내하기 위해 위치 권한이 필요합니다.</string>
 		<key>NSMotionUsageDescription</key>

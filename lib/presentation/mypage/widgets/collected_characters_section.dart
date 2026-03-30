@@ -136,7 +136,7 @@ class _CharacterCard extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          character.name,
+          character.isHatched ? character.name : '???',
           style: AppTextStyles.body.copyWith(color: AppColors.gray900),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -146,6 +146,15 @@ class _CharacterCard extends StatelessWidget {
   }
 
   Widget _buildCharacterImage() {
+    if (!character.isHatched) {
+      return Image.asset(
+        character.imagePath,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) =>
+            const Icon(Icons.egg, color: AppColors.gray300),
+      );
+    }
+
     final remoteUrl =
         'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/characters%2F${character.templateId}_big.png?alt=media';
 
