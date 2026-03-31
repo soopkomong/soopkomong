@@ -10,6 +10,7 @@ import 'package:soopkomong/domain/repositories/step_repository.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/step_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Home State
 class HomeState {
@@ -87,6 +88,7 @@ class HomeState {
 class HomeNotifier extends Notifier<HomeState> {
   StreamSubscription<geo.Position>? _positionSubscription;
   StreamSubscription<StepCount>? _stepSubscription;
+  int _lastSyncedSteps = 0;
 
   @override
   HomeState build() {
@@ -121,6 +123,20 @@ class HomeNotifier extends Notifier<HomeState> {
   Future<void> startTracking() async {
     // 앱 시작 시 초기 걸음수 로드
     final stepRepo = ref.read(stepRepositoryProvider);
+
+    // 앱 재설치 등 로컬 누적 걸음수가 0일 경우, Firestore(AppUser) 데이터 기반으로 복구
+    final user = ref.read(userProvider).value;
+    if (user != null) {
+      final localTotal = await stepRepo.getTotalSteps();
+      if (localTotal == 0 && user.totalSteps > 0) {
+        debugPrint('[디버그] 로컬 총 걸음수가 0이므로 Firestore의 totalSteps(${user.totalSteps})로 동기화합니다.');
+        await stepRepo.setTotalSteps(user.totalSteps);
+        _lastSyncedSteps = user.totalSteps;
+      } else {
+        _lastSyncedSteps = localTotal;
+      }
+    }
+
     final initialTodaySteps = await stepRepo.getTodaySteps();
     state = state.copyWith(stepCount: initialTodaySteps);
     print(state.stepCount);
@@ -300,7 +316,24 @@ class HomeNotifier extends Notifier<HomeState> {
       }
     }
 
+    _syncTotalStepsToFirestore(stepData.totalSteps);
+
     _checkHatchingCondition(stepData.totalSteps);
+  }
+
+  void _syncTotalStepsToFirestore(int currentTotalSteps) {
+    if (_lastSyncedSteps == 0) {
+      _lastSyncedSteps = currentTotalSteps;
+    } else if (currentTotalSteps - _lastSyncedSteps >= 100) {
+      _lastSyncedSteps = currentTotalSteps;
+      final user = ref.read(userProvider).value;
+      if (user != null) {
+        FirebaseFirestore.instance.collection('users').doc(user.id).update({
+          'totalSteps': currentTotalSteps,
+          'lastStepUpdateAt': FieldValue.serverTimestamp(),
+        }).catchError((e) => debugPrint('[디버그] Firestore 걸음수 동기화 에러: $e'));
+      }
+    }
   }
 
   Future<void> _acquirePet(int parkId, int currentTotalSteps) async {
