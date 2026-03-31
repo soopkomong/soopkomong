@@ -109,6 +109,27 @@ Future<void> _executeBackgroundLogic() async {
     // 2. 부화 조건 체크 및 Firestore 업데이트
     final userId = prefs.getString('user_id');
     if (userId != null) {
+      if (currentTotalSteps == 0) {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+          final int remoteTotalSteps = userDoc.data()?['totalSteps'] ?? 0;
+          if (remoteTotalSteps > 0) {
+            await stepRepo.setTotalSteps(remoteTotalSteps);
+            currentTotalSteps = remoteTotalSteps;
+            debugPrint("[BackgroundService] Restored totalSteps from Firestore: $remoteTotalSteps");
+          }
+        }
+      } else {
+        try {
+          await FirebaseFirestore.instance.collection('users').doc(userId).update({
+            'totalSteps': currentTotalSteps,
+            'lastStepUpdateAt': FieldValue.serverTimestamp(),
+          });
+        } catch (e) {
+          debugPrint("[BackgroundService] Firestore totalSteps update failed: $e");
+        }
+      }
+
       final remoteDataSource = RemoteLocationDataSourceImpl(
           firestore: FirebaseFirestore.instance);
       final soopkomonRepo = SoopkomonRepositoryImpl(

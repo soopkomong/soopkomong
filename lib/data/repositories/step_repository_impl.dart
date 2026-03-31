@@ -19,6 +19,11 @@ class StepRepositoryImpl implements StepRepository {
   }
 
   @override
+  Future<void> setTotalSteps(int steps) async {
+    await _prefs.setInt(_keyTotalSteps, steps);
+  }
+
+  @override
   Future<int> getTodaySteps() async {
     await _checkAndResetDailySteps();
     return _prefs.getInt(_keyTodaySteps) ?? 0;
