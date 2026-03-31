@@ -107,8 +107,7 @@
 		</array>
 		<key>BGTaskSchedulerPermittedIdentifiers</key>
 		<array>
-			<string>com.transistorsoft.fetch</string>
-			<string>be.tramckrijte.workmanager.BackgroundTask</string>
+			<string>dev.flutter.background.refresh</string>
 		</array>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>

@@ -119,13 +119,11 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> startTracking() async {
-    // 앱 시작 시 초기 걸음수 로드 및 건강 앱 동기화
+    // 앱 시작 시 초기 걸음수 로드
     final stepRepo = ref.read(stepRepositoryProvider);
     final initialTodaySteps = await stepRepo.getTodaySteps();
     state = state.copyWith(stepCount: initialTodaySteps);
-
-    final stepData = await stepRepo.syncWithHealthApp();
-    state = state.copyWith(stepCount: stepData.todaySteps);
+    print(state.stepCount);
 
     // 위치 추적과 걸음 수 추적 시작
     _startLocationTracking();
