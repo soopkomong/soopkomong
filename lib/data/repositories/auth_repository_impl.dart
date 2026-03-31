@@ -166,21 +166,17 @@ class AuthRepositoryImpl implements AuthRepository {
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
       // 2. ID 토큰 가져오기 (Firebase 인증에 필수)
+      // 변경 사항: v7부터 authentication은 Future가 아닌 getter이며, accessToken은 포함하지 않습니다.
       final String? idToken = googleUser.authentication.idToken;
 
-      // 3. 액세스 토큰 가져오기 (추가 팝업을 차단하기 위해 무인 방식 호출)
-      // authorizationForScopes는 promptIfUnauthorized를 false로 설정하여 추가 팝업을 띄우지 않습니다.
-      final authz = await googleUser.authorizationClient.authorizationForScopes(
-        ['email', 'profile'],
-      );
-
-      // 4. Firebase Credential 생성
+      // 3. Firebase Credential 생성
+      // authorizationForScopes 호출을 없애서 2차 팝업 로그인을 방지합니다. idToken만으로 인증이 가능합니다.
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: authz?.accessToken,
         idToken: idToken,
+        // accessToken은 더 이상 필요하지 않음
       );
 
-      // 5. Firebase 로그인
+      // 4. Firebase 로그인
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
