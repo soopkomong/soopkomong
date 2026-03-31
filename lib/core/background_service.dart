@@ -83,16 +83,34 @@ Future<void> _executeBackgroundLogic() async {
     final prefs = await SharedPreferences.getInstance();
     final stepRepo = StepRepositoryImpl(prefs);
 
-    // 1. Pedometer 값을 1회 가져와서 처리
+    int currentTotalSteps = await stepRepo.getTotalSteps();
+    int currentTodaySteps = await stepRepo.getTodaySteps();
+    final userId = prefs.getString('user_id');
+
+    // 1. 앱 재설치 등 로컬 캐시가 0일 경우, Pedometer 업데이트 전 Firestore에서 기존 누적 걸음수를 먼저 복원
+    if (userId != null && currentTotalSteps == 0) {
+      try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+          final int remoteTotalSteps = userDoc.data()?['totalSteps'] ?? 0;
+          if (remoteTotalSteps > 0) {
+            await stepRepo.setTotalSteps(remoteTotalSteps);
+            currentTotalSteps = remoteTotalSteps;
+            debugPrint("[BackgroundService] Restored totalSteps from Firestore: $remoteTotalSteps");
+          }
+        }
+      } catch (e) {
+        debugPrint("[BackgroundService] Failed to restore from Firestore: $e");
+      }
+    }
+
+    // 2. Pedometer 값을 1회 가져와서 처리 (복원된 누적 걸음수에 센서 증가분이 더해짐)
     StepCount? stepCount;
     try {
       stepCount = await Pedometer.stepCountStream.first;
     } catch (e) {
       debugPrint("[BackgroundService] Pedometer fetch error: $e");
     }
-
-    int currentTotalSteps = await stepRepo.getTotalSteps();
-    int currentTodaySteps = await stepRepo.getTodaySteps();
 
     if (stepCount != null) {
       final stepData = await stepRepo.updateFromPedometer(stepCount.steps);
@@ -106,20 +124,9 @@ Future<void> _executeBackgroundLogic() async {
       currentTodaySteps = await stepRepo.getTodaySteps();
     }
 
-    // 2. 부화 조건 체크 및 Firestore 업데이트
-    final userId = prefs.getString('user_id');
+    // 3. 부화 조건 체크 및 Firestore 업데이트
     if (userId != null) {
-      if (currentTotalSteps == 0) {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-        if (userDoc.exists) {
-          final int remoteTotalSteps = userDoc.data()?['totalSteps'] ?? 0;
-          if (remoteTotalSteps > 0) {
-            await stepRepo.setTotalSteps(remoteTotalSteps);
-            currentTotalSteps = remoteTotalSteps;
-            debugPrint("[BackgroundService] Restored totalSteps from Firestore: $remoteTotalSteps");
-          }
-        }
-      } else {
+      if (currentTotalSteps > 0) {
         try {
           await FirebaseFirestore.instance.collection('users').doc(userId).update({
             'totalSteps': currentTotalSteps,

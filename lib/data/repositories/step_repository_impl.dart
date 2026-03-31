@@ -55,7 +55,8 @@ class StepRepositoryImpl implements StepRepository {
     await _checkAndResetDailySteps(currentPedometerValue: pedometerValue);
 
     int totalSteps = _prefs.getInt(_keyTotalSteps) ?? 0;
-    int lastPedometer = _prefs.getInt(_keyLastPedometer) ?? 0;
+    // 첫 앱 시동 시, 이전 값이 없다면 현재 pedometerValue를 기준(0 delta)으로 삼음
+    int lastPedometer = _prefs.getInt(_keyLastPedometer) ?? pedometerValue;
     int baselinePedometer = _prefs.getInt(_keyBaselinePedometer) ?? pedometerValue;
 
     // 2. 기기 재부팅 또는 센서 오류(센서값이 이전 값보다 작아지는 경우) 보정
