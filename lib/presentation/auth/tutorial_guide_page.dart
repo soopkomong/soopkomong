@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
@@ -287,6 +288,9 @@ class _TutorialGuidePageState extends ConsumerState<TutorialGuidePage>
                       );
 
                       await ref.read(authRepositoryProvider).completeTutorial();
+
+                      if (!context.mounted) return;
+                      context.go('/home');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
