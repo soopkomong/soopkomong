@@ -81,16 +81,28 @@ class FriendRepositoryImpl implements FriendRepository {
       throw Exception('이미 친구입니다.');
     }
 
-    // 이미 보내진 요청이 있는지 확인
-    final existingRequest = await _firestore
+    // 이미 보내진 요청이 있는지 확인 (내가 보낸 것)
+    final sentRequest = await _firestore
         .collection('friend_requests')
         .where('senderId', isEqualTo: currentUser.id)
         .where('receiverId', isEqualTo: targetId)
         .where('status', isEqualTo: 'pending')
         .get();
 
-    if (existingRequest.docs.isNotEmpty) {
+    if (sentRequest.docs.isNotEmpty) {
       throw Exception('이미 친구 요청을 보냈습니다.');
+    }
+
+    // 상대방이 나에게 보낸 요청이 있는지 확인 (양방향 중복 방지)
+    final receivedRequest = await _firestore
+        .collection('friend_requests')
+        .where('senderId', isEqualTo: targetId)
+        .where('receiverId', isEqualTo: currentUser.id)
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    if (receivedRequest.docs.isNotEmpty) {
+      throw Exception('상대방으로부터 받은 친구 요청이 이미 있습니다. 알림 창에서 수락해 주세요.');
     }
 
     // 상대방 존재 여부 확인 (UID로 검색)
@@ -99,12 +111,24 @@ class FriendRepositoryImpl implements FriendRepository {
       throw Exception('해당 코드 또는 ID의 유저를 찾을 수 없습니다.');
     }
 
-    // 친구 요청 문서 생성 (photoUrl에 이미 아바타 정보가 포함되어 있음)
+    // 보낸 사람의 최신 정보를 Firestore에서 다시 조회하여 데이터 정합성 확보
+    final senderDoc = await _firestore.collection('users').doc(currentUser.id).get();
+    final senderData = senderDoc.data();
+    
+    final String senderName = senderData?['displayName'] ?? currentUser.displayName ?? '익명';
+    // 사진 우선순위: 캐릭터 아바타(photoUrl) > 소셜 프로필(socialPhotoUrl) > null
+    final String? senderPhotoUrl = (senderData?['photoUrl'] as String?)?.isNotEmpty == true 
+        ? senderData!['photoUrl'] 
+        : (senderData?['socialPhotoUrl'] as String?)?.isNotEmpty == true
+            ? senderData!['socialPhotoUrl']
+            : currentUser.photoUrl;
+
+    // 친구 요청 문서 생성
     final request = FriendRequestDto(
       id: '', // Firestore에서 자동 생성
       senderId: currentUser.id,
-      senderName: currentUser.displayName ?? '익명',
-      senderPhotoUrl: currentUser.photoUrl,
+      senderName: senderName,
+      senderPhotoUrl: senderPhotoUrl,
       receiverId: targetId,
       status: FriendRequestStatus.pending,
       notified: false,
@@ -148,7 +172,13 @@ class FriendRepositoryImpl implements FriendRepository {
       'friendships.${currentUser.id}': FieldValue.serverTimestamp(),
     });
 
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (e) {
+      // 팩토리나 외부에서 로깅을 할 수 있도록 에러를 재발생시키되, 좀 더 상세한 정보를 포함할 수 있음
+      print('친구 요청 수락 중 오류 발생: $e');
+      throw Exception('친구 요청 수락에 실패했습니다: $e');
+    }
   }
 
   @override
@@ -230,31 +260,39 @@ class FriendRepositoryImpl implements FriendRepository {
       'friendships.$friendId': FieldValue.delete(),
     });
 
-    // 2. 상대방 친구 목록 및 날짜 데이터 삭제
+    // 2. 상대방 친구 목록 및 날짜 데이터 삭제 (규칙 수정으로 가능)
     final friendRef = _firestore.collection('users').doc(friendId);
     batch.update(friendRef, {
       'friends': FieldValue.arrayRemove([currentUserId]),
       'friendships.$currentUserId': FieldValue.delete(),
     });
 
-    // 3. 관련 친구 요청 문서 삭제 (재신청이 가능하도록 정리)
-    final requestsQuery = await _firestore
+    // 3. 관련 친구 요청 문서 완전 삭제 (재신청이 가능하도록 정리)
+    // A->B 요청과 B->A 요청 모두 삭제
+    final requestsAtoB = await _firestore
         .collection('friend_requests')
-        .where('senderId', whereIn: [currentUserId, friendId])
+        .where('senderId', isEqualTo: currentUserId)
+        .where('receiverId', isEqualTo: friendId)
         .get();
 
-    for (var doc in requestsQuery.docs) {
-      final data = doc.data();
-      final senderId = data['senderId'];
-      final receiverId = data['receiverId'];
+    final requestsBtoA = await _firestore
+        .collection('friend_requests')
+        .where('senderId', isEqualTo: friendId)
+        .where('receiverId', isEqualTo: currentUserId)
+        .get();
 
-      // 내 ID와 상대방 ID가 서로 교차되어 있는지 확인 (A->B or B->A)
-      if ((senderId == currentUserId && receiverId == friendId) ||
-          (senderId == friendId && receiverId == currentUserId)) {
-        batch.delete(doc.reference);
-      }
+    for (var doc in requestsAtoB.docs) {
+      batch.delete(doc.reference);
+    }
+    for (var doc in requestsBtoA.docs) {
+      batch.delete(doc.reference);
     }
 
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (e) {
+      print('친구 삭제 중 오류 발생: $e');
+      throw Exception('친구 삭제에 실패했습니다: $e');
+    }
   }
 }

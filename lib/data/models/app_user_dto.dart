@@ -8,6 +8,7 @@ class AppUserDto extends AppUser {
     super.email,
     super.displayName,
     super.photoUrl,
+    super.socialPhotoUrl,
     super.userCode,
     super.hasCharacter = false,
     super.hasName = false,
@@ -44,7 +45,8 @@ class AppUserDto extends AppUser {
       id: user.uid,
       email: user.email,
       displayName: data?['displayName'],
-      photoUrl: data?['photoUrl'] ?? user.photoURL,
+      photoUrl: data?['photoUrl'], // Only from Firestore (Character image)
+      socialPhotoUrl: data?['socialPhotoUrl'] ?? user.photoURL, // Fallback to social photo
       userCode: data?['user_code'],
       hasCharacter: data?['has_character'] ?? false,
       hasName: data?['has_name'] ?? false,

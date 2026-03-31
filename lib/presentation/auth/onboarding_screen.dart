@@ -207,7 +207,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
+                          onTap: () async {
+                            // 로그인으로 바로 갈 때도 온보딩을 완료한 것으로 처리
+                            await ref.read(onboardingProvider.notifier).completeOnboarding();
+                            if (!context.mounted) return;
                             context.push(AppRoute.signIn.path);
                           },
                           child: Text(

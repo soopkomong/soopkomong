@@ -51,9 +51,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         '디버그: [Router] 리다이렉트 체크 - 경로: $matchedLocation, 인증상태: ${authState.isLoading ? "로딩중" : (authState.value != null ? "로그인됨" : "로그아웃됨")}',
       );
 
-      // (1) 온보딩 시청 여부 (가장 먼저 체크)
-      if (!hasSeenOnboarding) {
-        if (isOnboarding) return null;
+      // (1) 온보딩 시청 여부 체크
+      // 단, 이미 로그인된 유저는 온보딩을 강제하지 않음 (새 기기 로그인 등의 루프 방지)
+      final isLoggedIn = authState.hasValue && authState.value != null;
+      if (!hasSeenOnboarding && !isLoggedIn) {
+        if (isOnboarding || isLoggingIn) return null;
         debugPrint('디버그: [Router] -> 온보딩 화면으로 이동');
         return AppRoute.onboarding.path;
       }
@@ -66,7 +68,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // (3) 로그아웃 상태 확인
       if (authState.hasValue && authState.value == null) {
-        if (isLoggingIn) return null;
+        if (isLoggingIn || isOnboarding) return null;
         debugPrint('디버그: [Router] -> 로그인 화면으로 이동');
         return AppRoute.signIn.path;
       }
@@ -74,7 +76,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       // (4) 유저 데이터 확인 (로그인 성공 상태)
       final user = userAsync.value;
       if (user != null) {
+        // 로그인/온보딩 페이지에 남아있으면 안 되므로 적절한 다음 단계로 이동
         if (isLoggingIn || isOnboarding) {
+          // 필수 설정이 남아있으면 해당 단계로, 아니면 홈으로
+          if (!user.hasCharacter) return AppRoute.characterCustomize.path;
+          if (!user.hasName) return AppRoute.nameSetting.path;
+          if (!user.hasSeenTutorial) return AppRoute.tutorialGuide.path;
           debugPrint('디버그: [Router] -> 메인 홈으로 이동');
           return AppRoute.home.path;
         }
@@ -96,18 +103,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AppRoute.tutorialGuide.path;
         }
 
-        // 모든 단계를 마친 후 설정 페이지에 있었다면 홈으로 복귀
-        if (isLoggingIn || isOnboarding) {
-          return AppRoute.home.path;
-        }
-        
         return null;
       }
 
       // (5) 에러 발생 시 처리
       if (authState.hasError || userAsync.hasError) {
         debugPrint('디버그: [Router] 에러 발생 -> 로그인 화면으로 이동');
-        if (isLoggingIn) return null;
+        if (isLoggingIn || isOnboarding) return null;
         return AppRoute.signIn.path;
       }
 
