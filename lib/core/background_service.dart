@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,7 +39,7 @@ Future<void> initializeService() async {
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
-      autoStart: true,
+      autoStart: false,
       isForegroundMode: true,
       notificationChannelId: 'soopkomong_bg_service',
       initialNotificationTitle: '숲코몽',
@@ -45,13 +47,32 @@ Future<void> initializeService() async {
       foregroundServiceNotificationId: 888,
     ),
     iosConfiguration: IosConfiguration(
-      autoStart: true,
+      autoStart: false,
       onForeground: onStart,
       onBackground: onIosBackground,
     ),
   );
+}
 
-  await service.startService();
+Future<void> startBackgroundServiceSafe() async {
+  final service = FlutterBackgroundService();
+  if (await service.isRunning()) return;
+
+  if (Platform.isAndroid) {
+    // 안드로이드 14 이상에서는 포어그라운드 서비스 시작 시 권한이 없으면 SecurityException 발생
+    final locationGranted = await Permission.locationAlways.isGranted || await Permission.locationWhenInUse.isGranted;
+    final activityGranted = await Permission.activityRecognition.isGranted;
+    final notificationGranted = await Permission.notification.isGranted;
+
+    if (locationGranted && activityGranted && notificationGranted) {
+      debugPrint("[BackgroundService] Permissions verified, starting service.");
+      await service.startService();
+    } else {
+      debugPrint("[BackgroundService] Required permissions not fully granted. Skipping service start.");
+    }
+  } else {
+    await service.startService();
+  }
 }
 
 @pragma('vm:entry-point')

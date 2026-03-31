@@ -11,6 +11,7 @@ import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/step_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:soopkomong/core/background_service.dart';
 
 /// Home State
 class HomeState {
@@ -142,9 +143,12 @@ class HomeNotifier extends Notifier<HomeState> {
     print(state.stepCount);
 
     // 위치 추적과 걸음 수 추적 시작
-    _startLocationTracking();
+    await _startLocationTracking();
     _startPedometerTracking();
     _listenToUserForTutorialEgg();
+
+    // 백그라운드 서비스 안전 시작 (권한 체크 포함)
+    startBackgroundServiceSafe();
   }
 
   void _listenToUserForTutorialEgg() {
