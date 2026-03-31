@@ -7,6 +7,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/utils/map_helper.dart';
 import 'package:soopkomong/core/utils/turf_helper.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,7 +48,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final Map<String, int> _markerIndexMap = {};
   bool _isAddingMarkers = false;
   bool _isMapReady = false; // 지도 플랫폼 채널 준비 상태 플래그
-  bool _didInitialMove = false; // 앱 실행 후 초기 위치 이동 여부
+  bool _hasMovedToInitialLocation = false; // 최초 위치 이동 여부
 
   @override
   void initState() {
@@ -225,6 +226,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     polygonAnnotationManager = null;
     _markerIndexMap.clear();
     _isMapReady = false;
+    _hasMovedToInitialLocation = false;
 
     Future.microtask(() async {
       if (!mounted) return;
@@ -302,14 +304,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     await _applyDayNightTheme(mapboxMap);
-
-    // 지도가 준비됐을 때 이미 위치 정보가 있다면 즉시 이동 (초기 1회)
-    if (!_didInitialMove) {
-      final state = ref.read(homeViewModelProvider);
-      if (state.currentPosition != null) {
-        _didInitialMove = true;
-        _moveToCurrentLocation(forceDefaultZoom: true);
-      }
+    
+    // 지도가 생성된 시점에 이미 위치를 받아왔다면 즉시 1회 이동
+    final currentState = ref.read(homeViewModelProvider);
+    if (currentState.currentPosition != null && !_hasMovedToInitialLocation) {
+      _tryMoveToUserLocation(currentState.currentPosition!);
     }
   }
 
@@ -331,38 +330,34 @@ class _HomePageState extends ConsumerState<HomePage> {
     return currentHour < 6 || currentHour >= 18;
   }
 
-  Future<void> _moveToCurrentLocation({bool forceDefaultZoom = false}) async {
-    final state = ref.read(homeViewModelProvider);
-    final position = state.currentPosition;
+  Future<void> _tryMoveToUserLocation(geo.Position position, {bool forceDefaultZoom = false}) async {
+    if (mapboxMap == null) return;
     
-    debugPrint('[내 위치] 이동 시도: position=$position, mapboxMap=${mapboxMap != null}');
+    _hasMovedToInitialLocation = true; // 중복 호출 방지
     
-    if (position == null) {
-      debugPrint('[내 위치] 현재 위치 정보가 없어 이동할 수 없습니다.');
-      return;
+    double targetZoom = _defaultZoomLevel;
+    if (!forceDefaultZoom) {
+      try {
+        final currentCamera = await mapboxMap!.getCameraState();
+        targetZoom = currentCamera.zoom;
+      } catch (e) {
+        debugPrint('[내 위치] getCameraState 오류 무시: $e');
+      }
     }
 
-    if (mapboxMap != null) {
-      final currentCamera = await mapboxMap!.getCameraState();
-      final targetZoom = forceDefaultZoom
-          ? _defaultZoomLevel
-          : currentCamera.zoom;
-          
-      debugPrint('[내 위치] 카메라 이동 시작: lat=${position.latitude}, lng=${position.longitude}, zoom=$targetZoom');
-      
-      mapboxMap?.flyTo(
-        CameraOptions(
-          center: Point(
-            coordinates: Position(position.longitude, position.latitude),
-          ),
-          zoom: targetZoom,
-          bearing: 0.0, // 회전 초기화
-          pitch: 0.0, // 기울기 초기화
-        ),
-        MapAnimationOptions(duration: 1000, startDelay: 0),
+    final point = Point(coordinates: Position(position.longitude, position.latitude));
+    final cameraOptions = CameraOptions(center: point, zoom: targetZoom, bearing: 0.0, pitch: 0.0);
+    
+    debugPrint('[디버그] 내 위치로 맵 이동 명령 전송: ${position.latitude}, ${position.longitude}');
+    try {
+      // 큐에 정상적으로 적재되어, 지도 렌더링이 완료된 후 애니메이션으로 부드럽게 이동합니다.
+      await mapboxMap!.flyTo(
+        cameraOptions,
+        MapAnimationOptions(duration: 1200, startDelay: 0),
       );
-    } else {
-      debugPrint('[내 위치] 지도 컨트롤러가 준비되지 않았습니다.');
+    } catch (e) {
+      debugPrint('[디버그] 지도 이동 명령 실패: $e');
+      _hasMovedToInitialLocation = false; // 실패 시 재시도 할 수 있도록
     }
   }
 
@@ -441,20 +436,22 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     ref.listen(
       mapZoomResetProvider,
-      (_, _) => _moveToCurrentLocation(forceDefaultZoom: true),
+      (_, _) {
+        final state = ref.read(homeViewModelProvider);
+        if (state.currentPosition != null) {
+          _tryMoveToUserLocation(state.currentPosition!, forceDefaultZoom: true);
+        }
+      },
     );
 
-    // 앱 실행 후 최초 1회만 내 위치로 자동 이동
+    // 위치 획득 및 갱신 시 실시간 트래킹 (내가 걷는 대로 지도 중앙 유지)
     ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (
       prev,
       next,
     ) {
-      if (!_didInitialMove &&
-          next != null &&
-          mapboxMap != null &&
-          _isMapReady) {
-        _didInitialMove = true;
-        _moveToCurrentLocation(forceDefaultZoom: true);
+      if (next != null && mapboxMap != null) {
+        // 앱을 켠 첫 위치 획득 때만 고정 줌(16.5) 사용, 이후 걷는 중일 땐 사용자의 현재 줌 레벨 유지
+        _tryMoveToUserLocation(next, forceDefaultZoom: !_hasMovedToInitialLocation);
       }
     });
 
@@ -569,9 +566,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             key: const ValueKey("mapWidget"),
             styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
             onMapCreated: _onMapCreated,
-            viewport: null, // 자동 추적 비활성화 (버튼 누를 때만 이동)
+            viewport: null, // 자동 추적 비활성화, 수동 flyTo 적용
             cameraOptions: CameraOptions(
-              center: Point(coordinates: Position(127.7669, 35.9078)),
+              center: Point(coordinates: Position(127.7669, 35.9078)), // 대한민국 중앙을 기본값으로 두어 부드러운 시작 제공
               zoom: _defaultZoomLevel,
               pitch: 0.0,
               bearing: 0.0,
@@ -581,39 +578,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             top: 65,
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
-          ),
-          // 내 위치 및 줌 초기화 버튼
-          Positioned(
-            bottom: 135, // 바텀바에서 충분히 떨어지도록 높이 수정
-            right: 30,
-            child: GestureDetector(
-              onTap: () {
-                debugPrint('[내 위치] 버튼 클릭됨');
-                ref.read(mapZoomResetProvider.notifier).triggerReset();
-              },
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  border: Border.all(color: AppColors.gray100, width: 1),
-                ),
-
-                child: const Icon(
-                  Icons.my_location,
-                  color: AppColors.primary600,
-                  size: 26,
-                ),
-              ),
-            ),
           ),
         ],
       ),
