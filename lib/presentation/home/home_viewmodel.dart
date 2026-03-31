@@ -162,16 +162,17 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> _startLocationTracking() async {
-    debugPrint('[디버그] _startLocationTracking 시작');
     bool serviceEnabled;
     geo.LocationPermission permission;
 
+    // 1. 위치 서비스 활성화 여부 확인
     serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       state = state.copyWith(errorMessage: '위치 서비스가 비활성화되어 있습니다.');
       return;
     }
 
+    // 2. 위치 권한 확인 및 요청 (오직 Geolocator만 사용)
     permission = await geo.Geolocator.checkPermission();
     if (permission == geo.LocationPermission.denied) {
       permission = await geo.Geolocator.requestPermission();
@@ -182,17 +183,22 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     if (permission == geo.LocationPermission.deniedForever) {
-      state = state.copyWith(errorMessage: '위치 권한이 영구적으로 거부되었습니다.');
+      state = state.copyWith(errorMessage: '위치 권한이 영구적으로 거부되었습니다. 설정에서 변경해주세요.');
       return;
     }
 
+    // 3. 내 위치 파악 (정확도 높게)
     debugPrint('[디버그] 현재 위치 가져오기 시도 중...');
-    final initialPosition = await geo.Geolocator.getCurrentPosition();
-    debugPrint(
-      '[디버그] 초기 위치 획득: ${initialPosition.latitude}, ${initialPosition.longitude}',
-    );
-    state = state.copyWith(currentPosition: initialPosition);
-    _checkParkProximity(initialPosition);
+    try {
+      final position = await geo.Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.high,
+      );
+      state = state.copyWith(currentPosition: position);
+      debugPrint('[디버그] 내 위치 파악 성공: ${position.latitude}, ${position.longitude}');
+      _checkParkProximity(position);
+    } catch (e) {
+      debugPrint('[디버그] 위치 가져오기 초기 오류: $e');
+    }
 
     _positionSubscription =
         geo.Geolocator.getPositionStream(
