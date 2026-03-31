@@ -23,6 +23,38 @@ class AuthRepositoryImpl implements AuthRepository {
   Stream<AppUser?> get authStateChanges =>
       _firebaseAuth.authStateChanges().asyncMap((user) async {
         if (user == null) return null;
+
+        // Firebase 콘솔에서 계정이 삭제/비활성화된 경우를 감지하기 위해 reload() 호출
+        // ✅ reload() 실패 시 무조건 로그아웃하지 않음 (로그인 직후 일시적 실패 가능)
+        //    실패해도 기존 user 정보로 계속 진행하고, 실제 계정 삭제는 currentUser == null로 판단
+        try {
+          await user.reload();
+          final refreshedUser = _firebaseAuth.currentUser;
+          if (refreshedUser == null) {
+            // reload() 후 currentUser가 null → 계정이 실제로 삭제된 경우
+            log('User ${user.uid} no longer exists after reload. Signing out.');
+            await _firebaseAuth.signOut();
+            return null;
+          }
+          final userDoc = await _syncUserToFirestore(refreshedUser);
+          return _mapFirebaseUser(refreshedUser, userDoc);
+        } on FirebaseAuthException catch (e) {
+          // user-not-found, user-disabled: 계정 자체가 삭제/비활성화된 경우만 로그아웃
+          if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+            log('User ${user.uid} is deleted or disabled (${e.code}). Signing out.');
+            try {
+              await _firebaseAuth.signOut();
+            } catch (_) {}
+            return null;
+          }
+          // 그 외 FirebaseAuthException(네트워크, 토큰 미설정 등)은 기존 user로 계속 진행
+          log('User reload failed (non-critical): ${e.code}. Continuing with current user.');
+        } catch (e) {
+          // 예상치 못한 예외도 기존 user로 계속 진행 (로그아웃 금지)
+          log('User reload unexpected error: $e. Continuing with current user.');
+        }
+
+        // reload() 실패 시 원본 user로 Firestore 동기화 진행
         final userDoc = await _syncUserToFirestore(user);
         return _mapFirebaseUser(user, userDoc);
       });
@@ -117,6 +149,7 @@ class AuthRepositoryImpl implements AuthRepository {
         'deletedAt': null, // 탈퇴 일시 초기화
         'wasReentry': previouslyDeleted, // 탈퇴 상태였다면 재진입 플래그 설정
         'socialPhotoUrl': user.photoURL, // Always update social profile link
+        if (user.email != null) 'email': user.email, // 이메일 변경 시 동기화
       };
 
       // 마이그레이션: 캐릭터가 없는데 photoUrl이 있다면 socialPhotoUrl로 이동 (한 번만 실행되도록 설계 가능하지만 단순화)

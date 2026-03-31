@@ -62,7 +62,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // (2) 로딩 중일 때는 절대 이동 판단을 내리지 않음 (중요: 리다이렉트 루프 방지)
       if (userAsync.isLoading || authState.isLoading) {
-        debugPrint('디버그: [Router] 데이터 로딩 대기 중...');
+        debugPrint('디버그: [Router] 데이터 로딩 대기 중... (현재 경로: $matchedLocation)');
         return null;
       }
 
@@ -106,7 +106,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // (5) 에러 발생 시 처리
+      // (5) user가 null이고 authState도 값이 없는 경우 (isDeleted 등으로 null 반환된 경우)
+      // ✅ 로그인 화면으로 보내야 함
+      if (!isLoggingIn && !isOnboarding) {
+        debugPrint('디버그: [Router] user==null (isDeleted 등) -> 로그인 화면으로 이동');
+        return AppRoute.signIn.path;
+      }
+
+      // (6) 에러 발생 시 처리
       if (authState.hasError || userAsync.hasError) {
         debugPrint('디버그: [Router] 에러 발생 -> 로그인 화면으로 이동');
         if (isLoggingIn || isOnboarding) return null;
@@ -257,4 +264,3 @@ class RouterNotifier extends ChangeNotifier {
     }, fireImmediately: true);
   }
 }
-

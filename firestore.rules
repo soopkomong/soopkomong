@@ -54,5 +54,18 @@ service cloud.firestore {
       // 쓰기는 시스템 관리자만 가능해야 함 (일단 막아둠)
       allow write: if false;
     }
+    // 공원/장소 데이터 (한국어)
+    match /locations/{docId} {
+      // 공원 정보는 공개 데이터 - 인증된 사용자라면 누구나 읽기 가능
+      allow read: if request.auth != null;
+      // 쓰기는 시스템 관리자만 (일단 막아둠)
+      allow write: if false;
+    }
+
+    // 공원/장소 데이터 (영어)
+    match /locations_en/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
   }
 }
