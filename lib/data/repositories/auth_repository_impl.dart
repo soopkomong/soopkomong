@@ -93,7 +93,8 @@ class AuthRepositoryImpl implements AuthRepository {
         'id': user.uid,
         'email': user.email,
         'displayName': user.displayName,
-        'photoUrl': user.photoURL,
+        'socialPhotoUrl': user.photoURL, // Store social profile separately
+        'photoUrl': null, // Initial character photo is null
         'user_code': newCode,
         'has_character': false,
         'has_name': false,
@@ -115,7 +116,13 @@ class AuthRepositoryImpl implements AuthRepository {
         'isDeleted': false, // 로그인 시 탈퇴 대기 상태 해제
         'deletedAt': null, // 탈퇴 일시 초기화
         'wasReentry': previouslyDeleted, // 탈퇴 상태였다면 재진입 플래그 설정
+        'socialPhotoUrl': user.photoURL, // Always update social profile link
       };
+
+      // 마이그레이션: 캐릭터가 없는데 photoUrl이 있다면 socialPhotoUrl로 이동 (한 번만 실행되도록 설계 가능하지만 단순화)
+      if (data?['has_character'] == false && data?['photoUrl'] != null) {
+        updates['photoUrl'] = null; // 캐릭터가 없으므로 photoUrl은 null로 만듦 (사용자 요청 반영)
+      }
 
       try {
         final token = await FcmService.getToken();

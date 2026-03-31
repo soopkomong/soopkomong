@@ -5,6 +5,7 @@ class AppUser {
   final String? email;
   final String? displayName;
   final String? photoUrl;
+  final String? socialPhotoUrl;
 
   final String? providerId; // 로그인 제공자 ID (google.com, apple.com, oidc.kakao 등)
 
@@ -33,6 +34,7 @@ class AppUser {
     this.email,
     this.displayName,
     this.photoUrl,
+    this.socialPhotoUrl,
     this.userCode,
     this.hasCharacter = false,
     this.hasName = false,
