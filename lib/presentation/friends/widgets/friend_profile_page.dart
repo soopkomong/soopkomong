@@ -14,6 +14,7 @@ import 'package:soopkomong/presentation/friends/widgets/friend_soopkomong_sectio
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/presentation/widgets/common_back_button.dart';
 import 'package:soopkomong/presentation/friends/widgets/friend_delete_dialog.dart';
+import 'package:soopkomong/presentation/providers/friend_provider.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 
 class FriendProfilePage extends ConsumerWidget {
@@ -171,19 +172,12 @@ class FriendProfilePage extends ConsumerWidget {
   }
 
   Widget _buildProgressBadges(WidgetRef ref) {
-    final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
+    final visitCountAsync = ref.watch(friendVisitCountProvider(friend.id));
     final totalLocationsAsync = ref.watch(totalLocationsCountProvider);
     final totalTemplatesAsync = ref.watch(totalTemplatesCountProvider);
 
-    return friendCharactersAsync.when(
-      data: (characters) {
-        final visitedCount = characters
-            .map((c) => c.discoveredSpotId)
-            .where((id) => id.isNotEmpty)
-            .toSet()
-            .length;
-        final collectedCount = characters.length;
-
+    return visitCountAsync.when(
+      data: (data) {
         final leafMax = totalLocationsAsync.value ?? 50;
         final pawMax = totalTemplatesAsync.value ?? 30;
 
@@ -202,7 +196,7 @@ class FriendProfilePage extends ConsumerWidget {
                     BlendMode.srcIn,
                   ),
                 ),
-                current: visitedCount,
+                current: data.visitedCount,
                 total: leafMax,
               ),
               const SizedBox(width: 8),
@@ -213,7 +207,7 @@ class FriendProfilePage extends ConsumerWidget {
                   height: 30,
                   fit: BoxFit.contain,
                 ),
-                current: collectedCount,
+                current: data.collectedCount,
                 total: pawMax,
               ),
             ],

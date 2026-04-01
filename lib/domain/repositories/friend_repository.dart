@@ -13,6 +13,8 @@ abstract class FriendRepository {
   Stream<List<FriendRequest>> getPendingFriendRequests(String userId);
   Stream<List<FriendRequest>> getFriendRequestHistory(String userId);
 
+  Stream<AppUser> getUserStream(String userId);
+
   Future<void> markAllPendingRequestsAsNotified(String currentUserId);
   Future<void> markNotified(String requestId);
   Future<void> deleteNotification(String requestId);

@@ -72,4 +72,48 @@ class AppUserDto extends AppUser {
           : null,
     );
   }
+
+  factory AppUserDto.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+    if (data == null) throw Exception('Document data is null');
+
+    final Map<String, dynamic> rawFriendships =
+        data['friendships'] as Map<String, dynamic>? ?? {};
+    final Map<String, DateTime> friendshipsMap = {};
+    rawFriendships.forEach((key, value) {
+      if (value is Timestamp) {
+        friendshipsMap[key] = value.toDate();
+      }
+    });
+
+    return AppUserDto(
+      id: doc.id,
+      email: data['email'],
+      displayName: data['displayName'],
+      photoUrl: data['photoUrl'],
+      socialPhotoUrl: data['socialPhotoUrl'],
+      userCode: data['user_code'],
+      hasCharacter: data['has_character'] ?? false,
+      hasName: data['has_name'] ?? false,
+      hasSeenTutorial: data['has_seen_tutorial'] ?? false,
+      characterSettings: data['character_settings'],
+      totalSteps: data['totalSteps'] ?? 0,
+      lastStepUpdateAt: data['lastStepUpdateAt'] != null
+          ? (data['lastStepUpdateAt'] as Timestamp).toDate()
+          : null,
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : null,
+      deletedAt: data['deletedAt'] != null
+          ? (data['deletedAt'] as Timestamp).toDate()
+          : null,
+      wasReentry: data['wasReentry'] ?? false,
+      unlockedParkIds: List<int>.from(data['unlockedParkIds'] ?? []),
+      friends: List<String>.from(data['friends'] ?? []),
+      friendships: friendshipsMap,
+      providerId: data['providerId'],
+    );
+  }
+
+  AppUser toEntity() => this;
 }

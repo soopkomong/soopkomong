@@ -52,4 +52,16 @@ class AppUser {
     this.friendships = const {},
     this.providerId,
   });
+
+  /// 캐릭터 획득 정보와 잠금 해제 이력을 통합한 방문 공원 ID 목록
+  Set<int> getVisitedParkIds() {
+    final characterVisitedIds = acquiredCharacters
+        .map((c) => int.tryParse(c.discoveredSpotId) ?? -1)
+        .where((id) => id != -1);
+
+    return {
+      ...characterVisitedIds,
+      ...unlockedParkIds,
+    };
+  }
 }
