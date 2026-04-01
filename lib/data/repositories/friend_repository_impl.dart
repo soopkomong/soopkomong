@@ -4,6 +4,7 @@ import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/domain/entities/friend_request.dart';
 import 'package:soopkomong/domain/repositories/friend_repository.dart';
+import 'package:soopkomong/data/models/app_user_dto.dart';
 import 'package:soopkomong/data/models/friend_model_dto.dart';
 import 'package:soopkomong/data/models/friend_request_dto.dart';
 
@@ -230,6 +231,20 @@ class FriendRepositoryImpl implements FriendRepository {
               .toList();
           requests.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           return requests;
+        });
+  }
+
+  @override
+  Stream<AppUser> getUserStream(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists) {
+            throw Exception('유저를 찾을 수 없습니다.');
+          }
+          return AppUserDto.fromFirestore(snapshot).toEntity();
         });
   }
 
