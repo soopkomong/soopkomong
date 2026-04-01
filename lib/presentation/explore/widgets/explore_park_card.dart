@@ -39,6 +39,8 @@ class ExploreParkCard extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
+                  memCacheWidth: 240,
+                  memCacheHeight: 240,
                   fadeOutDuration: Duration.zero,
                   placeholderFadeInDuration: Duration.zero,
                   placeholder: (context, url) => const ShimmerLoading(

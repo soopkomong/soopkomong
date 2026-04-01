@@ -64,42 +64,50 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
               const SizedBox(height: 24),
               // 검색바
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.gray200,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: TextField(
-                    textAlignVertical: TextAlignVertical.center,
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: isEn ? 'Search parks...' : '검색어를 입력해주세요',
-                      hintStyle: AppTextStyles.label.copyWith(
-                        color: AppColors.gray500,
-                        height: 1.2,
-                      ),
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.only(left: 20, right: 8),
-                        child: Icon(
-                          Icons.search,
-                          color: AppColors.gray500,
-                          size: 22,
-                        ),
-                      ),
-                      prefixIconConstraints: const BoxConstraints(
-                        minWidth: 52,
-                        minHeight: 48,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: TextField(
+                  textAlignVertical: TextAlignVertical.center,
+                  cursorColor: AppColors.primary700,
+                  style: AppTextStyles.body.copyWith(color: AppColors.gray900),
+
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: AppColors.gray50,
+                    hintText: isEn ? 'Search parks...' : '검색어를 입력해주세요',
+                    hintStyle: AppTextStyles.body.copyWith(
+                      color: AppColors.gray500,
                     ),
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.only(left: 18, right: 10),
+                      child: Icon(
+                        Icons.search,
+                        color: AppColors.gray400,
+                        size: 22,
+                      ),
+                    ),
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 52,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
                 ),
               ),

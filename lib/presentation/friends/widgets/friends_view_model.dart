@@ -44,6 +44,9 @@ class FriendsViewModel extends AsyncNotifier<List<FriendModel>> {
 
     final friendRepo = ref.read(friendRepositoryProvider);
     await friendRepo.acceptFriendRequest(currentUser, request);
+    
+    // 수락 후 친구 목록 즉시 갱신
+    ref.invalidateSelf();
   }
 
   // 친구 요청 거절
