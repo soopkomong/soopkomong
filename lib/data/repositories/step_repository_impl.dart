@@ -42,42 +42,58 @@ class StepRepositoryImpl implements StepRepository {
       await _prefs.setInt(_keyTodaySteps, 0);
       await _prefs.setString(_keyLastUpdateDate, todayStr);
       
-      // 날짜가 바뀔 때 전달된 pedometer값이 있다면 그것을 새 기준점(Baseline)으로 삼음.
-      // 없다면 마지막 알려진 값을 기준점으로 삼음.
-      final baseline = currentPedometerValue ?? _prefs.getInt(_keyLastPedometer) ?? 0;
+      // 마지막 알려진 센서값이 0이고 현재 센서값도 없다면, 
+      // 아직 초기화 전이므로 baseline을 설정하지 않고 미룸 (updateFromPedometer에서 처리)
+      final lastPedometer = _prefs.getInt(_keyLastPedometer) ?? 0;
+      if (currentPedometerValue == null && lastPedometer == 0) {
+        return;
+      }
+
+      final baseline = currentPedometerValue ?? lastPedometer;
       await _prefs.setInt(_keyBaselinePedometer, baseline);
     }
   }
 
   @override
   Future<StepData> updateFromPedometer(int pedometerValue) async {
-    // 1. 날짜 갱신 여부 체크: 날짜가 바뀌면 전달받은 값을 Baseline으로 설정
+    int lastPedometer = _prefs.getInt(_keyLastPedometer) ?? 0;
+
+    // 1. 초기값 설정: 앱 설치 후 처음으로 센서값을 받을 때
+    if (lastPedometer == 0) {
+      debugPrint('[StepRepo] First run: initializing with sensor value $pedometerValue');
+      await _prefs.setInt(_keyLastPedometer, pedometerValue);
+      await _prefs.setInt(_keyBaselinePedometer, pedometerValue);
+      await _prefs.setInt(_keyTodaySteps, 0);
+      await _prefs.setInt(_keyTotalSteps, 0);
+      
+      final now = DateTime.now();
+      await _prefs.setString(_keyLastUpdateDate, "${now.year}-${now.month}-${now.day}");
+      
+      return StepData(todaySteps: 0, totalSteps: 0);
+    }
+
+    // 2. 날짜 갱신 여부 체크: 날짜가 바뀌면 전달받은 값을 Baseline으로 설정
     await _checkAndResetDailySteps(currentPedometerValue: pedometerValue);
 
     int totalSteps = _prefs.getInt(_keyTotalSteps) ?? 0;
-    int lastPedometer = _prefs.getInt(_keyLastPedometer) ?? 0;
     int baselinePedometer = _prefs.getInt(_keyBaselinePedometer) ?? pedometerValue;
 
-    // 2. 기기 재부팅 또는 센서 오류(센서값이 이전 값보다 작아지는 경우) 보정
+    // 3. 기기 재부팅 또는 센서 오류(센서값이 이전 값보다 작아지는 경우) 보정
     if (pedometerValue < lastPedometer) {
       debugPrint('[StepRepo] Reboot detected or sensor reset. Adjusting baseline.');
-      // 재부팅 시 앱이 살아나면서 센서값이 0-근처 로 초기화됨.
-      // 기존 누적치(Total)는 이미 보존되어 있으니 건드리지 않음.
-      // 어제/오늘 걸음수를 유지하기 위해 새로운 Baseline을 감소한 만큼 재조정.
-      // (현재 pedometerValue를 기반으로 todaySteps가 계산되도록)
       int currentTodaySteps = _prefs.getInt(_keyTodaySteps) ?? 0;
       baselinePedometer = pedometerValue - currentTodaySteps;
       await _prefs.setInt(_keyBaselinePedometer, baselinePedometer);
     }
 
-    // 3. 누적 걸음수(Total) 계산 로직
+    // 4. 누적 걸음수(Total) 계산 로직
     int delta = pedometerValue - lastPedometer;
     if (delta > 0) {
       totalSteps += delta;
       await _prefs.setInt(_keyTotalSteps, totalSteps);
     }
 
-    // 4. 오늘 걸음수 계산: 현재 센서값 - 오늘 자정 시점 센서값 (음수 방어)
+    // 5. 오늘 걸음수 계산: 현재 센서값 - 오늘 자정 시점 센서값 (음수 방어)
     int calculatedToday = pedometerValue - baselinePedometer;
     if (calculatedToday < 0) calculatedToday = 0;
     
