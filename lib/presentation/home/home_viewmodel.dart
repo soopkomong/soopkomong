@@ -29,6 +29,8 @@ class HomeState {
   final String? lastHatchedPetName;
   final String? lastHatchedParkName;
   final String? lastHatchedPetImagePath;
+  final String? lastUnlockedParkName;
+  final String? lastUnlockedParkImageUrl;
 
   HomeState({
     required this.isLoading,
@@ -45,6 +47,8 @@ class HomeState {
     this.lastHatchedPetName,
     this.lastHatchedParkName,
     this.lastHatchedPetImagePath,
+    this.lastUnlockedParkName,
+    this.lastUnlockedParkImageUrl,
   });
 
   HomeState copyWith({
@@ -62,6 +66,8 @@ class HomeState {
     String? lastHatchedPetName,
     String? lastHatchedParkName,
     String? lastHatchedPetImagePath,
+    String? lastUnlockedParkName,
+    String? lastUnlockedParkImageUrl,
   }) {
     return HomeState(
       isLoading: isLoading ?? this.isLoading,
@@ -81,6 +87,9 @@ class HomeState {
       lastHatchedParkName: lastHatchedParkName ?? this.lastHatchedParkName,
       lastHatchedPetImagePath:
           lastHatchedPetImagePath ?? this.lastHatchedPetImagePath,
+      lastUnlockedParkName: lastUnlockedParkName ?? this.lastUnlockedParkName,
+      lastUnlockedParkImageUrl:
+          lastUnlockedParkImageUrl ?? this.lastUnlockedParkImageUrl,
     );
   }
 }
@@ -273,12 +282,28 @@ class HomeNotifier extends Notifier<HomeState> {
 
     if (detectedParkId != state.currentParkId) {
       if (detectedParkId != null) {
+        final park = state.locations.firstWhere((loc) => loc.id == detectedParkId);
+
+        // 유저의 잠금 해제 이력 확인 (알 획득 방식과 동일하게 유저의 unlockedParkIds 체크)
+        final user = ref.read(userProvider).value;
+        final isAlreadyUnlocked =
+            user?.unlockedParkIds.contains(detectedParkId) ?? false;
+
         state = state.copyWith(
           currentParkId: detectedParkId,
           stepsAtParkEntry: state.stepCount,
           isPetAcquiredInCurrentPark: false,
+          // 이미 잠금 해제된 공원이면 팝업 데이터 노출 안 함
+          lastUnlockedParkName: isAlreadyUnlocked ? null : park.name,
+          lastUnlockedParkImageUrl: isAlreadyUnlocked ? null : park.imageUrl,
         );
-        debugPrint('공원 진입: $detectedParkId, 진입 시 걸음수: ${state.stepCount}');
+
+        // 처음 방문이면 이력 기록
+        if (user != null && !isAlreadyUnlocked) {
+          _recordParkUnlock(user.id, detectedParkId);
+        }
+
+        debugPrint('공원 진입: $detectedParkId (${park.name}), 이미 잠금해제됨: $isAlreadyUnlocked');
       } else {
         state = state.copyWith(
           currentParkId: null,
@@ -447,6 +472,35 @@ class HomeNotifier extends Notifier<HomeState> {
       lastHatchedParkName: null,
       lastHatchedPetImagePath: null,
     );
+  }
+
+  /// 공원 잠금해제 팝업 확인 후 상태 초기화
+  void clearUnlockedPark() {
+    debugPrint('[디버그] clearUnlockedPark() 호출');
+    state = state.copyWith(
+      lastUnlockedParkName: null,
+      lastUnlockedParkImageUrl: null,
+    );
+  }
+
+  /// 공원 잠금해제 이력 기록
+  Future<void> _recordParkUnlock(String userId, int parkId) async {
+    try {
+      final user = ref.read(userProvider).value;
+      if (user == null) return;
+
+      // 이미 리스트에 있는지 한 번 더 방어적 체크
+      if (user.unlockedParkIds.contains(parkId)) return;
+
+      final updatedIds = [...user.unlockedParkIds, parkId];
+      await ref
+          .read(authRepositoryProvider)
+          .updateUnlockedParks(userId, updatedIds);
+
+      debugPrint('[디버그] 공원 잠금 해제 이력 업데이트 성공: $parkId');
+    } catch (e) {
+      debugPrint('[디버그] 공원 잠금 해제 이력 업데이트 에러: $e');
+    }
   }
 }
 

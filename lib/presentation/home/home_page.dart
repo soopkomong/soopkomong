@@ -27,6 +27,8 @@ import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart'
 import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
+import 'package:soopkomong/presentation/home/widgets/park_unlocked_dialog.dart';
+import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
@@ -498,6 +500,24 @@ class _HomePageState extends ConsumerState<HomePage> {
               currentState.lastHatchedPetImagePath ??
               'assets/images/characters/000_big.png',
           isEn: ref.read(localeProvider) == AppLocale.en,
+        );
+      }
+    });
+
+    ref.listen(homeViewModelProvider.select((s) => s.lastUnlockedParkName), (
+      prev,
+      next,
+    ) {
+      if (next != null) {
+        final currentState = ref.read(homeViewModelProvider);
+        ParkUnlockedDialog.show(
+          context,
+          parkName: next,
+          imageUrl: currentState.lastUnlockedParkImageUrl ?? '',
+          isEn: ref.read(localeProvider) == AppLocale.en,
+          onConfirm: () {
+            ref.read(homeViewModelProvider.notifier).clearUnlockedPark();
+          },
         );
       }
     });

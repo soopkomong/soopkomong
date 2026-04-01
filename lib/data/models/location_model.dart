@@ -29,16 +29,19 @@ class LocationModel extends Location {
   factory LocationModel.fromJson(Map<String, dynamic> json) {
     final navi = json['navi'] as Map<String, dynamic>?;
 
-    // JSON의 imageUrls 배열 직접 파싱
+    // JSON의 imageUrls 배열 직접 파싱 (보안을 위해 http -> https 변환 포함)
     final List<String> imageUrls =
-        (json['imageUrls'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .where((url) => url.isNotEmpty)
-            .toList() ??
+        (json['imageUrls'] as List<dynamic>?)?.map((e) {
+              final url = e.toString();
+              if (url.startsWith('http://tong.visitkorea.or.kr')) {
+                return url.replaceFirst('http://', 'https://');
+              }
+              return url;
+            }).where((url) => url.isNotEmpty).toList() ??
         [];
 
     return LocationModel(
-      id: int.tryParse(json['contentId']?.toString() ?? '') ?? 0,
+      id: (json['id'] as num?)?.toInt() ?? 0,
       region: json['region'] as String? ?? '알 수 없음',
       name: json['title'] as String? ?? '이름 없음',
       lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
