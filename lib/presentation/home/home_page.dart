@@ -27,7 +27,6 @@ import 'package:soopkomong/presentation/friends/widgets/friends_view_model.dart'
 import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
-import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
@@ -49,8 +48,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   bool _isAddingMarkers = false;
   bool _isMapReady = false; // 지도 플랫폼 채널 준비 상태 플래그
   bool _hasMovedToInitialLocation = false; // 최초 위치 이동 여부
-  String? _lastShownRequestId; // 중복 팝업 방지를 위한 변수
-
 
   @override
   void initState() {
@@ -474,45 +471,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       }
     });
-
-    ref.listen(
-      friendRequestProvider.select(
-        (s) => s.value
-            ?.where(
-              (req) =>
-                  req.status == FriendRequestStatus.pending && !req.notified,
-            )
-            .firstOrNull,
-      ),
-      (prev, next) {
-        if (next != null && next.id != _lastShownRequestId) {
-          _lastShownRequestId = next.id;
-          
-          // 팝업을 띄우기 전에 즉시 알림 확인 처리하여 스트림 중복 방지
-          ref.read(friendsViewModelProvider.notifier).markNotified(next.id);
-
-          FriendRequestDialog.show(
-            context,
-            nickname: next.senderName,
-            photoUrl: next.senderPhotoUrl,
-            isEn: ref.read(localeProvider) == AppLocale.en,
-            onConfirm: () {
-              ref
-                  .read(friendsViewModelProvider.notifier)
-                  .acceptFriendRequest(next);
-            },
-            onReject: () {
-              ref
-                  .read(friendsViewModelProvider.notifier)
-                  .declineFriendRequest(next.id);
-            },
-            onClose: () {
-              // 이미 위에서 markNotified를 했으므로 여기서는 추가 작업 불필요
-            },
-          );
-        }
-      },
-    );
 
     ref.listen(homeViewModelProvider.select((s) => s.lastHatchedPetName), (
       prev,
