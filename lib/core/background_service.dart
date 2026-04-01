@@ -9,7 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/firebase_options.dart';
 import 'package:soopkomong/data/repositories/step_repository_impl.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/foundation.dart';
 import 'package:soopkomong/data/datasources/remote_location_datasource.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
 import 'package:soopkomong/domain/usecases/check_hatching_usecase.dart';

@@ -139,7 +139,9 @@ class HomeNotifier extends Notifier<HomeState> {
     if (user != null) {
       final localTotal = await stepRepo.getTotalSteps();
       if (localTotal == 0 && user.totalSteps > 0) {
-        debugPrint('[디버그] 로컬 총 걸음수가 0이므로 Firestore의 totalSteps(${user.totalSteps})로 동기화합니다.');
+        debugPrint(
+          '[디버그] 로컬 총 걸음수가 0이므로 Firestore의 totalSteps(${user.totalSteps})로 동기화합니다.',
+        );
         await stepRepo.setTotalSteps(user.totalSteps);
         _lastSyncedSteps = user.totalSteps;
       } else {
@@ -149,7 +151,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
     final initialTodaySteps = await stepRepo.getTodaySteps();
     state = state.copyWith(stepCount: initialTodaySteps);
-    print(state.stepCount);
+    debugPrint('[디버그] 오늘 걸음수 초기값: ${state.stepCount}');
 
     // 위치 추적과 걸음 수 추적 시작
     await _startLocationTracking();
@@ -174,11 +176,13 @@ class HomeNotifier extends Notifier<HomeState> {
     try {
       final pets = await ref.read(userSoopkomonProvider.future);
       final hasTutorialEgg = pets.any((p) => p.templateId == '000');
-      
+
       if (!hasTutorialEgg) {
         debugPrint('[디버그] 튜토리얼 알(000) 미보유 감지. 자동 지급 프로세스 시작 (UserID: $userId)');
         final tutorialEgg = Soopkomon.tutorialEgg();
-        await ref.read(soopkomonRepositoryProvider).addSoopkomon(userId, tutorialEgg);
+        await ref
+            .read(soopkomonRepositoryProvider)
+            .addSoopkomon(userId, tutorialEgg);
         debugPrint('[디버그] 튜토리얼 알(000) 지급 완료.');
       } else {
         debugPrint('[디버그] 튜토리얼 알(000) 이미 보유 중.');
@@ -210,7 +214,9 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     if (permission == geo.LocationPermission.deniedForever) {
-      state = state.copyWith(errorMessage: '위치 권한이 영구적으로 거부되었습니다. 설정에서 변경해주세요.');
+      state = state.copyWith(
+        errorMessage: '위치 권한이 영구적으로 거부되었습니다. 설정에서 변경해주세요.',
+      );
       return;
     }
 
@@ -221,7 +227,9 @@ class HomeNotifier extends Notifier<HomeState> {
         desiredAccuracy: geo.LocationAccuracy.high,
       );
       state = state.copyWith(currentPosition: position);
-      debugPrint('[디버그] 내 위치 파악 성공: ${position.latitude}, ${position.longitude}');
+      debugPrint(
+        '[디버그] 내 위치 파악 성공: ${position.latitude}, ${position.longitude}',
+      );
       _checkParkProximity(position);
     } catch (e) {
       debugPrint('[디버그] 위치 가져오기 초기 오류: $e');
@@ -357,10 +365,14 @@ class HomeNotifier extends Notifier<HomeState> {
       _lastSyncedSteps = currentTotalSteps;
       final user = ref.read(userProvider).value;
       if (user != null) {
-        FirebaseFirestore.instance.collection('users').doc(user.id).update({
-          'totalSteps': currentTotalSteps,
-          'lastStepUpdateAt': FieldValue.serverTimestamp(),
-        }).catchError((e) => debugPrint('[디버그] Firestore 걸음수 동기화 에러: $e'));
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.id)
+            .update({
+              'totalSteps': currentTotalSteps,
+              'lastStepUpdateAt': FieldValue.serverTimestamp(),
+            })
+            .catchError((e) => debugPrint('[디버그] Firestore 걸음수 동기화 에러: $e'));
       }
     }
   }

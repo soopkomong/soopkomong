@@ -132,6 +132,8 @@ class AuthRepositoryImpl implements AuthRepository {
         'has_name': false,
         'has_seen_tutorial': false,
         'character_settings': null,
+        'friends': [],
+        'friendships': {},
         'fcmToken': fcmToken,
         'createdAt': FieldValue.serverTimestamp(),
         'lastLoginAt': FieldValue.serverTimestamp(),
@@ -156,6 +158,11 @@ class AuthRepositoryImpl implements AuthRepository {
       if (data?['has_character'] == false && data?['photoUrl'] != null) {
         updates['photoUrl'] = null; // 캐릭터가 없으므로 photoUrl은 null로 만듦 (사용자 요청 반영)
       }
+
+      // 마이그레이션: friends/friendships 필드가 없는 구 버전 유저를 위한 초기화
+      // 보안 규칙에서 .size() 호출 시 null 에러가 발생하므로, 없으면 빈 값으로 초기화
+      if (data?['friends'] == null) updates['friends'] = [];
+      if (data?['friendships'] == null) updates['friendships'] = {};
 
       try {
         final token = await FcmService.getToken();

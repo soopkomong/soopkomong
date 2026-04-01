@@ -136,7 +136,13 @@ class FriendRepositoryImpl implements FriendRepository {
       timestamp: DateTime.now(),
     );
 
-    await _firestore.collection('friend_requests').add(request.toFirestore());
+    try {
+      await _firestore.collection('friend_requests').add(request.toFirestore());
+      debugPrint('[친구신청] 성공: ${currentUser.id} -> $targetId');
+    } catch (e) {
+      debugPrint('[친구신청] 실패: $e');
+      throw Exception('친구 요청을 보내는 중 오류가 발생했습니다: $e');
+    }
   }
 
   @override
@@ -179,10 +185,14 @@ class FriendRepositoryImpl implements FriendRepository {
       debugPrint('[친구수락] 성공: ${request.senderId} <-> ${currentUser.id}');
     } catch (e) {
       debugPrint('[친구수락] 실패(Batch Commit): $e');
-      if (e is FirebaseException && e.code == 'not-found') {
-        throw Exception('친구 요청 수락에 실패했습니다. 상대방 유저 정보가 존재하지 않습니다.');
+      if (e is FirebaseException) {
+        if (e.code == 'permission-denied') {
+          throw Exception('친구 요청 수락 권한이 없습니다. 관리자에게 보안 규칙 설정을 확인해 주세요.');
+        } else if (e.code == 'not-found') {
+          throw Exception('친구 요청 수락에 실패했습니다. 유저 정보가 존재하지 않습니다.');
+        }
       }
-      throw Exception('친구 요청 수락에 실패했습니다: $e');
+      throw Exception('친구 요청 수락 중 오류가 발생했습니다: $e');
     }
   }
 
@@ -295,9 +305,17 @@ class FriendRepositoryImpl implements FriendRepository {
 
     try {
       await batch.commit();
+      debugPrint('[친구삭제] 성공: $currentUserId <-> $friendId');
     } catch (e) {
-      print('친구 삭제 중 오류 발생: $e');
-      throw Exception('친구 삭제에 실패했습니다: $e');
+      debugPrint('[친구삭제] 실패(Batch Commit): $e');
+      if (e is FirebaseException) {
+        if (e.code == 'permission-denied') {
+          throw Exception('친구 삭제 권한이 없습니다. 보안 규칙을 확인해 주세요.');
+        } else if (e.code == 'not-found') {
+          throw Exception('친구 삭제에 실패했습니다. 유저 정보가 존재하지 않습니다.');
+        }
+      }
+      throw Exception('친구 삭제 중 오류가 발생했습니다: $e');
     }
   }
 }
