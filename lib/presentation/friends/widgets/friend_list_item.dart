@@ -6,6 +6,7 @@ import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
+import 'package:soopkomong/presentation/providers/friend_provider.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
@@ -20,8 +21,6 @@ class FriendListItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
-    
-    final friendCharactersAsync = ref.watch(friendSoopkomonProvider(friend.id));
 
     return InkWell(
       onTap: () {
@@ -44,21 +43,13 @@ class FriendListItem extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  friendCharactersAsync.when(
-                    data: (characters) {
-                      final visitedCount = characters
-                          .map((c) => c.discoveredSpotId)
-                          .where((id) => id.isNotEmpty)
-                          .toSet()
-                          .length;
-                      final collectedCount = characters.length;
+                  ref.watch(friendVisitCountProvider(friend.id)).when(
+                    data: (counts) {
+                      final visitedCount = counts.visitedCount;
+                      final collectedCount = counts.collectedCount;
 
-                      final totalLocationsAsync = ref.watch(
-                        totalLocationsCountProvider,
-                      );
-                      final totalTemplatesAsync = ref.watch(
-                        totalTemplatesCountProvider,
-                      );
+                      final totalLocationsAsync = ref.watch(totalLocationsCountProvider);
+                      final totalTemplatesAsync = ref.watch(totalTemplatesCountProvider);
 
                       final leafMax = totalLocationsAsync.value ?? 49;
                       final pawMax = totalTemplatesAsync.value ?? 50;
