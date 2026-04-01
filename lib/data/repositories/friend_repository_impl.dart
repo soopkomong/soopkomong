@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/domain/entities/app_user.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
@@ -158,14 +159,14 @@ class FriendRepositoryImpl implements FriendRepository {
       'notified': true,
     });
 
-    // 2. 내 친구 목록 및 날짜 추가
+    // 2. 내 친구 목록 및 날짜 추가 (update & dot notation 사용으로 기존 데이터 보존)
     final myRef = _firestore.collection('users').doc(currentUser.id);
     batch.update(myRef, {
       'friends': FieldValue.arrayUnion([request.senderId]),
       'friendships.${request.senderId}': FieldValue.serverTimestamp(),
     });
 
-    // 3. 상대방 친구 목록 및 날짜 추가
+    // 3. 상대방 친구 목록 및 날짜 추가 (update & dot notation 사용으로 기존 데이터 보존)
     final senderRef = _firestore.collection('users').doc(request.senderId);
     batch.update(senderRef, {
       'friends': FieldValue.arrayUnion([currentUser.id]),
@@ -173,10 +174,14 @@ class FriendRepositoryImpl implements FriendRepository {
     });
 
     try {
+      debugPrint('[친구수락] 배치 커밋 시도: ${request.id}');
       await batch.commit();
+      debugPrint('[친구수락] 성공: ${request.senderId} <-> ${currentUser.id}');
     } catch (e) {
-      // 팩토리나 외부에서 로깅을 할 수 있도록 에러를 재발생시키되, 좀 더 상세한 정보를 포함할 수 있음
-      print('친구 요청 수락 중 오류 발생: $e');
+      debugPrint('[친구수락] 실패(Batch Commit): $e');
+      if (e is FirebaseException && e.code == 'not-found') {
+        throw Exception('친구 요청 수락에 실패했습니다. 상대방 유저 정보가 존재하지 않습니다.');
+      }
       throw Exception('친구 요청 수락에 실패했습니다: $e');
     }
   }
