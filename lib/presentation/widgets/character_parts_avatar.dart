@@ -24,7 +24,7 @@ class CharacterPartsAvatar extends StatelessWidget {
     super.key,
     this.settings,
     String? baseImagePath,
-    this.bodyShadowImagePath,
+    String? bodyShadowImagePath,
     Color? baseColor,
     String? clothesImagePath,
     Color? clothesColor,
@@ -32,42 +32,58 @@ class CharacterPartsAvatar extends StatelessWidget {
     Color? shoesColor,
     String? faceImagePath,
     String? hairImagePath,
-    this.hairSubShadowImagePath,
-    this.hairShadowImagePath,
+    String? hairSubShadowImagePath,
+    String? hairShadowImagePath,
     String? hairHighlightImagePath,
     Color? hairColor,
     required this.size,
   }) : baseImagePath = baseImagePath ?? 'body_base.png',
+       bodyShadowImagePath =
+           bodyShadowImagePath ?? (settings != null ? 'body_shadow.png' : null),
        baseColor =
            baseColor ??
-           (settings != null
-               ? Color(settings['skinColor'] as int)
+           (settings != null && settings['skinColor'] != null
+               ? Color((settings['skinColor'] as num).toInt())
                : Colors.white),
        hairImagePath =
            hairImagePath ??
-           (settings != null ? 'hair_${settings['hair']}.png' : 'hair_01.png'),
+           (settings != null && settings['hair'] != null
+               ? 'hair_${settings['hair']}.png'
+               : 'hair_01.png'),
+       hairShadowImagePath =
+           hairShadowImagePath ??
+           (settings != null && settings['hair'] != null
+               ? 'hair_${settings['hair']}_shadow.png'
+               : null),
+       hairSubShadowImagePath =
+           hairSubShadowImagePath ??
+           (settings != null && settings['hair'] != null
+               ? 'hair_${settings['hair']}_sub_shadow.png'
+               : null),
        hairHighlightImagePath =
            hairHighlightImagePath ??
-           (settings != null ? 'hair_${settings['hair']}_highlight.png' : null),
+           (settings != null && settings['hair'] != null
+               ? 'hair_${settings['hair']}_highlight.png'
+               : null),
        hairColor =
            hairColor ??
-           (settings != null
-               ? Color(settings['hairColor'] as int)
-               : Colors.white),
+           (settings != null && settings['hairColor'] != null
+               ? Color((settings['hairColor'] as num).toInt())
+               : const Color(0xFF6D4C41)),
        faceImagePath =
            faceImagePath ??
-           (settings != null
+           (settings != null && settings['face'] != null
                ? 'face_${settings['face']}.png'
                : 'face_smile.png'),
        clothesImagePath =
            clothesImagePath ??
-           (settings != null
+           (settings != null && settings['clothes'] != null
                ? 'clothes_${settings['clothes']}.png'
                : 'clothes_01.png'),
        clothesColor =
            clothesColor ??
-           (settings != null
-               ? Color(settings['clothesColor'] as int)
+           (settings != null && settings['clothesColor'] != null
+               ? Color((settings['clothesColor'] as num).toInt())
                : Colors.white),
        shoesImagePath =
            shoesImagePath ??
@@ -76,8 +92,8 @@ class CharacterPartsAvatar extends StatelessWidget {
                : null),
        shoesColor =
            shoesColor ??
-           (settings != null
-               ? Color(settings['shoesColor'] as int? ?? 0xFFFFFFFF)
+           (settings != null && settings['shoesColor'] != null
+               ? Color((settings['shoesColor'] as num).toInt())
                : AppColors.white);
 
   static const _storageBaseUrl =
@@ -92,11 +108,13 @@ class CharacterPartsAvatar extends StatelessWidget {
   }
 
   Widget _buildPartImage({
-    required String path,
+    required String? path,
     Color? color,
     BlendMode colorBlendMode = BlendMode.modulate,
     double? opacity,
   }) {
+    if (path == null || path.isEmpty) return const SizedBox.shrink();
+
     final imageUrl = _getPartUrl(path);
 
     return CachedNetworkImage(
@@ -106,6 +124,8 @@ class CharacterPartsAvatar extends StatelessWidget {
       fit: BoxFit.contain,
       color: color,
       colorBlendMode: colorBlendMode,
+      memCacheWidth: (size * 2).toInt(),
+      memCacheHeight: (size * 2).toInt(),
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       placeholder: (context, url) => Container(

@@ -25,6 +25,8 @@ class UrlAvatar extends StatelessWidget {
       imageUrl: photoUrl!,
       width: size,
       height: size,
+      memCacheWidth: (size * 2).toInt(),
+      memCacheHeight: (size * 2).toInt(),
       fit: useCircle ? BoxFit.cover : BoxFit.contain,
       placeholder: (context, url) => Container(
         width: size,

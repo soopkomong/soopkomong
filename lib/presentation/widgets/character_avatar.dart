@@ -99,7 +99,7 @@ class CharacterAvatar extends StatelessWidget {
         child: CharacterPartsAvatar(
           baseImagePath: 'body_base.png',
           faceImagePath: 'face_smile.png',
-          hairImagePath: '', // 머리카락 없음
+          hairImagePath: null, // 머리카락 없음
           clothesImagePath: 'clothes_01.png', // 기본 의상 추가
           size: size,
         ),

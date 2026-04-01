@@ -25,8 +25,10 @@ class FriendProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final isEn = locale == AppLocale.en;
-    
-    final dateFormat = isEn ? DateFormat.yMMMd('en') : DateFormat('yyyy년 M월 d일');
+
+    final dateFormat = isEn
+        ? DateFormat.yMMMd('en')
+        : DateFormat('yyyy년 M월 d일');
     final numberFormat = NumberFormat('#,###');
 
     final friendsAsync = ref.watch(friendsViewModelProvider);
