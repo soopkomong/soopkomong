@@ -374,4 +374,11 @@ class AuthRepositoryImpl implements AuthRepository {
       'has_seen_tutorial': true,
     });
   }
+
+  @override
+  Future<void> updateUnlockedParks(String userId, List<int> unlockedParkIds) async {
+    await _firestore.collection('users').doc(userId).update({
+      'unlockedParkIds': unlockedParkIds,
+    });
+  }
 }

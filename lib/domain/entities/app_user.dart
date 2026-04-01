@@ -25,6 +25,7 @@ class AppUser {
   final bool hasName; // 이름 설정 여부
   final Map<String, dynamic>? characterSettings; // 캐릭터 파츠 설정 (머리, 얼굴, 옷 등)
   final bool wasReentry; // 탈퇴 후 14일 이내 재로그인 여부
+  final List<int> unlockedParkIds; // 잠금 해제된 공원 ID 리스트
   final DateTime? createdAt; // 가입일
   final DateTime? deletedAt; // 탈퇴 신청일
   final bool hasSeenTutorial;
@@ -45,6 +46,7 @@ class AppUser {
     this.createdAt,
     this.deletedAt,
     this.wasReentry = false,
+    this.unlockedParkIds = const [],
     this.acquiredCharacters = const [],
     this.friends = const [],
     this.friendships = const {},
