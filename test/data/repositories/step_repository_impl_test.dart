@@ -23,28 +23,49 @@ void main() {
       expect(today, 0);
     });
 
-    test('updateFromPedometer increments steps correctly within the same day', () async {
-      // 1. 초기 100 걸음 감지
-      final firstUpdate = await repository.updateFromPedometer(100);
-      expect(firstUpdate.totalSteps, 100);
-      expect(firstUpdate.todaySteps, 100);
+    test('updateFromPedometer handles brand new user with huge sensor value (First Join)', () async {
+      // 1. 센서값이 이미 40,000,000인 상태에서 처음 가입함 (첫 호출)
+      final firstUpdate = await repository.updateFromPedometer(40000000);
+      
+      // 결과는 무조건 0보여야 함 (기준값으로만 설정)
+      expect(firstUpdate.totalSteps, 0);
+      expect(firstUpdate.todaySteps, 0);
 
-      // 2. 추가 50 걸음 (총 150)
-      final secondUpdate = await repository.updateFromPedometer(150);
+      // 2. 이후 150보 더 걸음 (센서 40,000,150)
+      final secondUpdate = await repository.updateFromPedometer(40000150);
       expect(secondUpdate.totalSteps, 150);
       expect(secondUpdate.todaySteps, 150);
     });
 
+    test('updateFromPedometer initializes to 0 on first call and increments correctly', () async {
+      // 1. 초기 100 걸음 감지 (기준점으로만 설정되어야 함)
+      final firstUpdate = await repository.updateFromPedometer(100);
+      expect(firstUpdate.totalSteps, 0);
+      expect(firstUpdate.todaySteps, 0);
+
+      // 2. 추가 50 걸음 (총 150 - 100 = 50)
+      final secondUpdate = await repository.updateFromPedometer(150);
+      expect(secondUpdate.totalSteps, 50);
+      expect(secondUpdate.todaySteps, 50);
+    });
+
     test('updateFromPedometer handles reboot detection properly (pedometer value drops)', () async {
-      // 1. 처음엔 100 걸음
+      // 1. 처음엔 100 걸음 (기준점 100, 걸음수 0)
       await repository.updateFromPedometer(100);
+      // 2. 50걸음 더 걸음 (센서 150, 기준점 100, 걸음수 50)
+      await repository.updateFromPedometer(150);
       
-      // 2. 기기 재부팅으로 인해 pedometer 값이 초기화되어 0부터 다시 시작 후 30 걸음 걸음
+      // 3. 기기 재부팅으로 인해 pedometer 값이 초기화되어 0부터 다시 시작 후 30 걸음 걸음
+      // delta가 음수이므로 totalSteps는 50으로 유지되어야 함 (lastPedometer만 30으로 갱신됨)
       final rebootUpdate = await repository.updateFromPedometer(30);
       
-      // 누적은 이전 100에 30을 더해서 130이 되어야 함
-      expect(rebootUpdate.totalSteps, 130);
-      expect(rebootUpdate.todaySteps, 130);
+      expect(rebootUpdate.totalSteps, 50);
+      expect(rebootUpdate.todaySteps, 50);
+
+      // 4. 이후 10걸음 더 걸음 (센서 40 - 이전 30 = 10걸음 추가)
+      final nextUpdate = await repository.updateFromPedometer(40);
+      expect(nextUpdate.totalSteps, 60);
+      expect(nextUpdate.todaySteps, 60);
     });
 
     test('getTodaySteps resets today_steps if the date has changed', () async {
@@ -71,7 +92,8 @@ void main() {
     test('clearSteps removes all step related data', () async {
       final prefs = await SharedPreferences.getInstance();
       
-      await repository.updateFromPedometer(500);
+      await repository.updateFromPedometer(100); // 초기화
+      await repository.updateFromPedometer(600); // 500걸음 누적
       
       expect(prefs.getInt('total_accumulated_steps'), 500);
       
