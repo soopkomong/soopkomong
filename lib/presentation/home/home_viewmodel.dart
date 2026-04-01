@@ -222,17 +222,37 @@ class HomeNotifier extends Notifier<HomeState> {
 
     // 3. 내 위치 파악 (정확도 높게)
     debugPrint('[디버그] 현재 위치 가져오기 시도 중...');
+
+    // 3-1. 우선 마지막으로 알려진 위치(Last Known Position)를 먼저 가져와 지도를 즉시 노출
+    try {
+      final lastPosition = await geo.Geolocator.getLastKnownPosition();
+      if (lastPosition != null) {
+        state = state.copyWith(currentPosition: lastPosition);
+        debugPrint(
+          '[디버그] 마지막 알려진 위치 로드 성공: ${lastPosition.latitude}, ${lastPosition.longitude}',
+        );
+        _checkParkProximity(lastPosition);
+      }
+    } catch (e) {
+      debugPrint('[디버그] 마지막 위치 가져오기 실패: $e');
+    }
+
+    // 3-2. 실시간 위치 가져오기 (10초 타임아웃 설정)
     try {
       final position = await geo.Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10), // 타임아웃 추가
       );
-      state = state.copyWith(currentPosition: position);
+      state = state.copyWith(currentPosition: position, errorMessage: null);
       debugPrint(
-        '[디버그] 내 위치 파악 성공: ${position.latitude}, ${position.longitude}',
+        '[디버그] 실시간 내 위치 파악 성공: ${position.latitude}, ${position.longitude}',
       );
       _checkParkProximity(position);
     } catch (e) {
-      debugPrint('[디버그] 위치 가져오기 초기 오류: $e');
+      debugPrint('[디버그] 실시간 위치 가져오기 오류 (또는 타임아웃): $e');
+      if (state.currentPosition == null) {
+        state = state.copyWith(errorMessage: '위치 정보를 가져올 수 없습니다. GPS 신호를 확인해주세요.');
+      }
     }
 
     _positionSubscription =
@@ -513,6 +533,13 @@ class HomeNotifier extends Notifier<HomeState> {
     } catch (e) {
       debugPrint('[디버그] 공원 잠금 해제 이력 업데이트 에러: $e');
     }
+  }
+
+  /// 위치 정보 수동 재시도
+  Future<void> retryLocationTracking() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    await _startLocationTracking();
+    state = state.copyWith(isLoading: false);
   }
 }
 

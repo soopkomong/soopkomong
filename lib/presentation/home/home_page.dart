@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/utils/map_helper.dart';
 import 'package:soopkomong/core/utils/turf_helper.dart';
 import 'package:geolocator/geolocator.dart' as geo;
@@ -28,7 +29,6 @@ import 'package:soopkomong/presentation/home/widgets/app_bar_icon.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_acquired_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/pet_hatched_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/park_unlocked_dialog.dart';
-import 'package:soopkomong/presentation/home/widgets/friend_request_dialog.dart';
 import 'package:soopkomong/presentation/home/widgets/home_hamburger_menu.dart';
 
 /// [Presentation Layer] - View
@@ -229,6 +229,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     _isMapReady = false;
     _hasMovedToInitialLocation = false;
 
+    // 지도가 생성된 시점에 이미 위치를 받아왔다면 이를 '초기 이동 완료' 상태로 간주
+    // (이미 cameraOptions.center에서 해당 위치를 사용하기 때문)
+    final currentState = ref.read(homeViewModelProvider);
+    if (currentState.currentPosition != null) {
+      _hasMovedToInitialLocation = true;
+      debugPrint('[디버그] 지도 생성 시점에 이미 위치가 있어 초기 이동 완료로 설정함');
+    }
+
     Future.microtask(() async {
       if (!mounted) return;
       try {
@@ -307,7 +315,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     await _applyDayNightTheme(mapboxMap);
 
     // 지도가 생성된 시점에 이미 위치를 받아왔다면 즉시 1회 이동
-    final currentState = ref.read(homeViewModelProvider);
     if (currentState.currentPosition != null && !_hasMovedToInitialLocation) {
       _tryMoveToUserLocation(currentState.currentPosition!);
     }
@@ -557,26 +564,87 @@ class _HomePageState extends ConsumerState<HomePage> {
         elevation: 0,
         foregroundColor: AppColors.black,
       ),
-      body: Stack(
-        children: [
-          MapWidget(
-            key: const ValueKey("mapWidget"),
-            styleUri: dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
-            onMapCreated: _onMapCreated,
-            viewport: null, // 자동 추적 비활성화, 수동 flyTo 적용
-            cameraOptions: CameraOptions(
-              center: Point(
-                coordinates: Position(127.7669, 35.9078),
-              ), // 대한민국 중앙을 기본값으로 두어 부드러운 시작 제공
-              zoom: _defaultZoomLevel,
-              pitch: 0.0,
-              bearing: 0.0,
-            ),
-          ),
+      body: state.currentPosition == null
+          ? _buildLoadingOrError(state, ref)
+          : Stack(
+              children: [
+                MapWidget(
+                  key: const ValueKey("mapWidget"),
+                  styleUri:
+                      dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
+                  onMapCreated: _onMapCreated,
+                  viewport: null, // 자동 추적 비활성화, 수동 flyTo 적용
+                  cameraOptions: CameraOptions(
+                    center: Point(
+                      coordinates: Position(
+                        state.currentPosition!.longitude,
+                        state.currentPosition!.latitude,
+                      ),
+                    ), // 내 위치 정보를 초기 좌표로 즉시 적용
+                    zoom: _defaultZoomLevel,
+                    pitch: 0.0,
+                    bearing: 0.0,
+                  ),
+                ),
           Positioned(
             top: 65,
             left: 16,
             child: StepCountCard(state: state, isEn: isEn),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 위치 정보가 없을 때 로딩 또는 에러 화면을 구성
+  Widget _buildLoadingOrError(HomeState state, WidgetRef ref) {
+    if (state.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.location_off, size: 64, color: AppColors.gray400),
+              const SizedBox(height: 16),
+              Text(
+                state.errorMessage!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.body.copyWith(color: AppColors.gray700),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  ref
+                      .read(homeViewModelProvider.notifier)
+                      .retryLocationTracking();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary600,
+                  foregroundColor: AppColors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: AppColors.primary600),
+          SizedBox(height: 16),
+          Text(
+            '위치 정보를 확인하고 있습니다...',
+            style: TextStyle(color: AppColors.gray600),
           ),
         ],
       ),
