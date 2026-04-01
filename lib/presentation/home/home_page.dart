@@ -303,7 +303,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     await _applyDayNightTheme(mapboxMap);
-    
+
     // 지도가 생성된 시점에 이미 위치를 받아왔다면 즉시 1회 이동
     final currentState = ref.read(homeViewModelProvider);
     if (currentState.currentPosition != null && !_hasMovedToInitialLocation) {
@@ -329,11 +329,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     return currentHour < 6 || currentHour >= 18;
   }
 
-  Future<void> _tryMoveToUserLocation(geo.Position position, {bool forceDefaultZoom = false}) async {
+  Future<void> _tryMoveToUserLocation(
+    geo.Position position, {
+    bool forceDefaultZoom = false,
+  }) async {
     if (mapboxMap == null) return;
-    
+
     _hasMovedToInitialLocation = true; // 중복 호출 방지
-    
+
     double targetZoom = _defaultZoomLevel;
     if (!forceDefaultZoom) {
       try {
@@ -344,10 +347,19 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     }
 
-    final point = Point(coordinates: Position(position.longitude, position.latitude));
-    final cameraOptions = CameraOptions(center: point, zoom: targetZoom, bearing: 0.0, pitch: 0.0);
-    
-    debugPrint('[디버그] 내 위치로 맵 이동 명령 전송: ${position.latitude}, ${position.longitude}');
+    final point = Point(
+      coordinates: Position(position.longitude, position.latitude),
+    );
+    final cameraOptions = CameraOptions(
+      center: point,
+      zoom: targetZoom,
+      bearing: 0.0,
+      pitch: 0.0,
+    );
+
+    debugPrint(
+      '[디버그] 내 위치로 맵 이동 명령 전송: ${position.latitude}, ${position.longitude}',
+    );
     try {
       // 큐에 정상적으로 적재되어, 지도 렌더링이 완료된 후 애니메이션으로 부드럽게 이동합니다.
       await mapboxMap!.flyTo(
@@ -433,15 +445,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       }
     });
 
-    ref.listen(
-      mapZoomResetProvider,
-      (_, _) {
-        final state = ref.read(homeViewModelProvider);
-        if (state.currentPosition != null) {
-          _tryMoveToUserLocation(state.currentPosition!, forceDefaultZoom: true);
-        }
-      },
-    );
+    ref.listen(mapZoomResetProvider, (_, _) {
+      final state = ref.read(homeViewModelProvider);
+      if (state.currentPosition != null) {
+        _tryMoveToUserLocation(state.currentPosition!, forceDefaultZoom: true);
+      }
+    });
 
     // 위치 획득 및 갱신 시 실시간 트래킹 (내가 걷는 대로 지도 중앙 유지)
     ref.listen(homeViewModelProvider.select((s) => s.currentPosition), (
@@ -450,7 +459,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     ) {
       if (next != null && mapboxMap != null) {
         // 앱을 켠 첫 위치 획득 때만 고정 줌(16.5) 사용, 이후 걷는 중일 땐 사용자의 현재 줌 레벨 유지
-        _tryMoveToUserLocation(next, forceDefaultZoom: !_hasMovedToInitialLocation);
+        _tryMoveToUserLocation(
+          next,
+          forceDefaultZoom: !_hasMovedToInitialLocation,
+        );
       }
     });
 
@@ -533,7 +545,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             onMapCreated: _onMapCreated,
             viewport: null, // 자동 추적 비활성화, 수동 flyTo 적용
             cameraOptions: CameraOptions(
-              center: Point(coordinates: Position(127.7669, 35.9078)), // 대한민국 중앙을 기본값으로 두어 부드러운 시작 제공
+              center: Point(
+                coordinates: Position(127.7669, 35.9078),
+              ), // 대한민국 중앙을 기본값으로 두어 부드러운 시작 제공
               zoom: _defaultZoomLevel,
               pitch: 0.0,
               bearing: 0.0,

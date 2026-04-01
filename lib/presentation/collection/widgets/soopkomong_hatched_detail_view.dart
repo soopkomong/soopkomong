@@ -56,10 +56,6 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
                     isDiscovered ? template.name : '????',
                     style: AppTextStyles.title.copyWith(color: AppColors.black),
                   ),
-                  if (isDiscovered) ...[
-                    const SizedBox(width: 4),
-                    const Icon(Icons.edit_outlined, size: 20),
-                  ],
                 ],
               ),
             ],

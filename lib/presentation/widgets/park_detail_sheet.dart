@@ -75,7 +75,8 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
     super.initState();
     _imagePageController = PageController();
 
-    final html = '''
+    final html =
+        '''
     <!DOCTYPE html>
     <html>
     <head>
@@ -642,12 +643,15 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                       ClipboardData(text: widget.address),
                                     );
                                     if (!context.mounted) return;
-                                    
-                                    final currentLocale = ref.read(localeProvider);
-                                    final message = currentLocale == AppLocale.en
+
+                                    final currentLocale = ref.read(
+                                      localeProvider,
+                                    );
+                                    final message =
+                                        currentLocale == AppLocale.en
                                         ? 'Address copied'
                                         : '주소가 복사되었습니다';
-                                    
+
                                     AppToast.show(context, message);
                                   },
                                   child: SvgPicture.asset(

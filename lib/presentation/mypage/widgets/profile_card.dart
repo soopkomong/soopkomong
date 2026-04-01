@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/router/app_route.dart';
@@ -21,9 +22,6 @@ class ProfileCard extends ConsumerWidget {
     if (user == null) return const SizedBox.shrink();
 
     final stepFormat = NumberFormat('#,###');
-    final dateFormat = isEn
-        ? DateFormat('MMM d, yyyy')
-        : DateFormat('yyyy년 M월 d일');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -50,60 +48,41 @@ class ProfileCard extends ConsumerWidget {
                   children: [
                     Text(
                       user.displayName ?? (isEn ? 'User' : '사용자'),
-                      style: AppTextStyles.subTitleL.copyWith(
-                        color: AppColors.gray800,
+                      style: AppTextStyles.title.copyWith(
+                        color: AppColors.gray900,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.userCode ?? '',
-                      style: AppTextStyles.label.copyWith(
-                        color: AppColors.gray800,
-                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/footprints.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary700,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isEn
+                              ? '${stepFormat.format(user.totalSteps)} Total Steps'
+                              : '총 ${stepFormat.format(user.totalSteps)} 걸음',
+                          style: AppTextStyles.subTitleL.copyWith(
+                            color: AppColors.primary700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Stats section
-          Row(
-            children: [
-              Image.asset(
-                'assets/images/footprints.png',
-                width: 16,
-                height: 16,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                isEn
-                    ? '${stepFormat.format(user.totalSteps)} Total Steps'
-                    : '총 ${stepFormat.format(user.totalSteps)} 걸음',
-                style: AppTextStyles.label.copyWith(color: AppColors.gray800),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today,
-                size: 16,
-                color: AppColors.gray600,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                user.createdAt != null
-                    ? (isEn
-                          ? 'Joined ${dateFormat.format(user.createdAt!)}'
-                          : '${dateFormat.format(user.createdAt!)} 가입')
-                    : (isEn ? 'No join date' : '가입일 정보 없음'),
-                style: AppTextStyles.label.copyWith(color: AppColors.gray800),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           // Edit Profile Button
           GestureDetector(
             onTap: () {
@@ -111,15 +90,18 @@ class ProfileCard extends ConsumerWidget {
             },
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.gray50,
+                color: const Color(0xFFF1F3F5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 isEn ? 'Edit Profile' : '프로필 수정',
                 textAlign: TextAlign.center,
-                style: AppTextStyles.body.copyWith(color: AppColors.gray900),
+                style: AppTextStyles.subTitleM.copyWith(
+                  color: AppColors.gray800,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
