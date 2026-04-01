@@ -99,26 +99,35 @@ class HomeNotifier extends Notifier<HomeState> {
   StreamSubscription<geo.Position>? _positionSubscription;
   StreamSubscription<StepCount>? _stepSubscription;
   int _lastSyncedSteps = 0;
+  bool _isLocationTrackingInProgress = false; // 위치 추적 중복 실행 방지 가드
+  Timer? _watchdogTimer; // 10초 강제 타임아웃용 워치독 타이머
 
   @override
   HomeState build() {
-    // 전역 locationsProvider를 감시하여 언어 변경 시 상태 자동 갱신
+    // 1. 장소 데이터 리스너 등록 (watch 대신 listen 사용)
+    // 이를 통해 locationsProvider가 업데이트되어도 HomeNotifier 자체가 리빌드(상태 초기화)되지 않음
     ref.listen(locationsProvider, (prev, next) {
       next.whenData((locations) {
-        state = state.copyWith(locations: locations, isLoading: false);
+        if (state.locations.isEmpty || state.locations.length != locations.length) {
+          state = state.copyWith(locations: locations, isLoading: false);
+        }
       });
     });
 
-    final locationsAsync = ref.watch(locationsProvider);
-
+    // 2. 초기 데이터 및 자원 해제 설정
     ref.onDispose(() {
       _positionSubscription?.cancel();
       _stepSubscription?.cancel();
+      _watchdogTimer?.cancel();
     });
 
+    // 3. 초기 상태 반환 (기존 데이터가 있으면 유지, 없으면 빈 상태로 시작)
+    final initialLocations = ref.read(locationsProvider).value ?? [];
+    
     return HomeState(
-      isLoading: locationsAsync.isLoading,
-      locations: locationsAsync.value ?? [],
+      isLoading: initialLocations.isEmpty,
+      locations: initialLocations,
+      errorMessage: null, // 초기화 시 에러 메시지 초기화
     );
   }
 
@@ -193,78 +202,131 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> _startLocationTracking() async {
+    if (_isLocationTrackingInProgress) {
+      debugPrint('[디버그] 이미 위치 추적이 진행 중입니다. 호출을 건너뜀');
+      return;
+    }
+
+    _isLocationTrackingInProgress = true;
+    
+    // 10초 워치독 타이머 시작: 어떤 이유로든 10초 내에 완료되지 않으면 강제로 에러 출력
+    _watchdogTimer?.cancel();
+    _watchdogTimer = Timer(const Duration(seconds: 10), () {
+      if (_isLocationTrackingInProgress && state.currentPosition == null) {
+        debugPrint('[디버그] 워치독 작동: 10초 초과로 강제 에러 처리');
+        state = state.copyWith(
+          errorMessage: '위치 확인에 시간이 너무 오래 걸립니다. 트인 곳에서 다시 시도해 보세요.',
+          isLoading: false,
+        );
+        _isLocationTrackingInProgress = false;
+      }
+    });
+
     bool serviceEnabled;
     geo.LocationPermission permission;
 
-    // 1. 위치 서비스 활성화 여부 확인
-    serviceEnabled = await geo.Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      state = state.copyWith(errorMessage: '위치 서비스가 비활성화되어 있습니다.');
-      return;
-    }
-
-    // 2. 위치 권한 확인 및 요청 (오직 Geolocator만 사용)
-    permission = await geo.Geolocator.checkPermission();
-    if (permission == geo.LocationPermission.denied) {
-      permission = await geo.Geolocator.requestPermission();
-      if (permission == geo.LocationPermission.denied) {
-        state = state.copyWith(errorMessage: '위치 권한이 거부되었습니다.');
+    try {
+      // 1. 위치 서비스 활성화 여부 확인 (5초 타임아웃)
+      serviceEnabled = await geo.Geolocator.isLocationServiceEnabled()
+          .timeout(const Duration(seconds: 5), onTimeout: () => false);
+      if (!serviceEnabled) {
+        state = state.copyWith(
+          errorMessage: '위치 서비스가 비활성화되어 있습니다. 설정에서 GPS를 켜주세요.',
+        );
         return;
       }
-    }
 
-    if (permission == geo.LocationPermission.deniedForever) {
-      state = state.copyWith(
-        errorMessage: '위치 권한이 영구적으로 거부되었습니다. 설정에서 변경해주세요.',
-      );
-      return;
-    }
+      // 2. 위치 권한 확인 및 요청 (각 5초 타임아웃)
+      permission = await geo.Geolocator.checkPermission()
+          .timeout(const Duration(seconds: 5), onTimeout: () => geo.LocationPermission.denied);
+      
+      if (permission == geo.LocationPermission.denied) {
+        permission = await geo.Geolocator.requestPermission()
+            .timeout(const Duration(seconds: 5), onTimeout: () => geo.LocationPermission.denied);
+        if (permission == geo.LocationPermission.denied) {
+          state = state.copyWith(errorMessage: '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.');
+          return;
+        }
+      }
 
-    // 3. 내 위치 파악 (정확도 높게)
-    debugPrint('[디버그] 현재 위치 가져오기 시도 중...');
-
-    // 3-1. 우선 마지막으로 알려진 위치(Last Known Position)를 먼저 가져와 지도를 즉시 노출
-    try {
-      final lastPosition = await geo.Geolocator.getLastKnownPosition();
-      if (lastPosition != null) {
-        state = state.copyWith(currentPosition: lastPosition);
-        debugPrint(
-          '[디버그] 마지막 알려진 위치 로드 성공: ${lastPosition.latitude}, ${lastPosition.longitude}',
+      if (permission == geo.LocationPermission.deniedForever) {
+        state = state.copyWith(
+          errorMessage: '위치 권한이 영구적으로 거부되었습니다. 앱 설정에서 권한을 변경해주세요.',
         );
-        _checkParkProximity(lastPosition);
+        return;
       }
-    } catch (e) {
-      debugPrint('[디버그] 마지막 위치 가져오기 실패: $e');
-    }
 
-    // 3-2. 실시간 위치 가져오기 (10초 타임아웃 설정)
-    try {
-      final position = await geo.Geolocator.getCurrentPosition(
-        desiredAccuracy: geo.LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10), // 타임아웃 추가
-      );
-      state = state.copyWith(currentPosition: position, errorMessage: null);
-      debugPrint(
-        '[디버그] 실시간 내 위치 파악 성공: ${position.latitude}, ${position.longitude}',
-      );
-      _checkParkProximity(position);
-    } catch (e) {
-      debugPrint('[디버그] 실시간 위치 가져오기 오류 (또는 타임아웃): $e');
-      if (state.currentPosition == null) {
-        state = state.copyWith(errorMessage: '위치 정보를 가져올 수 없습니다. GPS 신호를 확인해주세요.');
+      // 3. 내 위치 파악
+      debugPrint('[디버그] 현재 위치 가져오기 시도 중...');
+
+      // 3-1. 마지막 알려진 위치 시도 (지도를 먼저 보여주기 위함)
+      try {
+        final lastPosition = await geo.Geolocator.getLastKnownPosition()
+            .timeout(const Duration(seconds: 3), onTimeout: () => null);
+        if (lastPosition != null) {
+          state = state.copyWith(currentPosition: lastPosition);
+          _checkParkProximity(lastPosition);
+        }
+      } catch (e) {
+        debugPrint('[디버그] 마지막 위치 가져오기 실패: $e');
       }
-    }
 
-    _positionSubscription =
-        geo.Geolocator.getPositionStream(
+      // 3-2. 실시간 위치 가져오기
+      try {
+        final position = await geo.Geolocator.getCurrentPosition(
           locationSettings: const geo.LocationSettings(
             accuracy: geo.LocationAccuracy.high,
-            distanceFilter: 5,
           ),
-        ).listen((geo.Position position) {
-          state = state.copyWith(currentPosition: position);
-          _checkParkProximity(position);
-        });
+        ).timeout(
+          const Duration(seconds: 8), // 워치독보다 약간 짧게 설정
+          onTimeout: () {
+            throw TimeoutException('GPS 응답 시간 초과');
+          },
+        );
+
+        state = state.copyWith(currentPosition: position, errorMessage: null);
+        _checkParkProximity(position);
+        
+        // 성공 시 워치독 취소
+        _watchdogTimer?.cancel();
+      } catch (e) {
+        debugPrint('[디버그] 실시간 위치 가져오기 최종 오류: $e');
+        if (state.currentPosition == null) {
+          state = state.copyWith(
+            errorMessage: '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
+          );
+        }
+      }
+
+      // 4. 위치 스트림 구독 (실시간 이동 트래킹)
+      _positionSubscription?.cancel();
+      _positionSubscription = geo.Geolocator.getPositionStream(
+        locationSettings: const geo.LocationSettings(
+          accuracy: geo.LocationAccuracy.high,
+          distanceFilter: 5,
+        ),
+      ).listen((geo.Position position) {
+        state = state.copyWith(currentPosition: position);
+        _checkParkProximity(position);
+      });
+
+    } catch (e) {
+      debugPrint('[디버그] 위치 추적 로직 전체 오류: $e');
+      if (state.currentPosition == null && state.errorMessage == null) {
+        state = state.copyWith(errorMessage: '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.');
+      }
+    } finally {
+      // 어떤 경로로든 함수가 종료될 때 반드시 잠금을 해제하고 로딩 상태를 종료함
+      _isLocationTrackingInProgress = false;
+      if (state.isLoading) {
+        state = state.copyWith(isLoading: false);
+      }
+      
+      // 위치 획득 성공 시 워치독 취소
+      if (state.currentPosition != null) {
+        _watchdogTimer?.cancel();
+      }
+    }
   }
 
   void _checkParkProximity(geo.Position position) {

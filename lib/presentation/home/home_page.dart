@@ -564,8 +564,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         elevation: 0,
         foregroundColor: AppColors.black,
       ),
-      body: state.currentPosition == null
-          ? _buildLoadingOrError(state, ref)
+      body: state.locations.isEmpty
+          ? _buildFullLoading() // 필수 데이터(장소)가 아예 없을 때만 전체 화면 로딩
           : Stack(
               children: [
                 MapWidget(
@@ -573,69 +573,36 @@ class _HomePageState extends ConsumerState<HomePage> {
                   styleUri:
                       dotenv.env['MAPBOX_STYLE_URI'] ?? MapboxStyles.STANDARD,
                   onMapCreated: _onMapCreated,
-                  viewport: null, // 자동 추적 비활성화, 수동 flyTo 적용
+                  viewport: null,
                   cameraOptions: CameraOptions(
                     center: Point(
                       coordinates: Position(
-                        state.currentPosition!.longitude,
-                        state.currentPosition!.latitude,
+                        state.currentPosition?.longitude ??
+                            state.locations.first.lng,
+                        state.currentPosition?.latitude ??
+                            state.locations.first.lat,
                       ),
-                    ), // 내 위치 정보를 초기 좌표로 즉시 적용
+                    ),
                     zoom: _defaultZoomLevel,
                     pitch: 0.0,
                     bearing: 0.0,
                   ),
                 ),
-          Positioned(
-            top: 65,
-            left: 16,
-            child: StepCountCard(state: state, isEn: isEn),
-          ),
-        ],
-      ),
+                // 상단 상태 오버레이 (위치 확인 중 또는 에러 표시)
+                if (state.currentPosition == null) _buildLocationStatusOverlay(state, ref),
+                
+                Positioned(
+                  top: 65,
+                  left: 16,
+                  child: StepCountCard(state: state, isEn: isEn),
+                ),
+              ],
+            ),
     );
   }
 
-  /// 위치 정보가 없을 때 로딩 또는 에러 화면을 구성
-  Widget _buildLoadingOrError(HomeState state, WidgetRef ref) {
-    if (state.errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.location_off, size: 64, color: AppColors.gray400),
-              const SizedBox(height: 16),
-              Text(
-                state.errorMessage!,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.body.copyWith(color: AppColors.gray700),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  ref
-                      .read(homeViewModelProvider.notifier)
-                      .retryLocationTracking();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary600,
-                  foregroundColor: AppColors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('다시 시도'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
+  /// 전체 화면 로딩 (데이터가 아예 없을 때)
+  Widget _buildFullLoading() {
     return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -643,10 +610,64 @@ class _HomePageState extends ConsumerState<HomePage> {
           CircularProgressIndicator(color: AppColors.primary600),
           SizedBox(height: 16),
           Text(
-            '위치 정보를 확인하고 있습니다...',
+            '필수 정보를 불러오고 있습니다...',
             style: TextStyle(color: AppColors.gray600),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 지도 상단에 띄우는 위치 상태 오버레이 (Non-blocking)
+  Widget _buildLocationStatusOverlay(HomeState state, WidgetRef ref) {
+    return Positioned(
+      top: 120, // StepCountCard 아래 위치
+      left: 16,
+      right: 16,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (state.errorMessage == null)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary600,
+                ),
+              )
+            else
+              const Icon(Icons.location_off, color: AppColors.error, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                state.errorMessage ?? '정확한 내 위치를 확인하고 있습니다...',
+                style: AppTextStyles.label.copyWith(
+                  color: state.errorMessage != null ? AppColors.error : AppColors.gray700,
+                ),
+              ),
+            ),
+            if (state.errorMessage != null)
+              TextButton(
+                onPressed: () {
+                  ref.read(homeViewModelProvider.notifier).retryLocationTracking();
+                },
+                child: const Text('다시 시도'),
+              ),
+          ],
+        ),
       ),
     );
   }
