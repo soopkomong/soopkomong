@@ -51,19 +51,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         '디버그: [Router] 리다이렉트 체크 - 경로: $matchedLocation, 인증상태: ${authState.isLoading ? "로딩중" : (authState.value != null ? "로그인됨" : "로그아웃됨")}',
       );
 
-      // (1) 온보딩 시청 여부 체크
+      // (1) 로딩 중일 때는 절대 이동 판단을 내리지 않음 (중요: 리다이렉트 루프 방지)
+      if (userAsync.isLoading || authState.isLoading) {
+        debugPrint('디버그: [Router] 데이터 로딩 대기 중... (현재 경로: $matchedLocation)');
+        return null;
+      }
+
+      // (2) 온보딩 시청 여부 체크
       // 단, 이미 로그인된 유저는 온보딩을 강제하지 않음 (새 기기 로그인 등의 루프 방지)
       final isLoggedIn = authState.hasValue && authState.value != null;
       if (!hasSeenOnboarding && !isLoggedIn) {
         if (isOnboarding || isLoggingIn) return null;
         debugPrint('디버그: [Router] -> 온보딩 화면으로 이동');
         return AppRoute.onboarding.path;
-      }
-
-      // (2) 로딩 중일 때는 절대 이동 판단을 내리지 않음 (중요: 리다이렉트 루프 방지)
-      if (userAsync.isLoading || authState.isLoading) {
-        debugPrint('디버그: [Router] 데이터 로딩 대기 중... (현재 경로: $matchedLocation)');
-        return null;
       }
 
       // (3) 로그아웃 상태 확인
