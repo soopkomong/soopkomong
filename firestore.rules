@@ -14,11 +14,11 @@ service cloud.firestore {
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'friendships']) &&
           (
             // 친구 추가 케이스 (arrayUnion)
-            (request.resource.data.friends.size() == resource.data.friends.size() + 1 &&
-             request.auth.uid in request.resource.data.friends) ||
+            (request.resource.data.get('friends', []).size() == resource.data.get('friends', []).size() + 1 &&
+             request.auth.uid in request.resource.data.get('friends', [])) ||
             // 친구 삭제 케이스 (arrayRemove)
-            (request.resource.data.friends.size() == resource.data.friends.size() - 1 &&
-             !(request.auth.uid in request.resource.data.friends))
+            (request.resource.data.get('friends', []).size() == resource.data.get('friends', []).size() - 1 &&
+             !(request.auth.uid in request.resource.data.get('friends', [])))
           )
         )
       );

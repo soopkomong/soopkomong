@@ -267,11 +267,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                                           request,
                                                         );
                                                     if (context.mounted) {
-                                                      AppToast.show(context, '친구 요청을 수락했습니다.');
+                                                      AppToast.show(context, isEn ? 'Accepted friend request.' : '친구 요청을 수락했습니다.');
                                                     }
                                                   } catch (e) {
                                                     if (context.mounted) {
-                                                      AppToast.show(context, '수락 실패: $e');
+                                                      AppToast.show(context, isEn ? 'Failed to accept: $e' : '수락 실패: $e');
                                                     }
                                                   }
                                                 },
@@ -312,11 +312,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
                                                           request.id,
                                                         );
                                                     if (context.mounted) {
-                                                      AppToast.show(context, '친구 요청을 거절했습니다.');
+                                                      AppToast.show(context, isEn ? 'Declined friend request.' : '친구 요청을 거절했습니다.');
                                                     }
                                                   } catch (e) {
                                                     if (context.mounted) {
-                                                      AppToast.show(context, '거절 실패: $e');
+                                                      AppToast.show(context, isEn ? 'Failed to decline: $e' : '거절 실패: $e');
                                                     }
                                                   }
                                                 },
