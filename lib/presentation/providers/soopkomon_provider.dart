@@ -111,9 +111,15 @@ final filteredLocationsProvider = Provider<AsyncValue<List<Location>>>((ref) {
     }
     final deduplicated = uniqueMap.values.toList();
 
-    // 2. 지역 필터 적용
-    if (selectedRegion == Region.all) return deduplicated;
-    return deduplicated
+    // 2. 방문 이력 실시간 주입 (자물쇠 및 카운터 동기화용)
+    final visitedIds = ref.watch(visitedLocationIdsProvider);
+    final enhancedLocations = deduplicated
+        .map((loc) => loc.copyWith(isVisited: visitedIds.contains(loc.id)))
+        .toList();
+
+    // 3. 지역 필터 적용
+    if (selectedRegion == Region.all) return enhancedLocations;
+    return enhancedLocations
         .where((loc) => loc.region == selectedRegion.label)
         .toList();
   });
@@ -140,44 +146,46 @@ final filteredTemplatesProvider = Provider<AsyncValue<List<SoopkomonTemplate>>>(
   },
 );
 
-/// 8. 유저가 실제 방문한 공원 리스트 (조합 프로바이더)
+/// 8. 유저가 실제 방문한 모든 공원 ID 세트 (Single Source of Truth)
+final visitedLocationIdsProvider = Provider<Set<int>>((ref) {
+  final userSoopkomons = ref.watch(userSoopkomonProvider).value ?? [];
+  final user = ref.watch(userProvider).value;
+
+  // 1. 펫을 획득하여 방문한 적이 있는 ID들 추출
+  final petVisitedIds = userSoopkomons
+      .where((s) => s.discoveredSpotId != 'tutorial_start')
+      .map((s) => int.tryParse(s.discoveredSpotId))
+      .whereType<int>()
+      .toSet();
+
+  // 2. 유저 정보의 '잠금 해제 이력(unlockedParkIds)' 통합
+  return {
+    ...petVisitedIds,
+    if (user != null) ...user.unlockedParkIds,
+  };
+});
+
+/// 8-2. 유저가 실제 방문한 공원 리스트 (조합 프로바이더)
 final userVisitedLocationsProvider = Provider<AsyncValue<List<Location>>>((
   ref,
 ) {
-  final userSoopkomonsAsync = ref.watch(userSoopkomonProvider);
   final locationsAsync = ref.watch(locationsProvider);
+  final visitedIds = ref.watch(visitedLocationIdsProvider);
 
-  return locationsAsync.when(
-    data: (locations) {
-      return userSoopkomonsAsync.when(
-        data: (userSoopkomons) {
-          final visitedIds = userSoopkomons
-              .where((s) => s.discoveredSpotId != 'tutorial_start')
-              .map((s) => int.tryParse(s.discoveredSpotId))
-              .whereType<int>()
-              .toSet();
+  return locationsAsync.whenData((locations) {
+    // 1. 고유 ID 기준 필터링 및 데이터 주입
+    final visitedLocations = locations
+        .where((loc) => visitedIds.contains(loc.id))
+        .map((loc) => loc.copyWith(isVisited: true))
+        .toList();
 
-          // 1. 고유 ID 기준 필터링
-          final visitedLocations = locations
-              .where((loc) => visitedIds.contains(loc.id))
-              .toList();
-
-          // 2. 고유 ID(id) 기준 중복 제거 (방어적 코드)
-          final uniqueMap = <int, Location>{};
-          for (var loc in visitedLocations) {
-            uniqueMap[loc.id] = loc;
-          }
-          final deduplicated = uniqueMap.values.toList();
-
-          return AsyncValue.data(deduplicated);
-        },
-        loading: () => const AsyncValue.loading(),
-        error: (err, stack) => AsyncValue.error(err, stack),
-      );
-    },
-    loading: () => const AsyncValue.loading(),
-    error: (err, stack) => AsyncValue.error(err, stack),
-  );
+    // 2. 고유 ID(id) 기준 중복 제거
+    final uniqueMap = <int, Location>{};
+    for (var loc in visitedLocations) {
+      uniqueMap[loc.id] = loc;
+    }
+    return uniqueMap.values.toList();
+  });
 });
 
 /// 9. 중복 제거된 전체 공원 개수 (지역 필터 무시)

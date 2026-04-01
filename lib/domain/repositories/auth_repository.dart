@@ -11,5 +11,6 @@ abstract class AuthRepository {
   Future<void> updateDisplayName(String name);
   Future<void> clearReentryFlag();
   Future<void> completeTutorial();
+  Future<void> updateUnlockedParks(String userId, List<int> unlockedParkIds);
   AppUser? get currentUser;
 }

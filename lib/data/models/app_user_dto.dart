@@ -19,6 +19,7 @@ class AppUserDto extends AppUser {
     super.createdAt,
     super.deletedAt,
     super.wasReentry = false,
+    super.unlockedParkIds = const [],
     super.acquiredCharacters = const [],
     super.friends = const [],
     super.friendships = const {},
@@ -63,6 +64,7 @@ class AppUserDto extends AppUser {
           ? (data?['deletedAt'] as Timestamp).toDate()
           : null,
       wasReentry: data?['wasReentry'] ?? false,
+      unlockedParkIds: List<int>.from(data?['unlockedParkIds'] ?? []),
       friends: List<String>.from(data?['friends'] ?? []),
       friendships: friendshipsMap,
       providerId: user.providerData.isNotEmpty
