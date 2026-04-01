@@ -36,7 +36,7 @@ class FriendProfilePage extends ConsumerWidget {
     final isFriend = friendsAsync.value?.any((f) => f.id == friend.id) ?? false;
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -105,14 +105,8 @@ class FriendProfilePage extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.black.withValues(alpha: 0.1),
-                            blurRadius: 6,
-                            offset: const Offset(0, 0),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.gray50),
                       ),
                       child: Column(
                         children: [
@@ -136,19 +130,10 @@ class FriendProfilePage extends ConsumerWidget {
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-            const Divider(height: 1, thickness: 3, color: AppColors.gray50),
-            const SizedBox(height: 24),
-
-            // 3. 진행도 배지 섹션
-            _buildProgressBadges(ref),
-
-            const SizedBox(height: 8),
-
+            // const SizedBox(height: 12),
             // 4. 생태공원 리스트
             FriendParkSection(friend: friend),
-            const SizedBox(height: 16),
+            // const SizedBox(height: 12),
             // 5. 숲코몽 리스트
             FriendSoopkomongSection(friend: friend),
 
@@ -178,8 +163,8 @@ class FriendProfilePage extends ConsumerWidget {
 
     return visitCountAsync.when(
       data: (data) {
-        final leafMax = totalLocationsAsync.value ?? 50;
-        final pawMax = totalTemplatesAsync.value ?? 30;
+        final leafMax = totalLocationsAsync.value ?? 49;
+        final pawMax = totalTemplatesAsync.value ?? 50;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
