@@ -9,6 +9,7 @@ import 'package:soopkomong/presentation/collection/widgets/soopkomong_detail_she
 import 'package:soopkomong/presentation/collection/widgets/undiscovered_character_dialog.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
@@ -32,7 +33,15 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
   bool _imageLoaded = false;
 
   bool get isDiscovered => widget.userCharacter != null;
-  bool get isHatched => widget.userCharacter?.isHatched ?? false;
+  bool get isHatched {
+    if (widget.userCharacter == null) return false;
+    if (widget.userCharacter!.isHatched) return true;
+
+    // DB에는 아직 미부화 상태여도, 실시간 걸음수가 목표치에 도달했다면 부화한 것으로 표시 (UX 향상)
+    final realTimeTotal = ref.watch(homeViewModelProvider).totalStepCount;
+    final traveled = realTimeTotal - widget.userCharacter!.stepsAtDiscovery;
+    return traveled >= widget.userCharacter!.requiredSteps;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +51,10 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
               ? widget.template.eggImagePath
               : widget.template.actualImagePath);
 
-    final displayRemoteUrl =
-        (widget.template.templateId == '000' && !isHatched)
-            ? null
-            : widget.template.remoteImagePath;
-    
+    final displayRemoteUrl = (widget.template.templateId == '000' && !isHatched)
+        ? null
+        : widget.template.remoteImagePath;
+
     // 000번이 아니거나 부화한 경우에는 파이어 스토리지 이미지를 우선하되,
     // 000번 알 상태일 때만 로컬 에셋(egg_tuto.png)을 사용하도록 합니다.
 
@@ -93,10 +101,10 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
             child: Stack(
               children: [
                 Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.gray50,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
+                  decoration: BoxDecoration(
+                    color: AppColors.gray50,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   child: Stack(
                     children: [
                       Center(
@@ -109,7 +117,9 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
                             color: isDiscovered
                                 ? null
                                 : AppColors.black.withValues(alpha: 0.7),
-                            colorBlendMode: isDiscovered ? null : BlendMode.srcIn,
+                            colorBlendMode: isDiscovered
+                                ? null
+                                : BlendMode.srcIn,
                             errorWidget: Image.asset(
                               'assets/images/character_silhouette.png',
                               width: 80,

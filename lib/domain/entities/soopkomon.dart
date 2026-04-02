@@ -68,7 +68,7 @@ class Soopkomon {
   }
 
   /// 신규 유저를 위한 초기 '알' 객체 생성 (튜토리얼용 000번)
-  factory Soopkomon.tutorialEgg() {
+  factory Soopkomon.tutorialEgg(int currentSteps) {
     return Soopkomon(
       instanceId: 'tutorial_egg_000',
       templateId: '000',
@@ -77,8 +77,8 @@ class Soopkomon {
       discoveredSpotName: '숲코몽 세계의 입구',
       discoveredAddr: '미지의 숲',
       discoveredAt: DateTime.now(),
-      stepsAtDiscovery: 0,
-      currentTotalSteps: 0,
+      stepsAtDiscovery: currentSteps,
+      currentTotalSteps: currentSteps,
       grade: 'T',
     );
   }

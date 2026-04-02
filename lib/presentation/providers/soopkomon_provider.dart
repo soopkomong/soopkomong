@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/domain/usecases/check_hatching_usecase.dart';
 import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/data/repositories/soopkomon_repository_impl.dart';
@@ -21,6 +22,11 @@ final soopkomonRepositoryProvider = Provider<SoopkomonRepository>((ref) {
   return SoopkomonRepositoryImpl(
     remoteDataSource: ref.watch(remoteLocationDataSourceProvider),
   );
+});
+
+/// 1-4. 유즈케이스 프로바이더
+final checkHatchingUseCaseProvider = Provider<CheckHatchingUseCase>((ref) {
+  return CheckHatchingUseCase(ref.watch(soopkomonRepositoryProvider));
 });
 
 /// 2. 전체 도감 템플릿 프로바이더 (Async)

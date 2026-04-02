@@ -6,6 +6,7 @@ import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
+import 'package:soopkomong/presentation/providers/step_provider.dart';
 
 class TutorialGuidePage extends ConsumerStatefulWidget {
   const TutorialGuidePage({super.key});
@@ -282,9 +283,12 @@ class _TutorialGuidePageState extends ConsumerState<TutorialGuidePage>
                       if (user == null) return;
 
                       final repository = ref.read(soopkomonRepositoryProvider);
+                      final stepRepository = ref.read(stepRepositoryProvider);
+                      final currentTotal = await stepRepository.getTotalSteps();
+                      
                       await repository.addSoopkomon(
                         user.id,
-                        Soopkomon.tutorialEgg(),
+                        Soopkomon.tutorialEgg(currentTotal),
                       );
 
                       await ref.read(authRepositoryProvider).completeTutorial();

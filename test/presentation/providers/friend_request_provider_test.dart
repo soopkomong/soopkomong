@@ -78,11 +78,12 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    // .future는 스트림의 에러를 throw함
-    expect(container.read(friendRequestProvider.future), throwsA(isA<Exception>()));
-    
-    // 비동기 작업이 완료되도록 대기
-    await pumpEventQueue();
+    // 에러 상태가 될 때까지 기다림
+    try {
+      await container.read(friendRequestProvider.future);
+    } catch (_) {
+      // 에러가 발생하면 무시하고 다음 단계에서 상태 확인
+    }
     
     final state = container.read(friendRequestProvider);
     expect(state, isA<AsyncError>());

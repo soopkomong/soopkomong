@@ -35,48 +35,68 @@ void main() {
         grade: 'S',
       );
 
-      when(() => mockRepo.getUnhatchedSoopkomons(userId))
-          .thenAnswer((_) async => [soopkomon]);
+      when(
+        () => mockRepo.getUserSoopkomons(userId),
+      ).thenAnswer((_) => Stream.value([soopkomon]));
 
-      final notifications = await useCase.execute(userId, 5000);
+      when(
+        () => mockRepo.updateSoopkomonSteps(any(), any(), any()),
+      ).thenAnswer((_) async {});
 
-      expect(notifications, isEmpty);
-      verify(() => mockRepo.getUnhatchedSoopkomons(userId)).called(1);
-      verifyNever(() => mockRepo.updateSoopkomonSteps(any(), any(), any()));
+      final hatchedList = await useCase.execute(userId, 5000);
+
+      expect(hatchedList, isEmpty);
+      verify(() => mockRepo.getUserSoopkomons(userId)).called(1);
+      // 걸음수가 100보 이상 차이나면 동기화가 발생함
+      verify(
+        () => mockRepo.updateSoopkomonSteps(userId, 'inst_1', 5000),
+      ).called(1);
       verifyNever(() => mockRepo.markSoopkomonAsHatched(any(), any()));
     });
 
-    test('should hatch and return notification if required steps are met', () async {
-      // C등급은 1000걸음 필요. 현재 1200걸음 걸음. (stepsAtDiscovery 0, current = 1200)
-      final soopkomon = Soopkomon(
-        instanceId: 'inst_2',
-        templateId: '002',
-        name: '쪼꼬미',
-        discoveredSpotId: 'spot2',
-        discoveredSpotName: '보라매공원',
-        discoveredAddr: '동작구',
-        discoveredAt: now,
-        stepsAtDiscovery: 0,
-        currentTotalSteps: 0,
-        isHatched: false,
-        grade: 'C',
-      );
+    test(
+      'should hatch and return notification if required steps are met',
+      () async {
+        // C등급은 1000걸음 필요. 현재 1200걸음 걸음. (stepsAtDiscovery 0, current = 1200)
+        final soopkomon = Soopkomon(
+          instanceId: 'inst_2',
+          templateId: '002',
+          name: '쪼꼬미',
+          discoveredSpotId: 'spot2',
+          discoveredSpotName: '보라매공원',
+          discoveredAddr: '동작구',
+          discoveredAt: now,
+          stepsAtDiscovery: 0,
+          currentTotalSteps: 0,
+          isHatched: false,
+          grade: 'C',
+        );
 
-      when(() => mockRepo.getUnhatchedSoopkomons(userId))
-          .thenAnswer((_) async => [soopkomon]);
-      when(() => mockRepo.updateSoopkomonSteps(userId, 'inst_2', 1200))
-          .thenAnswer((_) async {});
-      when(() => mockRepo.markSoopkomonAsHatched(userId, 'inst_2'))
-          .thenAnswer((_) async {});
+        when(
+          () => mockRepo.getUserSoopkomons(userId),
+        ).thenAnswer((_) => Stream.value([soopkomon]));
+        when(
+          () => mockRepo.updateSoopkomonSteps(userId, 'inst_2', 1200),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRepo.markSoopkomonAsHatched(userId, 'inst_2'),
+        ).thenAnswer((_) async {});
 
-      final notifications = await useCase.execute(userId, 1200);
+        final hatchedList = await useCase.execute(userId, 1200);
 
-      expect(notifications.length, 1);
-      expect(notifications.first, '보라매공원에 쪼꼬미 숲코몽이 태어났어요! 도감에서 자세한 정보를 확인하세요!');
-      
-      verify(() => mockRepo.getUnhatchedSoopkomons(userId)).called(1);
-      verify(() => mockRepo.updateSoopkomonSteps(userId, 'inst_2', 1200)).called(1);
-      verify(() => mockRepo.markSoopkomonAsHatched(userId, 'inst_2')).called(1);
-    });
+        expect(hatchedList.length, 1);
+        expect(hatchedList.first.isHatched, true);
+        expect(hatchedList.first.name, '쪼꼬미');
+
+        verify(() => mockRepo.getUserSoopkomons(userId)).called(1);
+        // 루프 시작 시 sync(1회) + 부화 성공 후 최종 sync(1회) = 총 2회 호출됨
+        verify(
+          () => mockRepo.updateSoopkomonSteps(userId, 'inst_2', 1200),
+        ).called(2);
+        verify(
+          () => mockRepo.markSoopkomonAsHatched(userId, 'inst_2'),
+        ).called(1);
+      },
+    );
   });
 }

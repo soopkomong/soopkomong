@@ -31,12 +31,14 @@ class HomeState {
   final String? lastHatchedPetImagePath;
   final String? lastUnlockedParkName;
   final String? lastUnlockedParkImageUrl;
+  final int totalStepCount; // 누적 걸음수 추가
 
   HomeState({
     required this.isLoading,
     required this.locations,
     this.errorMessage,
     this.stepCount = 0,
+    this.totalStepCount = 0, // 초기값 설정
     this.currentPosition,
     this.currentParkId,
     this.stepsAtParkEntry,
@@ -56,6 +58,7 @@ class HomeState {
     List<Location>? locations,
     String? errorMessage,
     int? stepCount,
+    int? totalStepCount,
     geo.Position? currentPosition,
     int? currentParkId,
     int? stepsAtParkEntry,
@@ -74,6 +77,7 @@ class HomeState {
       locations: locations ?? this.locations,
       errorMessage: errorMessage ?? this.errorMessage,
       stepCount: stepCount ?? this.stepCount,
+      totalStepCount: totalStepCount ?? this.totalStepCount,
       currentPosition: currentPosition ?? this.currentPosition,
       currentParkId: currentParkId ?? this.currentParkId,
       stepsAtParkEntry: stepsAtParkEntry ?? this.stepsAtParkEntry,
@@ -108,7 +112,8 @@ class HomeNotifier extends Notifier<HomeState> {
     // 이를 통해 locationsProvider가 업데이트되어도 HomeNotifier 자체가 리빌드(상태 초기화)되지 않음
     ref.listen(locationsProvider, (prev, next) {
       next.whenData((locations) {
-        if (state.locations.isEmpty || state.locations.length != locations.length) {
+        if (state.locations.isEmpty ||
+            state.locations.length != locations.length) {
           state = state.copyWith(locations: locations, isLoading: false);
         }
       });
@@ -123,7 +128,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
     // 3. 초기 상태 반환 (기존 데이터가 있으면 유지, 없으면 빈 상태로 시작)
     final initialLocations = ref.read(locationsProvider).value ?? [];
-    
+
     return HomeState(
       isLoading: initialLocations.isEmpty,
       locations: initialLocations,
@@ -159,8 +164,14 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     final initialTodaySteps = await stepRepo.getTodaySteps();
-    state = state.copyWith(stepCount: initialTodaySteps);
-    debugPrint('[디버그] 오늘 걸음수 초기값: ${state.stepCount}');
+    final initialTotalSteps = await stepRepo.getTotalSteps();
+    state = state.copyWith(
+      stepCount: initialTodaySteps,
+      totalStepCount: initialTotalSteps,
+    );
+    debugPrint(
+      '[디버그] 초기값 - 오늘: ${state.stepCount}, 총: ${state.totalStepCount}',
+    );
 
     // 위치 추적과 걸음 수 추적 시작
     await _startLocationTracking();
@@ -188,7 +199,11 @@ class HomeNotifier extends Notifier<HomeState> {
 
       if (!hasTutorialEgg) {
         debugPrint('[디버그] 튜토리얼 알(000) 미보유 감지. 자동 지급 프로세스 시작 (UserID: $userId)');
-        final tutorialEgg = Soopkomon.tutorialEgg();
+
+        final stepRepo = ref.read(stepRepositoryProvider);
+        final currentTotal = await stepRepo.getTotalSteps();
+
+        final tutorialEgg = Soopkomon.tutorialEgg(currentTotal);
         await ref
             .read(soopkomonRepositoryProvider)
             .addSoopkomon(userId, tutorialEgg);
@@ -208,7 +223,7 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     _isLocationTrackingInProgress = true;
-    
+
     // 10초 워치독 타이머 시작: 어떤 이유로든 10초 내에 완료되지 않으면 강제로 에러 출력
     _watchdogTimer?.cancel();
     _watchdogTimer = Timer(const Duration(seconds: 10), () {
@@ -227,8 +242,10 @@ class HomeNotifier extends Notifier<HomeState> {
 
     try {
       // 1. 위치 서비스 활성화 여부 확인 (5초 타임아웃)
-      serviceEnabled = await geo.Geolocator.isLocationServiceEnabled()
-          .timeout(const Duration(seconds: 5), onTimeout: () => false);
+      serviceEnabled = await geo.Geolocator.isLocationServiceEnabled().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => false,
+      );
       if (!serviceEnabled) {
         state = state.copyWith(
           errorMessage: '위치 서비스가 비활성화되어 있습니다. 설정에서 GPS를 켜주세요.',
@@ -237,14 +254,20 @@ class HomeNotifier extends Notifier<HomeState> {
       }
 
       // 2. 위치 권한 확인 및 요청 (각 5초 타임아웃)
-      permission = await geo.Geolocator.checkPermission()
-          .timeout(const Duration(seconds: 5), onTimeout: () => geo.LocationPermission.denied);
-      
+      permission = await geo.Geolocator.checkPermission().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => geo.LocationPermission.denied,
+      );
+
       if (permission == geo.LocationPermission.denied) {
-        permission = await geo.Geolocator.requestPermission()
-            .timeout(const Duration(seconds: 5), onTimeout: () => geo.LocationPermission.denied);
+        permission = await geo.Geolocator.requestPermission().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => geo.LocationPermission.denied,
+        );
         if (permission == geo.LocationPermission.denied) {
-          state = state.copyWith(errorMessage: '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.');
+          state = state.copyWith(
+            errorMessage: '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.',
+          );
           return;
         }
       }
@@ -273,47 +296,51 @@ class HomeNotifier extends Notifier<HomeState> {
 
       // 3-2. 실시간 위치 가져오기
       try {
-        final position = await geo.Geolocator.getCurrentPosition(
-          locationSettings: const geo.LocationSettings(
-            accuracy: geo.LocationAccuracy.high,
-          ),
-        ).timeout(
-          const Duration(seconds: 8), // 워치독보다 약간 짧게 설정
-          onTimeout: () {
-            throw TimeoutException('GPS 응답 시간 초과');
-          },
-        );
+        final position =
+            await geo.Geolocator.getCurrentPosition(
+              locationSettings: const geo.LocationSettings(
+                accuracy: geo.LocationAccuracy.high,
+              ),
+            ).timeout(
+              const Duration(seconds: 8), // 워치독보다 약간 짧게 설정
+              onTimeout: () {
+                throw TimeoutException('GPS 응답 시간 초과');
+              },
+            );
 
         state = state.copyWith(currentPosition: position, errorMessage: null);
         _checkParkProximity(position);
-        
+
         // 성공 시 워치독 취소
         _watchdogTimer?.cancel();
       } catch (e) {
         debugPrint('[디버그] 실시간 위치 가져오기 최종 오류: $e');
         if (state.currentPosition == null) {
           state = state.copyWith(
-            errorMessage: '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
+            errorMessage:
+                '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
           );
         }
       }
 
       // 4. 위치 스트림 구독 (실시간 이동 트래킹)
       _positionSubscription?.cancel();
-      _positionSubscription = geo.Geolocator.getPositionStream(
-        locationSettings: const geo.LocationSettings(
-          accuracy: geo.LocationAccuracy.high,
-          distanceFilter: 5,
-        ),
-      ).listen((geo.Position position) {
-        state = state.copyWith(currentPosition: position);
-        _checkParkProximity(position);
-      });
-
+      _positionSubscription =
+          geo.Geolocator.getPositionStream(
+            locationSettings: const geo.LocationSettings(
+              accuracy: geo.LocationAccuracy.high,
+              distanceFilter: 5,
+            ),
+          ).listen((geo.Position position) {
+            state = state.copyWith(currentPosition: position);
+            _checkParkProximity(position);
+          });
     } catch (e) {
       debugPrint('[디버그] 위치 추적 로직 전체 오류: $e');
       if (state.currentPosition == null && state.errorMessage == null) {
-        state = state.copyWith(errorMessage: '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.');
+        state = state.copyWith(
+          errorMessage: '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.',
+        );
       }
     } finally {
       // 어떤 경로로든 함수가 종료될 때 반드시 잠금을 해제하고 로딩 상태를 종료함
@@ -321,7 +348,7 @@ class HomeNotifier extends Notifier<HomeState> {
       if (state.isLoading) {
         state = state.copyWith(isLoading: false);
       }
-      
+
       // 위치 획득 성공 시 워치독 취소
       if (state.currentPosition != null) {
         _watchdogTimer?.cancel();
@@ -372,7 +399,9 @@ class HomeNotifier extends Notifier<HomeState> {
 
     if (detectedParkId != state.currentParkId) {
       if (detectedParkId != null) {
-        final park = state.locations.firstWhere((loc) => loc.id == detectedParkId);
+        final park = state.locations.firstWhere(
+          (loc) => loc.id == detectedParkId,
+        );
 
         // 유저의 잠금 해제 이력 확인 (알 획득 방식과 동일하게 유저의 unlockedParkIds 체크)
         final user = ref.read(userProvider).value;
@@ -393,7 +422,9 @@ class HomeNotifier extends Notifier<HomeState> {
           _recordParkUnlock(user.id, detectedParkId);
         }
 
-        debugPrint('공원 진입: $detectedParkId (${park.name}), 이미 잠금해제됨: $isAlreadyUnlocked');
+        debugPrint(
+          '공원 진입: $detectedParkId (${park.name}), 이미 잠금해제됨: $isAlreadyUnlocked',
+        );
       } else {
         state = state.copyWith(
           currentParkId: null,
@@ -422,7 +453,10 @@ class HomeNotifier extends Notifier<HomeState> {
   void _processNewStepCount(StepData stepData) {
     if (stepData.todaySteps == state.stepCount) return;
 
-    state = state.copyWith(stepCount: stepData.todaySteps);
+    state = state.copyWith(
+      stepCount: stepData.todaySteps,
+      totalStepCount: stepData.totalSteps,
+    );
 
     if (state.currentParkId != null &&
         !state.isPetAcquiredInCurrentPark &&
@@ -437,6 +471,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
     _syncTotalStepsToFirestore(stepData.totalSteps);
 
+    // 부화 조건 체크 및 개별 숲코몽 걸음수 실시간 동기화
     _checkHatchingCondition(stepData.totalSteps);
   }
 
@@ -532,34 +567,26 @@ class HomeNotifier extends Notifier<HomeState> {
     _processNewStepCount(data);
   }
 
-  void _checkHatchingCondition(int currentTotalSteps) {
-    final userPetsAsync = ref.read(userSoopkomonProvider);
-    userPetsAsync.whenData((pets) {
-      for (final pet in pets) {
-        if (!pet.isHatched &&
-            (currentTotalSteps - pet.stepsAtDiscovery) >= pet.requiredSteps) {
-          _hatchPet(pet);
-          break;
-        }
-      }
-    });
-  }
-
-  void _hatchPet(Soopkomon pet) {
+  Future<void> _checkHatchingCondition(int currentTotalSteps) async {
     final user = ref.read(userProvider).value;
-    if (user != null) {
-      ref
-          .read(soopkomonRepositoryProvider)
-          .markSoopkomonAsHatched(user.id, pet.instanceId);
+    if (user == null) return;
+
+    final useCase = ref.read(checkHatchingUseCaseProvider);
+
+    // 이 유즈케이스 내부에서 모든 숲코몽의 currentTotalSteps를 업데이트함
+    final hatchedPets = await useCase.execute(user.id, currentTotalSteps);
+
+    if (hatchedPets.isNotEmpty) {
+      final pet = hatchedPets.first;
+      state = state.copyWith(
+        lastHatchedPetName: pet.name,
+        lastHatchedParkName: pet.discoveredSpotName,
+        lastHatchedPetImagePath: pet.imagePath,
+      );
     }
-    state = state.copyWith(
-      lastHatchedPetName: pet.name,
-      lastHatchedParkName: pet.discoveredSpotName,
-      lastHatchedPetImagePath: pet.imagePath,
-    );
-    debugPrint('펫 부화 성공: ${pet.name} from ${pet.discoveredSpotName}');
   }
 
+  /// 기존의 개별 부화 처리 함수는 UseCase 내부로 이동됨
   void clearHatchedPet() {
     state = state.copyWith(
       lastHatchedPetName: null,
