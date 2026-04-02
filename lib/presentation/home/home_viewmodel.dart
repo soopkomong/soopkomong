@@ -10,6 +10,8 @@ import 'package:soopkomong/domain/repositories/step_repository.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/step_provider.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/core/background_service.dart';
 
@@ -229,8 +231,11 @@ class HomeNotifier extends Notifier<HomeState> {
     _watchdogTimer = Timer(const Duration(seconds: 10), () {
       if (_isLocationTrackingInProgress && state.currentPosition == null) {
         debugPrint('[디버그] 워치독 작동: 10초 초과로 강제 에러 처리');
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '위치 확인에 시간이 너무 오래 걸립니다. 트인 곳에서 다시 시도해 보세요.',
+          errorMessage: isEn
+              ? 'Location check is taking too long. Please try again in an open area.'
+              : '위치 확인에 시간이 너무 오래 걸립니다. 트인 곳에서 다시 시도해 보세요.',
           isLoading: false,
         );
         _isLocationTrackingInProgress = false;
@@ -247,8 +252,11 @@ class HomeNotifier extends Notifier<HomeState> {
         onTimeout: () => false,
       );
       if (!serviceEnabled) {
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '위치 서비스가 비활성화되어 있습니다. 설정에서 GPS를 켜주세요.',
+          errorMessage: isEn
+              ? 'Location services are disabled. Please turn on GPS in settings.'
+              : '위치 서비스가 비활성화되어 있습니다. 설정에서 GPS를 켜주세요.',
         );
         return;
       }
@@ -265,16 +273,22 @@ class HomeNotifier extends Notifier<HomeState> {
           onTimeout: () => geo.LocationPermission.denied,
         );
         if (permission == geo.LocationPermission.denied) {
+          final isEn = ref.read(localeProvider) == AppLocale.en;
           state = state.copyWith(
-            errorMessage: '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.',
+            errorMessage: isEn
+                ? 'Location permission denied. Please allow permission for smooth use.'
+                : '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.',
           );
           return;
         }
       }
 
       if (permission == geo.LocationPermission.deniedForever) {
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '위치 권한이 영구적으로 거부되었습니다. 앱 설정에서 권한을 변경해주세요.',
+          errorMessage: isEn
+              ? 'Location permission permanently denied.\nPlease change permissions in app settings.'
+              : '위치 권한이 영구적으로 거부되었습니다.\n앱 설정에서 권한을 변경해주세요.',
         );
         return;
       }
@@ -316,9 +330,11 @@ class HomeNotifier extends Notifier<HomeState> {
       } catch (e) {
         debugPrint('[디버그] 실시간 위치 가져오기 최종 오류: $e');
         if (state.currentPosition == null) {
+          final isEn = ref.read(localeProvider) == AppLocale.en;
           state = state.copyWith(
-            errorMessage:
-                '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
+            errorMessage: isEn
+                ? 'Could not get location information. GPS signals may be weak in the bushes. Please try again in an open area.'
+                : '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
           );
         }
       }
@@ -338,8 +354,11 @@ class HomeNotifier extends Notifier<HomeState> {
     } catch (e) {
       debugPrint('[디버그] 위치 추적 로직 전체 오류: $e');
       if (state.currentPosition == null && state.errorMessage == null) {
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.',
+          errorMessage: isEn
+              ? 'An unknown error occurred while retrieving location information.'
+              : '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.',
         );
       }
     } finally {

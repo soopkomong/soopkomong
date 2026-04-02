@@ -75,6 +75,7 @@ class _MainPageState extends ConsumerState<MainPage> {
             onConfirm: () {
               ref.read(authRepositoryProvider).clearReentryFlag();
             },
+            isEn: ref.read(localeProvider) == AppLocale.en,
           );
         }
       }
