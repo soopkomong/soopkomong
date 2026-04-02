@@ -60,7 +60,11 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        AppToast.show(context, '프로필 로드 실패: $e');
+        final isEn = ref.read(localeProvider) == AppLocale.en;
+        AppToast.show(
+          context,
+          isEn ? 'Failed to load profile: $e' : '프로필 로드 실패: $e',
+        );
       }
     }
   }

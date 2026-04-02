@@ -10,6 +10,8 @@ import 'package:soopkomong/domain/repositories/step_repository.dart';
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/presentation/providers/step_provider.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/core/background_service.dart';
 
@@ -108,7 +110,8 @@ class HomeNotifier extends Notifier<HomeState> {
     // 이를 통해 locationsProvider가 업데이트되어도 HomeNotifier 자체가 리빌드(상태 초기화)되지 않음
     ref.listen(locationsProvider, (prev, next) {
       next.whenData((locations) {
-        if (state.locations.isEmpty || state.locations.length != locations.length) {
+        if (state.locations.isEmpty ||
+            state.locations.length != locations.length) {
           state = state.copyWith(locations: locations, isLoading: false);
         }
       });
@@ -123,7 +126,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
     // 3. 초기 상태 반환 (기존 데이터가 있으면 유지, 없으면 빈 상태로 시작)
     final initialLocations = ref.read(locationsProvider).value ?? [];
-    
+
     return HomeState(
       isLoading: initialLocations.isEmpty,
       locations: initialLocations,
@@ -208,14 +211,17 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     _isLocationTrackingInProgress = true;
-    
+
     // 10초 워치독 타이머 시작: 어떤 이유로든 10초 내에 완료되지 않으면 강제로 에러 출력
     _watchdogTimer?.cancel();
     _watchdogTimer = Timer(const Duration(seconds: 10), () {
       if (_isLocationTrackingInProgress && state.currentPosition == null) {
         debugPrint('[디버그] 워치독 작동: 10초 초과로 강제 에러 처리');
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '위치 확인에 시간이 너무 오래 걸립니다. 트인 곳에서 다시 시도해 보세요.',
+          errorMessage: isEn
+              ? 'Location check is taking too long. Please try again in an open area.'
+              : '위치 확인에 시간이 너무 오래 걸립니다. 트인 곳에서 다시 시도해 보세요.',
           isLoading: false,
         );
         _isLocationTrackingInProgress = false;
@@ -227,31 +233,48 @@ class HomeNotifier extends Notifier<HomeState> {
 
     try {
       // 1. 위치 서비스 활성화 여부 확인 (5초 타임아웃)
-      serviceEnabled = await geo.Geolocator.isLocationServiceEnabled()
-          .timeout(const Duration(seconds: 5), onTimeout: () => false);
+      serviceEnabled = await geo.Geolocator.isLocationServiceEnabled().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => false,
+      );
       if (!serviceEnabled) {
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '위치 서비스가 비활성화되어 있습니다. 설정에서 GPS를 켜주세요.',
+          errorMessage: isEn
+              ? 'Location services are disabled. Please turn on GPS in settings.'
+              : '위치 서비스가 비활성화되어 있습니다. 설정에서 GPS를 켜주세요.',
         );
         return;
       }
 
       // 2. 위치 권한 확인 및 요청 (각 5초 타임아웃)
-      permission = await geo.Geolocator.checkPermission()
-          .timeout(const Duration(seconds: 5), onTimeout: () => geo.LocationPermission.denied);
-      
+      permission = await geo.Geolocator.checkPermission().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => geo.LocationPermission.denied,
+      );
+
       if (permission == geo.LocationPermission.denied) {
-        permission = await geo.Geolocator.requestPermission()
-            .timeout(const Duration(seconds: 5), onTimeout: () => geo.LocationPermission.denied);
+        permission = await geo.Geolocator.requestPermission().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => geo.LocationPermission.denied,
+        );
         if (permission == geo.LocationPermission.denied) {
-          state = state.copyWith(errorMessage: '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.');
+          final isEn = ref.read(localeProvider) == AppLocale.en;
+          state = state.copyWith(
+            errorMessage: isEn
+                ? 'Location permission denied. Please allow permission for smooth use.'
+                : '위치 권한이 거부되었습니다. 원활한 이용을 위해 권한을 허용해주세요.',
+          );
           return;
         }
       }
 
       if (permission == geo.LocationPermission.deniedForever) {
+        final isEn = ref.read(localeProvider) == AppLocale.en;
         state = state.copyWith(
-          errorMessage: '위치 권한이 영구적으로 거부되었습니다. 앱 설정에서 권한을 변경해주세요.',
+          errorMessage: isEn
+              ? 'Location permission permanently denied.\nPlease change permissions in app settings.'
+              : '위치 권한이 영구적으로 거부되었습니다.\n앱 설정에서 권한을 변경해주세요.',
         );
         return;
       }
@@ -273,47 +296,56 @@ class HomeNotifier extends Notifier<HomeState> {
 
       // 3-2. 실시간 위치 가져오기
       try {
-        final position = await geo.Geolocator.getCurrentPosition(
-          locationSettings: const geo.LocationSettings(
-            accuracy: geo.LocationAccuracy.high,
-          ),
-        ).timeout(
-          const Duration(seconds: 8), // 워치독보다 약간 짧게 설정
-          onTimeout: () {
-            throw TimeoutException('GPS 응답 시간 초과');
-          },
-        );
+        final position =
+            await geo.Geolocator.getCurrentPosition(
+              locationSettings: const geo.LocationSettings(
+                accuracy: geo.LocationAccuracy.high,
+              ),
+            ).timeout(
+              const Duration(seconds: 8), // 워치독보다 약간 짧게 설정
+              onTimeout: () {
+                throw TimeoutException('GPS 응답 시간 초과');
+              },
+            );
 
         state = state.copyWith(currentPosition: position, errorMessage: null);
         _checkParkProximity(position);
-        
+
         // 성공 시 워치독 취소
         _watchdogTimer?.cancel();
       } catch (e) {
         debugPrint('[디버그] 실시간 위치 가져오기 최종 오류: $e');
         if (state.currentPosition == null) {
+          final isEn = ref.read(localeProvider) == AppLocale.en;
           state = state.copyWith(
-            errorMessage: '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
+            errorMessage: isEn
+                ? 'Could not get location information. GPS signals may be weak in the bushes. Please try again in an open area.'
+                : '위치 정보를 가져올 수 없습니다. 수풀 속에서는 GPS 신호가 약할 수 있습니다. 트인 곳에서 다시 시도해주세요.',
           );
         }
       }
 
       // 4. 위치 스트림 구독 (실시간 이동 트래킹)
       _positionSubscription?.cancel();
-      _positionSubscription = geo.Geolocator.getPositionStream(
-        locationSettings: const geo.LocationSettings(
-          accuracy: geo.LocationAccuracy.high,
-          distanceFilter: 5,
-        ),
-      ).listen((geo.Position position) {
-        state = state.copyWith(currentPosition: position);
-        _checkParkProximity(position);
-      });
-
+      _positionSubscription =
+          geo.Geolocator.getPositionStream(
+            locationSettings: const geo.LocationSettings(
+              accuracy: geo.LocationAccuracy.high,
+              distanceFilter: 5,
+            ),
+          ).listen((geo.Position position) {
+            state = state.copyWith(currentPosition: position);
+            _checkParkProximity(position);
+          });
     } catch (e) {
       debugPrint('[디버그] 위치 추적 로직 전체 오류: $e');
       if (state.currentPosition == null && state.errorMessage == null) {
-        state = state.copyWith(errorMessage: '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.');
+        final isEn = ref.read(localeProvider) == AppLocale.en;
+        state = state.copyWith(
+          errorMessage: isEn
+              ? 'An unknown error occurred while retrieving location information.'
+              : '알 수 없는 오류가 발생하여 위치 정보를 가져오지 못했습니다.',
+        );
       }
     } finally {
       // 어떤 경로로든 함수가 종료될 때 반드시 잠금을 해제하고 로딩 상태를 종료함
@@ -321,7 +353,7 @@ class HomeNotifier extends Notifier<HomeState> {
       if (state.isLoading) {
         state = state.copyWith(isLoading: false);
       }
-      
+
       // 위치 획득 성공 시 워치독 취소
       if (state.currentPosition != null) {
         _watchdogTimer?.cancel();
@@ -372,7 +404,9 @@ class HomeNotifier extends Notifier<HomeState> {
 
     if (detectedParkId != state.currentParkId) {
       if (detectedParkId != null) {
-        final park = state.locations.firstWhere((loc) => loc.id == detectedParkId);
+        final park = state.locations.firstWhere(
+          (loc) => loc.id == detectedParkId,
+        );
 
         // 유저의 잠금 해제 이력 확인 (알 획득 방식과 동일하게 유저의 unlockedParkIds 체크)
         final user = ref.read(userProvider).value;
@@ -393,7 +427,9 @@ class HomeNotifier extends Notifier<HomeState> {
           _recordParkUnlock(user.id, detectedParkId);
         }
 
-        debugPrint('공원 진입: $detectedParkId (${park.name}), 이미 잠금해제됨: $isAlreadyUnlocked');
+        debugPrint(
+          '공원 진입: $detectedParkId (${park.name}), 이미 잠금해제됨: $isAlreadyUnlocked',
+        );
       } else {
         state = state.copyWith(
           currentParkId: null,

@@ -72,7 +72,9 @@ class VisitedParksSection extends ConsumerWidget {
                 separatorBuilder: (_, _) => const SizedBox(width: 12),
                 itemBuilder: (context, index) => const ParkCardSkeleton(),
               ),
-              error: (err, _) => _buildEmptyState('오류가 발생했습니다'),
+              error: (err, _) => _buildEmptyState(
+                isEn ? 'An error occurred' : '오류가 발생했습니다',
+              ),
             ),
           ),
         ],

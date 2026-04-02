@@ -565,7 +565,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         foregroundColor: AppColors.black,
       ),
       body: state.locations.isEmpty
-          ? _buildFullLoading() // 필수 데이터(장소)가 아예 없을 때만 전체 화면 로딩
+          ? _buildFullLoading(isEn) // 필수 데이터(장소)가 아예 없을 때만 전체 화면 로딩
           : Stack(
               children: [
                 MapWidget(
@@ -589,8 +589,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
                 // 상단 상태 오버레이 (위치 확인 중 또는 에러 표시)
-                if (state.currentPosition == null) _buildLocationStatusOverlay(state, ref),
-                
+                if (state.currentPosition == null)
+                  _buildLocationStatusOverlay(state, ref, isEn),
+
                 Positioned(
                   top: 65,
                   left: 16,
@@ -602,16 +603,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// 전체 화면 로딩 (데이터가 아예 없을 때)
-  Widget _buildFullLoading() {
-    return const Center(
+  Widget _buildFullLoading(bool isEn) {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.primary600),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(color: AppColors.primary600),
+          const SizedBox(height: 16),
           Text(
-            '필수 정보를 불러오고 있습니다...',
-            style: TextStyle(color: AppColors.gray600),
+            isEn ? 'Loading essential information...' : '필수 정보를 불러오고 있습니다...',
+            style: const TextStyle(color: AppColors.gray600),
           ),
         ],
       ),
@@ -619,7 +620,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   /// 지도 상단에 띄우는 위치 상태 오버레이 (Non-blocking)
-  Widget _buildLocationStatusOverlay(HomeState state, WidgetRef ref) {
+  Widget _buildLocationStatusOverlay(
+    HomeState state,
+    WidgetRef ref,
+    bool isEn,
+  ) {
     return Positioned(
       top: 120, // StepCountCard 아래 위치
       left: 16,
@@ -653,18 +658,25 @@ class _HomePageState extends ConsumerState<HomePage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                state.errorMessage ?? '정확한 내 위치를 확인하고 있습니다...',
+                state.errorMessage ??
+                    (isEn
+                        ? 'Checking your location...'
+                        : '정확한 내 위치를 확인하고 있습니다...'),
                 style: AppTextStyles.label.copyWith(
-                  color: state.errorMessage != null ? AppColors.error : AppColors.gray700,
+                  color: state.errorMessage != null
+                      ? AppColors.error
+                      : AppColors.gray700,
                 ),
               ),
             ),
             if (state.errorMessage != null)
               TextButton(
                 onPressed: () {
-                  ref.read(homeViewModelProvider.notifier).retryLocationTracking();
+                  ref
+                      .read(homeViewModelProvider.notifier)
+                      .retryLocationTracking();
                 },
-                child: const Text('다시 시도'),
+                child: Text(isEn ? 'Retry' : '다시 시도'),
               ),
           ],
         ),
