@@ -1,4 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/core/theme/app_text_styles.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 
 class ExploreParkCard extends StatelessWidget {
   final String region;
@@ -31,12 +35,21 @@ class ExploreParkCard extends StatelessWidget {
               child: Container(
                 width: 120,
                 height: 120,
-                color: Colors.grey[200],
-                child: Image.network(
-                  imageUrl,
+                color: AppColors.gray200,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.image, color: Colors.grey);
+                  memCacheWidth: 240,
+                  memCacheHeight: 240,
+                  fadeOutDuration: Duration.zero,
+                  placeholderFadeInDuration: Duration.zero,
+                  placeholder: (context, url) => const ShimmerLoading(
+                    width: double.infinity,
+                    height: double.infinity,
+                    borderRadius: 0,
+                  ),
+                  errorWidget: (context, url, error) {
+                    return const Icon(Icons.image, color: AppColors.gray500);
                   },
                 ),
               ),
@@ -49,20 +62,23 @@ class ExploreParkCard extends StatelessWidget {
                 children: [
                   Text(
                     region,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.gray600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: AppTextStyles.title.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.gray800,
+                    ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),

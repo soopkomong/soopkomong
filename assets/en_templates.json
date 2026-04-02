@@ -1,0 +1,402 @@
+[
+  {
+    "templateId": "000",
+    "grade": "T",
+    "name": "Sproutmong",
+    "description": "A special gift prepared for rookie explorers who are just entering the world of Soopkomon. This mysterious life will finally awaken when your warm steps are collected.",
+    "eggType": "tutorial",
+    "region": "capital"
+  },
+  {
+    "templateId": "001",
+    "grade": "A",
+    "name": "Molemong",
+    "description": "A spirit wearing a hard hat and diligently digging under the railway at Uiwang Rail Park. It enjoys the vibration of rail bikes and acts as a reliable and hard-working assistant by clearing underground obstacles to ensure travelers can safely enjoy nature.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "002",
+    "grade": "A",
+    "name": "Turtlemong",
+    "description": "An elegant spirit carrying the ancient walls of Namhansanseong on its back. Moving at a very slow pace, each step contains deep wisdom, conveying peaceful energy and unchanging persistence to those visiting the fortress.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "003",
+    "grade": "A",
+    "name": "Eaglemong",
+    "description": "A king with a white head and dignified physique, soaring high above Imjingak to deliver a message of peace. Watching over the land of harmony with sharp eyes beyond the pain of division, it symbolizes a powerful guardian of a future where all life mingles without boundaries.",
+    "eggType": "flying",
+    "region": "capital"
+  },
+  {
+    "templateId": "004",
+    "grade": "B",
+    "name": "Woodpeckermong",
+    "description": "A forest carpenter rhythmically tapping on trees with its red crest in the lush woods of Bukhansan. Its drumming serves as a wake-up call for other forest creatures, and it acts as the energetic doctor of the ecosystem by finding and treating diseased parts of trees.",
+    "eggType": "grass",
+    "region": "capital"
+  },
+  {
+    "templateId": "005",
+    "grade": "A",
+    "name": "Heronmong",
+    "description": "A quiet observer of the wetlands of Gyeongancheon, appearing as if in deep meditation with its gray wings folded. Possessing great patience, it waits without disturbing the flow of water and maintains order from behind the scenes so that the ecological balance of the wetland is not broken.",
+    "eggType": "water",
+    "region": "capital"
+  },
+  {
+    "templateId": "006",
+    "grade": "B",
+    "name": "Mandarinmong",
+    "description": "A messenger of love and harmony swimming along the clear waters of Anyangcheon, showing off its colorful and brilliant feathers. It has the ability to paint the surroundings beautifully and spreads positive energy to everyone it meets, breathing life into Anyangcheon, the ecological path of the desolate city.",
+    "eggType": "water",
+    "region": "capital"
+  },
+  {
+    "templateId": "007",
+    "grade": "C",
+    "name": "Mudskippermong",
+    "description": "A prankster that leaps across the mud of Sorae Marsh and looks at the world with curiosity through large eyes. It has the ability to keep the tidal flat moist, and its vital energy in such a harsh environment is a precious indicator of the health of the tidal flat ecosystem.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "008",
+    "grade": "A",
+    "name": "Frogmong",
+    "description": "A spirit playing the sounds of rain and wind while its green skin sparkles on the leaves of Dasan Ecological Park. Raised learning the laws of nature in the land where the wisdom of scholar Jeong Yak-yong resides, it acts as a guide that reminds people of the joy of walking and the importance of nature.",
+    "eggType": "grass",
+    "region": "capital"
+  },
+  {
+    "templateId": "009",
+    "grade": "A",
+    "name": "Ottermong",
+    "description": "A master of underwater life swimming through the waterways of Ansan Reed Marsh, carrying precious memories in a clam-shaped bag. With a noble character that only resides in clean water, it purifies the marsh and communicates with other aquatic creatures like a leader of a peaceful community.",
+    "eggType": "ground",
+    "region": "capital"
+  },
+  {
+    "templateId": "010",
+    "grade": "C",
+    "name": "Spoonbillmong",
+    "description": "An artist-type spirit searching for traces of life by stirring the wide tidal flats of Ganghwa with its unique spoon-shaped bill. This action is more than just feeding; it's a ritual to soothe the energy of the land, silently highlighting the importance of conserving tidal flats as a rare species.",
+    "eggType": "water",
+    "region": "capital"
+  },
+  {
+    "templateId": "011",
+    "grade": "B",
+    "name": "Kingfishermong",
+    "description": "A jewel of the wetlands crossing the blue surface of Gyeongpoho like an arrow with its vivid jade feathers. Its agility in catching fish proves the vitality of the ecosystem, and its appearance sitting by the water creates a beautiful scene like an oriental painting alongside prickly water lilies.",
+    "eggType": "water",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "012",
+    "grade": "S",
+    "name": "Goatmong",
+    "description": "A sacred creature of the mountains with pure white fur, freely roaming the rugged rock cliffs of Odaesan. Keeping the nobility of an endangered species, it overlooks the entire forest from high places and is said to become a faint light in the fog to guide lost hikers.",
+    "eggType": "ground",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "013",
+    "grade": "C",
+    "name": "Sturgeonmong",
+    "description": "A legendary spirit swimming in the cold, clear waters of Hwacheon, wearing hard scales that hold ancient mysteries like armor. Keeping its appearance unchanged for a very long time, it guards the secrets of the ecosystem sleeping in the deep water and acts as a sentinel that warns of water quality changes.",
+    "eggType": "water",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "014",
+    "grade": "A",
+    "name": "Salamandermong",
+    "description": "A transparent and smooth-skinned spirit born in the clear rock crevices of Mureung Valley, embracing the valley's energy. Symbolizing the purity of water, moss comes to life and water becomes clearer wherever it passes, offering refreshing rest to those who visit the valley.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "015",
+    "grade": "A",
+    "name": "Leopardmong",
+    "description": "A brave spirit managing the order of the forest with spots on its forehead flashing in the deep bushes of Chiaksan. With spirit and agility like a tiger despite its small size, it is respected by small creatures and maintains the health of the forest by controlling populations as a predator.",
+    "eggType": "grass",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "016",
+    "grade": "A",
+    "name": "Martenmong",
+    "description": "A beautiful and clever forest guardian with yellow neck fur roaming the woods of Yanggu. Possessing the wisdom of group cooperation, it symbolizes friendship by overcoming hardships with companions. As a top predator, it supports the forest's ecosystem and prevents it from being devastated.",
+    "eggType": "grass",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "017",
+    "grade": "A",
+    "name": "Cormorantmong",
+    "description": "A master of diving with feathers resembling the black waves of Yeongrangho, feeling the breath of the earth deep underwater. Stretching its wings to dry in the sun after emerging from the water is a sacred ritual to recharge energy from nature, managing the pond's vitality without breaking its deep peace.",
+    "eggType": "water",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "018",
+    "grade": "B",
+    "name": "Cranemong",
+    "description": "A noble messenger with a red spot on its head, singing for peace in the silence of the Civilian Control Zone. Its flight across borders symbolizes the hope of reconciliation and coexistence, remaining an elegant spirit that reminds us of the preciousness of life in the wild nature of DMZ.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "019",
+    "grade": "A",
+    "name": "Batmong",
+    "description": "A spirit that brings good luck by spreading dazzling golden wings in the darkness of Gossi Cave, created over millions of years. With the courage to not fear the dark, it has the special ability to protect the cave's environment by sensing minute changes in places unseen by humans.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "020",
+    "grade": "C",
+    "name": "Fireflymong",
+    "description": "A guide of light that gathers forest fairies by lighting an emerald lantern at the end of its tail under the pitch-black night sky. Appearing only in clean environments as a badge of honor, it lights a small spark of hope in the hearts of travelers walking through the night forest.",
+    "eggType": "mystic",
+    "region": "gangwon"
+  },
+  {
+    "templateId": "021",
+    "grade": "C",
+    "name": "Butterflymong",
+    "description": "A life matchmaker connecting flowers with brilliant and intense wings like a tiger. Flying along the fragrance of Manroesan, it helps the forest reproduce, and its colorful dance adds visual pleasure as a spirit that expresses infinite artistic inspiration from nature.",
+    "eggType": "grass",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "022",
+    "grade": "A",
+    "name": "Stalactitemong",
+    "description": "A mysterious spirit with the soul of stalactites and stalagmites formed by water droplets falling in caves for tens of thousands of years. Knowing a level of waiting that humans cannot fathom, it stores long memories of the earth in its hard exterior and whispers the earth's history to cave explorers.",
+    "eggType": "mystic",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "023",
+    "grade": "C",
+    "name": "Beetlemong",
+    "description": "The best environmental cleaner in the ecosystem, silently going its way while rolling a ball larger than itself on sand dunes. Enjoying the noble work of returning what others ignore to nature, its diligent rolling provides nutrients to the soil of the dunes for various plants to take root.",
+    "eggType": "grass",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "024",
+    "grade": "C",
+    "name": "Owlmong",
+    "description": "A wise watcher guarding the night of the National Institute of Ecology with dignified horns of feathers. Silently flying to suppress night outlaws and maintain peace, its deep yellow eyes have the power to see the truth of the night and foresee crises in the ecosystem.",
+    "eggType": "flying",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "025",
+    "grade": "B",
+    "name": "Tealmong",
+    "description": "A fantastic spirit with a distinct Taegeuk pattern on its face, drawing a massive celestial dance with tens of thousands of companions. Showing the value of cooperation where individuals are small but collectively powerful, their flight against the Seosan sunset is a epic narrative of life admired worldwide.",
+    "eggType": "flying",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "026",
+    "grade": "C",
+    "name": "Kingfishermong",
+    "description": "A summer guest leaving a strong impression in the forest with its burning red beak and body near the deep valleys of Gyeryongsan. Sitting in the comfort of a tree hollow, its clear cries harmonize with the valley's water, enriching and beautifying the forest's auditory ecosystem.",
+    "eggType": "grass",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "027",
+    "grade": "S",
+    "name": "Squirrelmong",
+    "description": "A forest fairy flying through the lush pine woods of Songnisan with its mint-colored wings. Looking at the world positively with large, clear eyes, it has the special ability to connect hearts between humans and nature, bringing back pure childhood innocence to anyone who meets it.",
+    "eggType": "flying",
+    "region": "chungcheong"
+  },
+  {
+    "templateId": "028",
+    "grade": "B",
+    "name": "Cranemong",
+    "description": "A noble winter guest showing an elegant gray body among the wide reed fields of Suncheonman, soothing the exhaustion of long-distance travel. With strong physical strength and intelligence to find its way from thousands of kilometers away, it recharges its life energy in the peaceful sanctuary of Suncheonman.",
+    "eggType": "flying",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "029",
+    "grade": "C",
+    "name": "Beetlemong",
+    "description": "A natural powerhouse with majestic horns and a hard shell, teaching children about the resilience of nature. Acting as a forest janitor and nutrient provider by helping with the decomposition of wood, its small but firm appearance symbolizes the solid foundation of the ecosystem.",
+    "eggType": "grass",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "030",
+    "grade": "S",
+    "name": "Tigermong",
+    "description": "A striped spirit inheriting the brave spirit of Deogyusan, possessing the dignity of a king protecting all life on the mountain. With powerful energy that makes the ground vibrate at each step, it is a sacred existence that drives away evil spirits and governs so that nature maintains its original form.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "031",
+    "grade": "S",
+    "name": "Bearmong",
+    "description": "A benevolent yet powerful guardian of Jirisan's deep forest with a distinct white crescent pattern on its chest. Symbolizing the abundance of the forest as an apex predator, it is a living legend of Jirisan with a motherly heart, helping the forest expand by planting acorns and spreading seeds.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "032",
+    "grade": "B",
+    "name": "Crabmong",
+    "description": "A passionate spirit performing a courtship dance on the Julpoman tidal flat with its uniquely large single claw. By digging holes to help oxygen reach deep underground, it makes the earth breathe healthily, and its life adapted to the rhythm of the tides shows the wonders of nature.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "033",
+    "grade": "B",
+    "name": "Egretmong",
+    "description": "A spirit dancing on thin legs like a fairy over the yellow mud of Muan with white feathers and a yellow beak. Due to its meticulous nature of residing only in unpolluted tidal flats, its presence marks a place with the highest ecological value, enhancing the tidal flat's dignity.",
+    "eggType": "flying",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "034",
+    "grade": "B",
+    "name": "Cocklemong",
+    "description": "A simple but strong spirit growing in the sticky tidal flats of Beolgyo, absorbing nutrients from the sea inside its hard shell. Acting as an invisible filter that purifies organic matter to keep the water clear, a huge energy of life is condensed within its small, round appearance.",
+    "eggType": "ground",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "035",
+    "grade": "C",
+    "name": "Crayfishmong",
+    "description": "A small warrior wielding red claws to maintain order in the cold, first-grade water of Tteunbongsaem, the source of the Geumgang River. A sensitive indicator species that warns of the water's state, it is a diligent underwater guardian that manages the bottom of the valley by living among rock crevices.",
+    "eggType": "mystic",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "036",
+    "grade": "S",
+    "name": "Foxmong",
+    "description": "A clever spirit mysteriously roaming through the autumn leaves of Naejangsan with red fur and a soft, bushy tail. A symbol of hope that returned after overcoming the crisis of extinction using secret forest paths, its witty movement increases the forest's vitality and makes us rethink coexistence with nature.",
+    "eggType": "mystic",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "037",
+    "grade": "A",
+    "name": "Rockmong",
+    "description": "A solid and heavy spirit born from the energy of the most sacred rock in Wolchulsan. Possessing an unshakeable firmness against any wind and rain, it provides tireless energy to hikers and silently guards the mountain's memories over eons of time as a representative of the rocks.",
+    "eggType": "mystic",
+    "region": "jeolla"
+  },
+  {
+    "templateId": "038",
+    "grade": "B",
+    "name": "Owlmong",
+    "description": "A spirit of wisdom that has watched over historical sites and tombs in Gyeongju while flying quietly through the night sky. With eyes that can see the world clearly even at night, it acts as a nighttime storyteller and forest sage, whispering the spirit of nature protection left by ancestors to today's travelers.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "039",
+    "grade": "C",
+    "name": "Rookmong",
+    "description": "A clever spirit showing a fantastic group dance in the evening sky of Taehwagang by gathering in tens of thousands. Acting as a correspondent delivering news of the ecosystem between the city and nature, their high intelligence and cooperation break prejudices and teach the importance of a harmonious community.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "040",
+    "grade": "S",
+    "name": "Mushmong",
+    "description": "A fragrant forest spirit grown from the energy of the Geumgang pine tree roots and earth nutrients. Carrying the true scent of nature hidden deep in the forest, it is a treasure that provides healthy energy to those who find it, symbolizing the mysterious harmony between plants and fungi.",
+    "eggType": "grass",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "041",
+    "grade": "B",
+    "name": "Chipmunkmong",
+    "description": "A cute forest sower busily moving along the fortress walls of Mungyeongsaejae with its mouth full of acorns. Just as acorns buried for winter grow into massive trees, its small actions form the foundation for a future giant forest, practicing the forest's sustainability as a diligent friend.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "042",
+    "grade": "B",
+    "name": "Turtlemong",
+    "description": "A spirit of longevity dreaming over a thousand years while contemplating the world with its long neck above the deep waters of Jinyangho. Embracing strong vitality despite its leisure, it maintains peace as an elder of the lake by listening to and mediating the diverse voices of the ecosystem.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "043",
+    "grade": "A",
+    "name": "Dolphinmong",
+    "description": "A free-spirited entity swimming through the blue waters of Seongsan with a smooth body, dancing with the waves. With excellent ability to commune with humans, it is a pleasant companion for sea travelers and plays an important role by circulating seawater through waves to prevent pollution.",
+    "eggType": "water",
+    "region": "jeju"
+  },
+  {
+    "templateId": "044",
+    "grade": "S",
+    "name": "Deermong",
+    "description": "A pure-hearted spirit purifying the world with its deer-like eyes in the misty forests of Jeju's mid-mountain areas. Grown with sacred energy in Jeju's unique ecological environment, it has the blessed power to turn rugged volcanic terrain into a lush paradise, where new life sprouts wherever it steps.",
+    "eggType": "grass",
+    "region": "jeju"
+  },
+  {
+    "templateId": "045",
+    "grade": "C",
+    "name": "Eelmong",
+    "description": "An underwater martial artist hidden in the crevices of clear valley rocks in Seogwipo as a natural monument, boasting strong stamina. With a flexible body that carves through complex waterways, its persistence to swim upstream against waterfalls provides courage and energy to those who challenge themselves.",
+    "eggType": "water",
+    "region": "jeju"
+  },
+  {
+    "templateId": "046",
+    "grade": "B",
+    "name": "Treemong",
+    "description": "A Christmas tree-shaped spirit with the soul of Korean fir trees that only grow in high altitudes of Hallasan. With strength that remains green even in snow-covered winter mountains, it acts as a sturdy protector, informing people of the urgency of environmental protection for its endangered companions.",
+    "eggType": "mystic",
+    "region": "jeju"
+  },
+  {
+    "templateId": "047",
+    "grade": "A",
+    "name": "Swanmong",
+    "description": "The queen of winter reservoirs with dazzling white feathers and an elegantly curved neck, showing a dignified posture. Possessing the persistence to fly through Siberia's cold, it creates a peaceful atmosphere on the water and is a leader-type spirit that cares for other birds during the winter food shortage.",
+    "eggType": "flying",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "048",
+    "grade": "S",
+    "name": "Camelliamong",
+    "description": "A flower spirit with strong vitality that bursts into red buds even in the cold winter winds of Busan's Hwangnyeongsan. A symbol of patience blossoming through the cold, the camellia on its head serves as a food store for forest fairies and a beacon of hope in the winter forest.",
+    "eggType": "grass",
+    "region": "gyeongsang"
+  },
+  {
+    "templateId": "049",
+    "grade": "C",
+    "name": "Toadmong",
+    "description": "A friendly wetland companion singing for the earth's abundance with a low voice during rainy wetland nights. Despite its slow and plump appearance, it maintains wetland health by eating pests, and its manifestation during the rainy season is an honest expression of nature's cycles.",
+    "eggType": "ground",
+    "region": "gyeongsang"
+  }
+]

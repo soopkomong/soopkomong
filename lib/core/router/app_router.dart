@@ -2,15 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soopkomong/presentation/mypage/my_page.dart';
+import 'package:soopkomong/presentation/mypage/profile_edit_page.dart';
+import 'package:soopkomong/presentation/mypage/character_page/character_customize_page.dart';
 import 'package:soopkomong/presentation/auth/sign_in_screen.dart';
+import 'package:soopkomong/presentation/auth/onboarding_screen.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/presentation/home/home_page.dart';
 import 'package:soopkomong/presentation/collection/collection_page.dart';
 import 'package:soopkomong/presentation/explore/explore_page.dart';
 import 'package:soopkomong/presentation/friends/friends_page.dart';
+import 'package:soopkomong/presentation/friends/widgets/friend_profile_page.dart';
+import 'package:soopkomong/domain/entities/friend_model.dart';
 import 'package:soopkomong/presentation/layout/app_shell.dart';
-import 'package:soopkomong/domain/entities/app_user.dart';
+import 'package:soopkomong/presentation/home/notifications_page.dart';
+import 'package:soopkomong/presentation/settings/settings_page.dart';
+import 'package:soopkomong/presentation/providers/onboarding_provider.dart';
+
+import 'package:soopkomong/presentation/auth/name_setting_page.dart';
+import 'package:soopkomong/presentation/auth/tutorial_guide_page.dart';
 
 export 'app_route.dart';
 
@@ -19,27 +29,102 @@ final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateChangesProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoute.home.path,
+    refreshListenable: notifier,
     redirect: (context, state) {
-      final user = authState.value;
-      final isLoggingIn = state.matchedLocation == AppRoute.signIn.path;
+      final authState = ref.read(authStateChangesProvider);
+      final userAsync = ref.read(userProvider);
+      final hasSeenOnboarding = ref.read(onboardingProvider);
 
-      if (user == null) {
-        return isLoggingIn ? null : AppRoute.signIn.path;
+      final matchedLocation = state.matchedLocation;
+      final isLoggingIn = matchedLocation == AppRoute.signIn.path;
+      final isOnboarding = matchedLocation == AppRoute.onboarding.path;
+      final isCustomizing = matchedLocation == AppRoute.characterCustomize.path;
+      final isNameSetting = matchedLocation == AppRoute.nameSetting.path;
+      final isTutorial = matchedLocation == AppRoute.tutorialGuide.path;
+
+      debugPrint(
+        '디버그: [Router] 리다이렉트 체크 - 경로: $matchedLocation, 인증상태: ${authState.isLoading ? "로딩중" : (authState.value != null ? "로그인됨" : "로그아웃됨")}',
+      );
+
+      // (1) 로딩 중일 때는 절대 이동 판단을 내리지 않음 (중요: 리다이렉트 루프 방지)
+      if (userAsync.isLoading || authState.isLoading) {
+        debugPrint('디버그: [Router] 데이터 로딩 대기 중... (현재 경로: $matchedLocation)');
+        return null;
       }
 
-      if (isLoggingIn) {
-        return AppRoute.home.path;
+      // (2) 온보딩 시청 여부 체크
+      // 단, 이미 로그인된 유저는 온보딩을 강제하지 않음 (새 기기 로그인 등의 루프 방지)
+      final isLoggedIn = authState.hasValue && authState.value != null;
+      if (!hasSeenOnboarding && !isLoggedIn) {
+        if (isOnboarding || isLoggingIn) return null;
+        debugPrint('디버그: [Router] -> 온보딩 화면으로 이동');
+        return AppRoute.onboarding.path;
       }
 
+      // (3) 로그아웃 상태 확인
+      if (authState.hasValue && authState.value == null) {
+        if (isLoggingIn || isOnboarding) return null;
+        debugPrint('디버그: [Router] -> 로그인 화면으로 이동');
+        return AppRoute.signIn.path;
+      }
+
+      // (4) 유저 데이터 확인 (로그인 성공 상태)
+      final user = userAsync.value;
+      if (user != null) {
+        // 로그인/온보딩 페이지에 남아있으면 안 되므로 적절한 다음 단계로 이동
+        if (isLoggingIn || isOnboarding) {
+          // 필수 설정이 남아있으면 해당 단계로, 아니면 홈으로
+          if (!user.hasCharacter) return AppRoute.characterCustomize.path;
+          if (!user.hasName) return AppRoute.nameSetting.path;
+          if (!user.hasSeenTutorial) return AppRoute.tutorialGuide.path;
+          debugPrint('디버그: [Router] -> 메인 홈으로 이동');
+          return AppRoute.home.path;
+        }
+
+        // 필수 설정 단계 체크 (이미 해당 페이지라면 null 반환하여 이동 중단)
+        if (!user.hasCharacter) {
+          if (isCustomizing) return null;
+          debugPrint('디버그: [Router] -> 캐릭터 생성(커스텀) 창으로 이동');
+          return AppRoute.characterCustomize.path;
+        }
+        if (!user.hasName) {
+          if (isNameSetting) return null;
+          debugPrint('디버그: [Router] -> 닉네임 설정 창으로 이동');
+          return AppRoute.nameSetting.path;
+        }
+        if (!user.hasSeenTutorial) {
+          if (isTutorial) return null;
+          debugPrint('디버그: [Router] -> 튜토리얼 가이드 창으로 이동');
+          return AppRoute.tutorialGuide.path;
+        }
+
+        return null;
+      }
+
+      // (5) user가 null이고 authState도 값이 없는 경우 (isDeleted 등으로 null 반환된 경우)
+      // ✅ 로그인 화면으로 보내야 함
+      if (!isLoggingIn && !isOnboarding) {
+        debugPrint('디버그: [Router] user==null (isDeleted 등) -> 로그인 화면으로 이동');
+        return AppRoute.signIn.path;
+      }
+
+      // (6) 에러 발생 시 처리
+      if (authState.hasError || userAsync.hasError) {
+        debugPrint('디버그: [Router] 에러 발생 -> 로그인 화면으로 이동');
+        if (isLoggingIn || isOnboarding) return null;
+        return AppRoute.signIn.path;
+      }
+
+      debugPrint('디버그: [Router] 최종 가드 통과. 경로: $matchedLocation');
       return null;
     },
-    refreshListenable: ValueNotifier<AppUser?>(authState.value),
     observers: [routeObserver],
+
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -60,7 +145,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppRoute.collection.path,
                 name: AppRoute.collection.name,
-                builder: (context, state) => const CollectionPage(),
+                builder: (context, state) {
+                  final tab =
+                      int.tryParse(state.uri.queryParameters['tab'] ?? '0') ??
+                      0;
+                  return CollectionPage(initialTab: tab);
+                },
               ),
             ],
           ),
@@ -85,17 +175,92 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
+        path: AppRoute.friendProfile.path,
+        name: AppRoute.friendProfile.name,
+        builder: (context, state) {
+          final friend = state.extra as FriendModel?;
+          if (friend == null) {
+            return const Scaffold(body: Center(child: Text('정보를 불러올 수 없습니다.')));
+          }
+          return FriendProfilePage(friend: friend);
+        },
+      ),
+      GoRoute(
         path: AppRoute.mypage.path,
         name: AppRoute.mypage.name,
         builder: (context, state) => const MyPage(),
+      ),
+      GoRoute(
+        path: AppRoute.profileEdit.path,
+        name: AppRoute.profileEdit.name,
+        builder: (context, state) => const ProfileEditPage(),
+      ),
+      GoRoute(
+        path: AppRoute.characterCustomize.path,
+        name: AppRoute.characterCustomize.name,
+        builder: (context, state) => const CharacterCustomizePage(),
+      ),
+      GoRoute(
+        path: AppRoute.notifications.path,
+        name: AppRoute.notifications.name,
+        builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: AppRoute.nameSetting.path,
+        name: AppRoute.nameSetting.name,
+        builder: (context, state) => const NameSettingPage(),
+      ),
+      GoRoute(
+        path: AppRoute.tutorialGuide.path,
+        name: AppRoute.tutorialGuide.name,
+        builder: (context, state) => const TutorialGuidePage(),
+      ),
+      GoRoute(
+        path: AppRoute.settings.path,
+        name: AppRoute.settings.name,
+        builder: (context, state) => const SettingsPage(),
       ),
       GoRoute(
         path: AppRoute.signIn.path,
         name: AppRoute.signIn.name,
         builder: (context, state) => const SignInScreen(),
       ),
+      GoRoute(
+        path: AppRoute.onboarding.path,
+        name: AppRoute.onboarding.name,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
     ],
     errorBuilder: (context, state) =>
         Scaffold(body: Center(child: Text('Error: ${state.error}'))),
   );
 });
+
+/// 라우터 리프레시를 관리하는 Notifier
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    // 인증 상태 변화 감시
+    _ref.listen(authStateChangesProvider, (prev, next) {
+      debugPrint('디버그: [RouterNotifier] 인증 상태 변경 감지');
+      notifyListeners();
+    }, fireImmediately: true); // 즉시 실행하여 초기 상태 반영 보장
+
+    // 유저 데이터 변화 감시
+    _ref.listen(userProvider, (prev, next) {
+      debugPrint('디버그: [RouterNotifier] 유저 데이터 변경 감지');
+      notifyListeners();
+    }, fireImmediately: true);
+
+    // 온보딩 상태 변화 감시
+    _ref.listen(onboardingProvider, (prev, next) {
+      debugPrint('디버그: [RouterNotifier] 온보딩 상태 변경 감지');
+      notifyListeners();
+    }, fireImmediately: true);
+  }
+}
