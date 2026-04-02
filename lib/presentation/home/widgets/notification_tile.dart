@@ -16,6 +16,7 @@ class NotificationTile extends StatelessWidget {
   final VoidCallback? onDecline;
   final String? statusText; // '수락됨', '거절됨' 등 상태 표시
   final EdgeInsetsGeometry? margin;
+  final bool isEn;
 
   const NotificationTile({
     super.key,
@@ -29,6 +30,7 @@ class NotificationTile extends StatelessWidget {
     this.onDecline,
     this.statusText,
     this.margin,
+    this.isEn = false,
   });
 
   @override
@@ -77,13 +79,13 @@ class NotificationTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _buildActionButton(
-                    label: '거절',
+                    label: isEn ? 'Decline' : '거절',
                     onPressed: onDecline,
                     isPrimary: false,
                   ),
                   const SizedBox(width: 8),
                   _buildActionButton(
-                    label: '수락',
+                    label: isEn ? 'Accept' : '수락',
                     onPressed: onAccept,
                     isPrimary: true,
                   ),
