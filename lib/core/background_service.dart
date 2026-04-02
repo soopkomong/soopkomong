@@ -32,7 +32,8 @@ Future<void> initializeService() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -59,7 +60,9 @@ Future<void> startBackgroundServiceSafe() async {
 
   if (Platform.isAndroid) {
     // 안드로이드 14 이상에서는 포어그라운드 서비스 시작 시 권한이 없으면 SecurityException 발생
-    final locationGranted = await Permission.locationAlways.isGranted || await Permission.locationWhenInUse.isGranted;
+    final locationGranted =
+        await Permission.locationAlways.isGranted ||
+        await Permission.locationWhenInUse.isGranted;
     final activityGranted = await Permission.activityRecognition.isGranted;
     final notificationGranted = await Permission.notification.isGranted;
 
@@ -67,7 +70,9 @@ Future<void> startBackgroundServiceSafe() async {
       debugPrint("[BackgroundService] Permissions verified, starting service.");
       await service.startService();
     } else {
-      debugPrint("[BackgroundService] Required permissions not fully granted. Skipping service start.");
+      debugPrint(
+        "[BackgroundService] Required permissions not fully granted. Skipping service start.",
+      );
     }
   } else {
     await service.startService();
@@ -130,37 +135,55 @@ Future<void> _executeBackgroundLogic() async {
     final userId = prefs.getString('user_id');
     if (userId != null) {
       if (currentTotalSteps == 0) {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
         if (userDoc.exists) {
           final int remoteTotalSteps = userDoc.data()?['totalSteps'] ?? 0;
           if (remoteTotalSteps > 0) {
             await stepRepo.setTotalSteps(remoteTotalSteps);
             currentTotalSteps = remoteTotalSteps;
-            debugPrint("[BackgroundService] Restored totalSteps from Firestore: $remoteTotalSteps");
+            debugPrint(
+              "[BackgroundService] Restored totalSteps from Firestore: $remoteTotalSteps",
+            );
           }
         }
       } else {
         try {
-          await FirebaseFirestore.instance.collection('users').doc(userId).update({
-            'totalSteps': currentTotalSteps,
-            'lastStepUpdateAt': FieldValue.serverTimestamp(),
-          });
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .update({
+                'totalSteps': currentTotalSteps,
+                'lastStepUpdateAt': FieldValue.serverTimestamp(),
+              });
         } catch (e) {
-          debugPrint("[BackgroundService] Firestore totalSteps update failed: $e");
+          debugPrint(
+            "[BackgroundService] Firestore totalSteps update failed: $e",
+          );
         }
       }
 
       final remoteDataSource = RemoteLocationDataSourceImpl(
-          firestore: FirebaseFirestore.instance);
+        firestore: FirebaseFirestore.instance,
+      );
       final soopkomonRepo = SoopkomonRepositoryImpl(
-          remoteDataSource: remoteDataSource);
+        remoteDataSource: remoteDataSource,
+      );
       final checkHatchingUseCase = CheckHatchingUseCase(soopkomonRepo);
 
-      final notifications =
-          await checkHatchingUseCase.execute(userId, currentTotalSteps);
+      final hatchedPets = await checkHatchingUseCase.execute(
+        userId,
+        currentTotalSteps,
+      );
 
-      for (var msg in notifications) {
-        await _showNotification('숲코몽 부화', msg);
+      for (var pet in hatchedPets) {
+        final parkName = pet.discoveredSpotName.isNotEmpty
+            ? pet.discoveredSpotName
+            : '생태공원';
+        final msg = '$parkName에서 ${pet.name} 숲코몽이 태어났어요! 도감에서 확인해 보세요!';
+        await _showNotification('숲코몽 부화 ✨', msg);
       }
 
       // 3. 생태 공원 진입 감지 및 100걸음 걷기 체크
@@ -185,7 +208,11 @@ Future<void> _executeBackgroundLogic() async {
 
             for (final loc in locations) {
               final distance = geo.Geolocator.distanceBetween(
-                  position.latitude, position.longitude, loc.lat, loc.lng);
+                position.latitude,
+                position.longitude,
+                loc.lat,
+                loc.lng,
+              );
               if (distance <= loc.radius) {
                 detectedParkId = loc.id;
                 detectedParkName = loc.name;
@@ -202,10 +229,12 @@ Future<void> _executeBackgroundLogic() async {
                 final stepsInPark = currentTodaySteps - savedEntrySteps;
                 if (stepsInPark >= 100 && parkPetIds.isNotEmpty) {
                   final targetTemplateId = parkPetIds.first;
-                  final userPets =
-                      await soopkomonRepo.getUserSoopkomons(userId).first;
-                  final alreadyHas = userPets
-                      .any((p) => p.templateId == targetTemplateId);
+                  final userPets = await soopkomonRepo
+                      .getUserSoopkomons(userId)
+                      .first;
+                  final alreadyHas = userPets.any(
+                    (p) => p.templateId == targetTemplateId,
+                  );
 
                   if (!alreadyHas) {
                     final templateQuery = await FirebaseFirestore.instance
@@ -231,8 +260,9 @@ Future<void> _executeBackgroundLogic() async {
 
                       await soopkomonRepo.addSoopkomon(userId, newPet);
                       await _showNotification(
-                          '숲코몽 획득!',
-                          '$detectedParkName에서 100보를 걷고 ${newPet.name} 숲코몽을 발견했어요!');
+                        '숲코몽 획득!',
+                        '$detectedParkName에서 100보를 걷고 ${newPet.name} 숲코몽을 발견했어요!',
+                      );
 
                       prefs.remove('bg_park_id');
                       prefs.remove('bg_park_entry_steps');
@@ -261,12 +291,12 @@ Future<void> _executeBackgroundLogic() async {
 Future<void> _showNotification(String title, String body) async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
       AndroidNotificationDetails(
-    'hatching_channel',
-    'Hatching Notifications',
-    channelDescription: 'Notifications for pet hatching',
-    importance: Importance.max,
-    priority: Priority.high,
-  );
+        'hatching_channel',
+        'Hatching Notifications',
+        channelDescription: 'Notifications for pet hatching',
+        importance: Importance.max,
+        priority: Priority.high,
+      );
 
   const NotificationDetails platformChannelSpecifics = NotificationDetails(
     android: androidPlatformChannelSpecifics,
@@ -283,4 +313,3 @@ Future<void> _showNotification(String title, String body) async {
     payload: 'item x',
   );
 }
-

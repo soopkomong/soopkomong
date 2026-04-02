@@ -33,12 +33,14 @@ class HomeState {
   final String? lastHatchedPetImagePath;
   final String? lastUnlockedParkName;
   final String? lastUnlockedParkImageUrl;
+  final int totalStepCount; // 누적 걸음수 추가
 
   HomeState({
     required this.isLoading,
     required this.locations,
     this.errorMessage,
     this.stepCount = 0,
+    this.totalStepCount = 0, // 초기값 설정
     this.currentPosition,
     this.currentParkId,
     this.stepsAtParkEntry,
@@ -58,6 +60,7 @@ class HomeState {
     List<Location>? locations,
     String? errorMessage,
     int? stepCount,
+    int? totalStepCount,
     geo.Position? currentPosition,
     int? currentParkId,
     int? stepsAtParkEntry,
@@ -76,6 +79,7 @@ class HomeState {
       locations: locations ?? this.locations,
       errorMessage: errorMessage ?? this.errorMessage,
       stepCount: stepCount ?? this.stepCount,
+      totalStepCount: totalStepCount ?? this.totalStepCount,
       currentPosition: currentPosition ?? this.currentPosition,
       currentParkId: currentParkId ?? this.currentParkId,
       stepsAtParkEntry: stepsAtParkEntry ?? this.stepsAtParkEntry,
@@ -162,8 +166,14 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     final initialTodaySteps = await stepRepo.getTodaySteps();
-    state = state.copyWith(stepCount: initialTodaySteps);
-    debugPrint('[디버그] 오늘 걸음수 초기값: ${state.stepCount}');
+    final initialTotalSteps = await stepRepo.getTotalSteps();
+    state = state.copyWith(
+      stepCount: initialTodaySteps,
+      totalStepCount: initialTotalSteps,
+    );
+    debugPrint(
+      '[디버그] 초기값 - 오늘: ${state.stepCount}, 총: ${state.totalStepCount}',
+    );
 
     // 위치 추적과 걸음 수 추적 시작
     await _startLocationTracking();
@@ -191,7 +201,11 @@ class HomeNotifier extends Notifier<HomeState> {
 
       if (!hasTutorialEgg) {
         debugPrint('[디버그] 튜토리얼 알(000) 미보유 감지. 자동 지급 프로세스 시작 (UserID: $userId)');
-        final tutorialEgg = Soopkomon.tutorialEgg();
+
+        final stepRepo = ref.read(stepRepositoryProvider);
+        final currentTotal = await stepRepo.getTotalSteps();
+
+        final tutorialEgg = Soopkomon.tutorialEgg(currentTotal);
         await ref
             .read(soopkomonRepositoryProvider)
             .addSoopkomon(userId, tutorialEgg);
@@ -458,7 +472,10 @@ class HomeNotifier extends Notifier<HomeState> {
   void _processNewStepCount(StepData stepData) {
     if (stepData.todaySteps == state.stepCount) return;
 
-    state = state.copyWith(stepCount: stepData.todaySteps);
+    state = state.copyWith(
+      stepCount: stepData.todaySteps,
+      totalStepCount: stepData.totalSteps,
+    );
 
     if (state.currentParkId != null &&
         !state.isPetAcquiredInCurrentPark &&
@@ -473,6 +490,7 @@ class HomeNotifier extends Notifier<HomeState> {
 
     _syncTotalStepsToFirestore(stepData.totalSteps);
 
+    // 부화 조건 체크 및 개별 숲코몽 걸음수 실시간 동기화
     _checkHatchingCondition(stepData.totalSteps);
   }
 
@@ -568,34 +586,26 @@ class HomeNotifier extends Notifier<HomeState> {
     _processNewStepCount(data);
   }
 
-  void _checkHatchingCondition(int currentTotalSteps) {
-    final userPetsAsync = ref.read(userSoopkomonProvider);
-    userPetsAsync.whenData((pets) {
-      for (final pet in pets) {
-        if (!pet.isHatched &&
-            (currentTotalSteps - pet.stepsAtDiscovery) >= pet.requiredSteps) {
-          _hatchPet(pet);
-          break;
-        }
-      }
-    });
-  }
-
-  void _hatchPet(Soopkomon pet) {
+  Future<void> _checkHatchingCondition(int currentTotalSteps) async {
     final user = ref.read(userProvider).value;
-    if (user != null) {
-      ref
-          .read(soopkomonRepositoryProvider)
-          .markSoopkomonAsHatched(user.id, pet.instanceId);
+    if (user == null) return;
+
+    final useCase = ref.read(checkHatchingUseCaseProvider);
+
+    // 이 유즈케이스 내부에서 모든 숲코몽의 currentTotalSteps를 업데이트함
+    final hatchedPets = await useCase.execute(user.id, currentTotalSteps);
+
+    if (hatchedPets.isNotEmpty) {
+      final pet = hatchedPets.first;
+      state = state.copyWith(
+        lastHatchedPetName: pet.name,
+        lastHatchedParkName: pet.discoveredSpotName,
+        lastHatchedPetImagePath: pet.imagePath,
+      );
     }
-    state = state.copyWith(
-      lastHatchedPetName: pet.name,
-      lastHatchedParkName: pet.discoveredSpotName,
-      lastHatchedPetImagePath: pet.imagePath,
-    );
-    debugPrint('펫 부화 성공: ${pet.name} from ${pet.discoveredSpotName}');
   }
 
+  /// 기존의 개별 부화 처리 함수는 UseCase 내부로 이동됨
   void clearHatchedPet() {
     state = state.copyWith(
       lastHatchedPetName: null,
