@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/location.dart';
@@ -126,7 +127,7 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/Book_3D.png', width: 26, height: 26),
+                Image.asset(Assets.book3dPng, width: 26, height: 26),
                 const SizedBox(width: 6),
                 Text(
                   isEn ? 'Collection' : '도감',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 
 /// 캐릭터 파츠를 실시간으로 조합하여 렌더링하는 위젯
@@ -37,9 +38,9 @@ class CharacterPartsAvatar extends StatelessWidget {
     String? hairHighlightImagePath,
     Color? hairColor,
     required this.size,
-  }) : baseImagePath = baseImagePath ?? 'body_base.png',
+  }) : baseImagePath = baseImagePath ?? Assets.partPath('body_base.png'),
        bodyShadowImagePath =
-           bodyShadowImagePath ?? (settings != null ? 'body_shadow.png' : null),
+           bodyShadowImagePath ?? (settings != null ? Assets.partPath('body_shadow.png') : null),
        baseColor =
            baseColor ??
            (settings != null && settings['skinColor'] != null
@@ -48,22 +49,22 @@ class CharacterPartsAvatar extends StatelessWidget {
        hairImagePath =
            hairImagePath ??
            (settings != null && settings['hair'] != null
-               ? 'hair_${settings['hair']}.png'
-               : 'hair_01.png'),
+               ? Assets.partPath('hair_${settings['hair']}.png')
+               : Assets.partPath('hair_01.png')),
        hairShadowImagePath =
            hairShadowImagePath ??
            (settings != null && settings['hair'] != null
-               ? 'hair_${settings['hair']}_shadow.png'
+               ? Assets.partPath('hair_${settings['hair']}_shadow.png')
                : null),
        hairSubShadowImagePath =
            hairSubShadowImagePath ??
            (settings != null && settings['hair'] != null
-               ? 'hair_${settings['hair']}_sub_shadow.png'
+               ? Assets.partPath('hair_${settings['hair']}_sub_shadow.png')
                : null),
        hairHighlightImagePath =
            hairHighlightImagePath ??
            (settings != null && settings['hair'] != null
-               ? 'hair_${settings['hair']}_highlight.png'
+               ? Assets.partPath('hair_${settings['hair']}_highlight.png')
                : null),
        hairColor =
            hairColor ??
@@ -73,13 +74,13 @@ class CharacterPartsAvatar extends StatelessWidget {
        faceImagePath =
            faceImagePath ??
            (settings != null && settings['face'] != null
-               ? 'face_${settings['face']}.png'
-               : 'face_smile.png'),
+               ? Assets.partPath('face_${settings['face']}.png')
+               : Assets.partPath('face_smile.png')),
        clothesImagePath =
            clothesImagePath ??
            (settings != null && settings['clothes'] != null
-               ? 'clothes_${settings['clothes']}.png'
-               : 'clothes_01.png'),
+               ? Assets.partPath('clothes_${settings['clothes']}.png')
+               : Assets.partPath('clothes_01.png')),
        clothesColor =
            clothesColor ??
            (settings != null && settings['clothesColor'] != null
@@ -88,7 +89,7 @@ class CharacterPartsAvatar extends StatelessWidget {
        shoesImagePath =
            shoesImagePath ??
            (settings != null && settings['shoes'] != null
-               ? 'shoes_${settings['shoes']}.png'
+               ? Assets.partPath('shoes_${settings['shoes']}.png')
                : null),
        shoesColor =
            shoesColor ??
@@ -96,15 +97,12 @@ class CharacterPartsAvatar extends StatelessWidget {
                ? Color((settings['shoesColor'] as num).toInt())
                : AppColors.white);
 
-  static const _storageBaseUrl =
-      'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/';
+
 
   String _getPartUrl(String assetPath) {
     final fileName = assetPath.split('/').last;
-    if (assetPath.contains('/thumbnails/')) {
-      return '${_storageBaseUrl}parts%2Fthumbnails%2F$fileName?alt=media';
-    }
-    return '${_storageBaseUrl}parts%2F$fileName?alt=media';
+    final isThumbnail = assetPath.contains('/thumbnails/');
+    return Assets.partUrl(fileName, isThumbnail: isThumbnail);
   }
 
   Widget _buildPartImage({

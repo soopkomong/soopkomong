@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
@@ -39,7 +40,7 @@ class SignInScreen extends ConsumerWidget {
                 decoration: const BoxDecoration(shape: BoxShape.circle),
                 child: Center(
                   child: Image.asset(
-                    'assets/images/Login_character.png',
+                    Assets.loginCharacter,
                     width: 249,
                     height: 189,
                     fit: BoxFit.contain,

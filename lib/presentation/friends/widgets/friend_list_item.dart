@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
@@ -57,7 +58,7 @@ class FriendListItem extends ConsumerWidget {
                       return Row(
                         children: [
                           SvgPicture.asset(
-                            'assets/images/Leaf.svg',
+                            Assets.leaf,
                             width: 18,
                             height: 18,
                             colorFilter: const ColorFilter.mode(
@@ -74,7 +75,7 @@ class FriendListItem extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Image.asset(
-                            'assets/images/Sprout.png',
+                            Assets.sprout,
                             width: 20,
                             height: 20,
                           ),

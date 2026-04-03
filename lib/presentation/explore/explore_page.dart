@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/region.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/collection/widgets/region_filter_bar.dart';
@@ -47,7 +48,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/images/Leaf_3D.png',
+                      Assets.leaf3dPng,
                       width: 26,
                       height: 26,
                     ),

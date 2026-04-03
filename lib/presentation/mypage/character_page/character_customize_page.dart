@@ -16,10 +16,11 @@ import 'package:soopkomong/presentation/providers/character_parts_provider.dart'
 import 'package:soopkomong/presentation/providers/character_provider.dart';
 import 'package:soopkomong/core/utils/app_toast.dart';
 
-import 'package:soopkomong/core/enums/app_locale.dart';
-import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
+import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/presentation/providers/locale_provider.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 // import 'package:soopkomong/domain/entities/soopkomon.dart'; // 튜토리얼 구현 시 활성화
 
 class CharacterCustomizePage extends ConsumerStatefulWidget {
@@ -143,44 +144,43 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
 
       // 2. 모든 이미지 URL 생성 및 프리캐시
       // 기본 몸체
-      final List<String> allAssetPaths = ['body_base.png', 'body_shadow.png'];
+      final List<String> allAssetPaths = [
+        Assets.partPath('body_base.png'),
+        Assets.partPath('body_shadow.png'),
+      ];
 
       // 머리카락 (각 ID별로 메인, 하이라이트, 그림자 포함)
       final List<String> hairs = parts['hairs'] ?? [];
       for (final id in hairs) {
         allAssetPaths.addAll([
-          'hair_$id.png',
-          'hair_${id}_highlight.png',
-          'hair_${id}_shadow.png',
-          'hair_${id}_sub_shadow.png',
+          Assets.partPath('hair_$id.png'),
+          Assets.partPath('hair_${id}_highlight.png'),
+          Assets.partPath('hair_${id}_shadow.png'),
+          Assets.partPath('hair_${id}_sub_shadow.png'),
         ]);
       }
 
       // 얼굴
       final List<String> faces = parts['faces'] ?? [];
       for (final id in faces) {
-        allAssetPaths.add('face_$id.png');
+        allAssetPaths.add(Assets.partPath('face_$id.png'));
       }
 
       // 의상
       final List<String> clothes = parts['clothes'] ?? [];
       for (final id in clothes) {
-        allAssetPaths.add('clothes_$id.png');
+        allAssetPaths.add(Assets.partPath('clothes_$id.png'));
       }
 
       // 신발
       final List<String> shoes = parts['shoes'] ?? [];
       for (final id in shoes) {
-        allAssetPaths.add('shoes_$id.png');
+        allAssetPaths.add(Assets.partPath('shoes_$id.png'));
       }
-
-      // Storage URL로 변환하여 precacheImage 실행
-      const storageBaseUrl =
-          'https://firebasestorage.googleapis.com/v0/b/soopkomong.firebasestorage.app/o/';
 
       final List<Future<void>> imageFutures = allAssetPaths.map((assetPath) {
         final fileName = assetPath.split('/').last;
-        final imageUrl = '${storageBaseUrl}parts%2F$fileName?alt=media';
+        final imageUrl = Assets.partUrl(fileName);
         return precacheImage(CachedNetworkImageProvider(imageUrl), context);
       }).toList();
 
@@ -316,19 +316,19 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
           RepaintBoundary(
             key: _globalKey,
             child: CharacterPartsAvatar(
-              baseImagePath: 'body_base.png',
-              bodyShadowImagePath: 'body_shadow.png',
+              baseImagePath: Assets.partPath('body_base.png'),
+              bodyShadowImagePath: Assets.partPath('body_shadow.png'),
               baseColor: _selectedSkinColor,
-              hairImagePath: 'hair_$_selectedHair.png',
-              hairHighlightImagePath: 'hair_${_selectedHair}_highlight.png',
-              hairShadowImagePath: 'hair_${_selectedHair}_shadow.png',
-              hairSubShadowImagePath: 'hair_${_selectedHair}_sub_shadow.png',
+              hairImagePath: Assets.partPath('hair_$_selectedHair.png'),
+              hairHighlightImagePath: Assets.partPath('hair_${_selectedHair}_highlight.png'),
+              hairShadowImagePath: Assets.partPath('hair_${_selectedHair}_shadow.png'),
+              hairSubShadowImagePath: Assets.partPath('hair_${_selectedHair}_sub_shadow.png'),
               hairColor: _selectedHairColor,
-              faceImagePath: 'face_$_selectedFace.png',
-              clothesImagePath: 'clothes_$_selectedClothes.png',
+              faceImagePath: Assets.partPath('face_$_selectedFace.png'),
+              clothesImagePath: Assets.partPath('clothes_$_selectedClothes.png'),
               clothesColor: _selectedClothesColor,
               shoesImagePath: _selectedShoes != null
-                  ? 'shoes_$_selectedShoes.png'
+                  ? Assets.partPath('shoes_$_selectedShoes.png')
                   : null,
               shoesColor: _selectedShoesColor,
               size: 280,
@@ -432,9 +432,9 @@ class _CharacterCustomizePageState extends ConsumerState<CharacterCustomizePage>
         unselectedLabelStyle: AppTextStyles.subTitleM,
         tabs: categories.asMap().entries.map((entry) {
           final svgIcons = [
-            'assets/images/scissors.svg',
-            'assets/images/smiley.svg',
-            'assets/images/t-shirt.svg',
+            Assets.scissors,
+            Assets.smiley,
+            Assets.tShirt,
           ];
           return Tab(
             child: AnimatedBuilder(

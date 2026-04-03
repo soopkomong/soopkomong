@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/location.dart';
@@ -77,7 +78,7 @@ class ParkCard extends ConsumerWidget {
                           )
                         : Image.asset(
                             imageUrl.isEmpty
-                                ? 'assets/images/placeholder.png'
+                                ? Assets.placeholder
                                 : imageUrl,
                             fit: BoxFit.cover,
                             color: isVisited ? null : AppColors.grey,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/router/app_router.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_shadows.dart';
@@ -103,7 +104,7 @@ class _FriendsPageState extends ConsumerState<FriendsPage> {
     return Row(
       children: [
         SvgPicture.asset(
-          'assets/images/Users_Fill.svg',
+          Assets.usersFill,
           width: 20,
           height: 20,
           colorFilter: const ColorFilter.mode(AppColors.black, BlendMode.srcIn),

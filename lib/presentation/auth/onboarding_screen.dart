@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/router/app_route.dart';
@@ -22,17 +23,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     OnboardingItem(
       title: '공원에 가야 숲코몽 알을 발견할 수 있어요',
       description: '생태공원에 도착하는 순간,\n숲코몽 알이 기다리고 있어요!',
-      imagePath: 'assets/images/onboarding/01.png',
+      imagePath: Assets.onboarding1,
     ),
     OnboardingItem(
       title: '함께 걸으면 숲코몽이 태어나요',
       description: '알을 품고 일정 걸음 이상 걸으면\n숲코몽이 깨어나요!',
-      imagePath: 'assets/images/onboarding/02.png',
+      imagePath: Assets.onboarding2,
     ),
     OnboardingItem(
       title: '내가 가본 공원도 숲코몽도 모두 기록돼요',
       description: '도감에서 나만의 탐험 기록을 확인해요!',
-      imagePath: 'assets/images/onboarding/03.png',
+      imagePath: Assets.onboarding3,
     ),
   ];
 

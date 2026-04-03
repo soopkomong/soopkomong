@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'url_avatar.dart';
 import 'character_parts_avatar.dart';
@@ -66,13 +67,13 @@ class CharacterAvatar extends StatelessWidget {
     // 캐릭터 설정이 없으면 템플릿 또는 기본 아이콘 표시
     if (templateId != null && templateId!.isNotEmpty) {
       return Image.asset(
-        'assets/images/characters/$templateId.png',
+        Assets.characterPortrait(templateId!),
         width: size,
         height: size,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
           return Image.asset(
-            'assets/images/characters/${templateId}_big.png',
+            Assets.characterBig(templateId!),
             width: size,
             height: size,
             fit: BoxFit.contain,
@@ -97,10 +98,10 @@ class CharacterAvatar extends StatelessWidget {
       child: ClipOval(
         clipBehavior: useCircle ? Clip.antiAlias : Clip.none,
         child: CharacterPartsAvatar(
-          baseImagePath: 'body_base.png',
-          faceImagePath: 'face_smile.png',
+          baseImagePath: Assets.partPath('body_base.png'),
+          faceImagePath: Assets.partPath('face_smile.png'),
           hairImagePath: null, // 머리카락 없음
-          clothesImagePath: 'clothes_01.png', // 기본 의상 추가
+          clothesImagePath: Assets.partPath('clothes_01.png'), // 기본 의상 추가
           size: size,
         ),
       ),

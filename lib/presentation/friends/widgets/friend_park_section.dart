@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
@@ -91,7 +92,7 @@ class FriendParkSection extends ConsumerWidget {
                                   )
                                 : const DecorationImage(
                                     image: AssetImage(
-                                      'assets/images/park_placeholder.png',
+                                      Assets.park,
                                     ),
                                     fit: BoxFit.cover,
                                   ),

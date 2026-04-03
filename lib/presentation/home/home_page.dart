@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/utils/map_helper.dart';
@@ -142,7 +143,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         final String imageId =
             'icon_marker_${type.name}_${DateTime.now().millisecondsSinceEpoch}';
         final Uint8List markerBytes = await createSvgMarkerBitmap(
-          'assets/images/Pin.svg',
+          Assets.pin,
           type.color,
           size: 150.0,
         );
@@ -487,7 +488,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           parkName: currentState.lastAcquiredParkName ?? '',
           eggPath:
               currentState.lastAcquiredPetEggPath ??
-              'assets/images/egg/egg_mystery.png',
+              Assets.eggMystery,
           isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }
@@ -505,7 +506,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           parkName: currentState.lastHatchedParkName ?? '',
           imagePath:
               currentState.lastHatchedPetImagePath ??
-              'assets/images/characters/000_big.png',
+              Assets.character000Big,
           isEn: ref.read(localeProvider) == AppLocale.en,
         );
       }
@@ -536,7 +537,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         title: null,
         actions: [
           AppBarIcon(
-            svgPath: 'assets/images/bell.svg',
+            svgPath: Assets.bell,
             onTap: () {
               ref
                   .read(friendsViewModelProvider.notifier)
@@ -549,7 +550,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           Builder(
             builder: (innerContext) {
               return AppBarIcon(
-                svgPath: 'assets/images/Hamburger.svg',
+                svgPath: Assets.hamburger,
                 onTap: () => showHamburgerMenu(
                   context: innerContext,
                   ref: ref,

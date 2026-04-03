@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/widgets/url_avatar.dart';
@@ -115,9 +116,9 @@ class NotificationTile extends StatelessWidget {
           child: const Icon(Icons.notifications, color: Colors.white, size: 20),
         );
       case NotificationType.eggObtained:
-        String eggPath = 'assets/images/egg/egg_mystery.png';
+        String eggPath = Assets.eggMystery;
         if (characterTemplateId == '000') {
-          eggPath = 'assets/images/egg/egg_tuto.png';
+          eggPath = Assets.eggTuto;
         }
         return _buildCircleIcon(
           size: 40,
@@ -135,7 +136,7 @@ class NotificationTile extends StatelessWidget {
           size: 40,
           backgroundColor: AppColors.primary100,
           child: Image.asset(
-            'assets/images/character_silhouette.png',
+            Assets.charSilhouette,
             width: 24,
             height: 24,
             errorBuilder: (_, _, _) => const Icon(

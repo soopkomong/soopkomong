@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/theme/app_shadows.dart';
@@ -31,7 +32,7 @@ class StepCountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SvgPicture.asset(
-                "assets/images/footprints.svg",
+                Assets.footprintsSvg,
                 width: 24,
                 height: 24,
                 colorFilter: ColorFilter.mode(

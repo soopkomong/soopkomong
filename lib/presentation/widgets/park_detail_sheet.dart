@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/core/utils/kakao_navi_service.dart';
@@ -355,7 +356,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InfoCard(
                   leading: SvgPicture.asset(
-                    'assets/images/Info.svg',
+                    Assets.info,
                     width: 20,
                     height: 20,
                   ),
@@ -388,7 +389,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: InfoCard(
                         leading: SvgPicture.asset(
-                          'assets/images/Info.svg',
+                          Assets.info,
                           width: 20,
                           height: 20,
                         ),
@@ -467,7 +468,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InfoCard(
                   leading: SvgPicture.asset(
-                    'assets/images/Info.svg',
+                    Assets.info,
                     width: 20,
                     height: 20,
                   ),
@@ -511,7 +512,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         false;
 
                                     Widget imageWidget = Image.asset(
-                                      'assets/images/character_silhouette.png',
+                                      Assets.charSilhouette,
                                     );
 
                                     if (template != null) {
@@ -528,7 +529,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                             ? null
                                             : BlendMode.srcIn,
                                         errorWidget: Image.asset(
-                                          'assets/images/character_silhouette.png',
+                                          Assets.charSilhouette,
                                         ),
                                       );
                                     }
@@ -625,7 +626,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SvgPicture.asset(
-                                  'assets/images/Map_pin_area.svg',
+                                  Assets.mapPinArea,
                                   width: 24,
                                   height: 24,
                                 ),
@@ -657,7 +658,7 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                     AppToast.show(context, message);
                                   },
                                   child: SvgPicture.asset(
-                                    'assets/images/Copy.svg',
+                                    Assets.copy,
                                     width: 24,
                                     height: 24,
                                     colorFilter: const ColorFilter.mode(

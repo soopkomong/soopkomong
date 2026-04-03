@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
@@ -43,7 +44,7 @@ Future<void> showHamburgerMenu({
         child: Row(
           children: [
             SvgPicture.asset(
-              'assets/images/User.svg',
+              Assets.user,
               width: 20,
               height: 20,
               colorFilter: const ColorFilter.mode(
@@ -68,7 +69,7 @@ Future<void> showHamburgerMenu({
         child: Row(
           children: [
             SvgPicture.asset(
-              'assets/images/Settings.svg',
+              Assets.settings,
               width: 20,
               height: 20,
               colorFilter: const ColorFilter.mode(

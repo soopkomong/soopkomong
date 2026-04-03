@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/router/app_route.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
@@ -57,7 +58,7 @@ class ProfileCard extends ConsumerWidget {
                     Row(
                       children: [
                         SvgPicture.asset(
-                          'assets/images/footprints.svg',
+                          Assets.footprintsSvg,
                           width: 18,
                           height: 18,
                           colorFilter: const ColorFilter.mode(

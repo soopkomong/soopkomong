@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
@@ -91,7 +92,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
           const SizedBox(height: 16),
           InfoCard(
             leading: SvgPicture.asset(
-              'assets/images/book.svg',
+              Assets.book,
               width: 24,
               height: 24,
             ),
@@ -133,7 +134,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/images/Map_pin_area.svg',
+                Assets.mapPinArea,
                 width: 24,
                 height: 24,
               ),
@@ -153,7 +154,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/images/Calendar_Check.svg',
+                Assets.calendarCheck,
                 width: 24,
                 height: 24,
               ),

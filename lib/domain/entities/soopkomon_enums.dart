@@ -1,46 +1,48 @@
+import 'package:soopkomong/core/constants/assets.dart';
+
 /// 알의 속성 타입
 enum SoopkomonEggType {
   water(
     '물',
     'Water',
-    'assets/images/egg/egg_water.png',
-    'assets/images/Water.svg',
+    Assets.eggWater,
+    Assets.water,
   ),
   flying(
     '비행',
     'Flying',
-    'assets/images/egg/egg_fly.png',
-    'assets/images/Flying.svg',
+    Assets.eggFly,
+    Assets.flying,
   ),
   psychic(
     '에스퍼',
     'Psychic',
-    'assets/images/egg/egg_mystery.png',
-    'assets/images/Psychic.svg',
+    Assets.eggMystery,
+    Assets.psychic,
   ),
   grass(
     '풀',
     'Grass',
-    'assets/images/egg/egg_grass.png',
-    'assets/images/Grass.svg',
+    Assets.eggGrass,
+    Assets.grass,
   ),
   ground(
     '땅',
     'Ground',
-    'assets/images/egg/egg_earth.png',
-    'assets/images/Ground.svg',
+    Assets.eggEarth,
+    Assets.ground,
   ),
   fire(
     '불',
     'Fire',
-    'assets/images/egg/egg_mystery.png',
-    'assets/images/Fire.svg',
+    Assets.eggMystery,
+    Assets.fire,
   ),
   tutorial(
     '튜토리얼',
     'Tutorial',
-    'assets/images/egg/egg_tuto.png',
-    'assets/images/Grass.svg',
+    Assets.eggTuto,
+    Assets.grass,
   );
 
   final String label;

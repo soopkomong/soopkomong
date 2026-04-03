@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/presentation/providers/auth_provider.dart';
@@ -48,7 +49,7 @@ class LoginButtons extends ConsumerWidget {
               children: [
                 // 카카오 로고 아이콘
                 SvgPicture.asset(
-                  'assets/images/kakao.svg',
+                  Assets.logoKakao,
                   width: 18,
                   height: 18,
                 ),
@@ -85,7 +86,7 @@ class LoginButtons extends ConsumerWidget {
               children: [
                 // 구글 로고 아이콘
                 SvgPicture.asset(
-                  'assets/images/google.svg',
+                  Assets.logoGoogle,
                   width: 20,
                   height: 20,
                 ),
@@ -125,7 +126,7 @@ class LoginButtons extends ConsumerWidget {
                 children: [
                   // 애플 로고 아이콘
                   SvgPicture.asset(
-                    'assets/images/applelogo.svg',
+                    Assets.logoApple,
                     width: 20,
                     height: 20,
                     colorFilter: const ColorFilter.mode(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
 import 'package:soopkomong/domain/entities/friend_model.dart';
@@ -61,7 +62,7 @@ class FriendProfilePage extends ConsumerWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   icon: SvgPicture.asset(
-                    'assets/images/trash.svg',
+                    Assets.trash,
                     width: 20,
                     height: 20,
                   ),
@@ -173,7 +174,7 @@ class FriendProfilePage extends ConsumerWidget {
             children: [
               _buildProgressBadge(
                 iconWidget: SvgPicture.asset(
-                  'assets/images/Leaf.svg',
+                  Assets.leaf,
                   width: 22,
                   height: 22,
                   colorFilter: const ColorFilter.mode(
@@ -187,7 +188,7 @@ class FriendProfilePage extends ConsumerWidget {
               const SizedBox(width: 8),
               _buildProgressBadge(
                 iconWidget: Image.asset(
-                  'assets/images/Sprout.png',
+                  Assets.sprout,
                   width: 30,
                   height: 30,
                   fit: BoxFit.contain,
