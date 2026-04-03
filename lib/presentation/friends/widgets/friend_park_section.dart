@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
@@ -89,13 +90,21 @@ class FriendParkSection extends ConsumerWidget {
                                     image: NetworkImage(park.imageUrl),
                                     fit: BoxFit.cover,
                                   )
-                                : const DecorationImage(
-                                    image: AssetImage(
-                                      'assets/images/park_placeholder.png',
-                                    ),
-                                    fit: BoxFit.cover,
-                                  ),
+                                : null,
                           ),
+                          child: park.imageUrl.isEmpty
+                              ? Center(
+                                  child: SvgPicture.asset(
+                                    'assets/images/Leaf.svg',
+                                    width: 32,
+                                    height: 32,
+                                    colorFilter: const ColorFilter.mode(
+                                      AppColors.gray300,
+                                      BlendMode.srcIn,
+                                    ),
+                                  ),
+                                )
+                              : null,
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
