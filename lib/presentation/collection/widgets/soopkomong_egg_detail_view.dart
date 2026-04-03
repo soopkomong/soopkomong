@@ -8,6 +8,7 @@ import 'package:soopkomong/domain/entities/soopkomon.dart';
 import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 
 class SoopkomongEggDetailView extends ConsumerWidget {
   final SoopkomonTemplate template;
@@ -21,7 +22,12 @@ class SoopkomongEggDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final int currentStepsValue = soopkomon?.traveledSteps ?? 0;
+    final int realTimeTotalSteps = ref.watch(homeViewModelProvider).totalStepCount;
+    final int currentStepsValue = (soopkomon != null)
+        ? (realTimeTotalSteps - soopkomon!.stepsAtDiscovery)
+            .clamp(0, double.infinity)
+            .toInt()
+        : 0;
     final int targetSteps = template.requiredSteps;
     final double progress = (currentStepsValue / targetSteps).clamp(0.0, 1.0);
     final locale = ref.watch(localeProvider);

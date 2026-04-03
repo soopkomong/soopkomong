@@ -9,6 +9,7 @@ import 'package:soopkomong/presentation/providers/version_provider.dart';
 import 'package:soopkomong/presentation/mypage/widgets/withdraw_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 import 'widgets/setting_tile.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -75,6 +76,55 @@ class SettingsPage extends ConsumerWidget {
                     ),
                 onTap: null,
               ),
+              const SizedBox(height: 32),
+              
+              // --- 테스트용 영역 ---
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.gray50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gray200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isEn ? 'Developer Tools' : '개발자 도구 (테스트)',
+                      style: AppTextStyles.label.copyWith(color: AppColors.gray600),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await ref.read(homeViewModelProvider.notifier).addManualSteps(1000);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(isEn ? '1,000 steps added!' : '1,000보가 추가되었습니다!'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(isEn ? 'Add 1,000 Steps' : '걸음수 1,000보 추가'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // -------------------
+
               const SizedBox(height: 40),
               _BottomActions(ref: ref),
             ],
