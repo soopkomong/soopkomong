@@ -21,42 +21,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<AppUser?> get authStateChanges =>
-      _firebaseAuth.authStateChanges().asyncMap((user) async {
+      _firebaseAuth.authStateChanges().map((user) {
         if (user == null) return null;
-
-        // Firebase 콘솔에서 계정이 삭제/비활성화된 경우를 감지하기 위해 reload() 호출
-        // ✅ reload() 실패 시 무조건 로그아웃하지 않음 (로그인 직후 일시적 실패 가능)
-        //    실패해도 기존 user 정보로 계속 진행하고, 실제 계정 삭제는 currentUser == null로 판단
-        try {
-          await user.reload();
-          final refreshedUser = _firebaseAuth.currentUser;
-          if (refreshedUser == null) {
-            // reload() 후 currentUser가 null → 계정이 실제로 삭제된 경우
-            log('User ${user.uid} no longer exists after reload. Signing out.');
-            await _firebaseAuth.signOut();
-            return null;
-          }
-          final userDoc = await _syncUserToFirestore(refreshedUser);
-          return _mapFirebaseUser(refreshedUser, userDoc);
-        } on FirebaseAuthException catch (e) {
-          // user-not-found, user-disabled: 계정 자체가 삭제/비활성화된 경우만 로그아웃
-          if (e.code == 'user-not-found' || e.code == 'user-disabled') {
-            log('User ${user.uid} is deleted or disabled (${e.code}). Signing out.');
-            try {
-              await _firebaseAuth.signOut();
-            } catch (_) {}
-            return null;
-          }
-          // 그 외 FirebaseAuthException(네트워크, 토큰 미설정 등)은 기존 user로 계속 진행
-          log('User reload failed (non-critical): ${e.code}. Continuing with current user.');
-        } catch (e) {
-          // 예상치 못한 예외도 기존 user로 계속 진행 (로그아웃 금지)
-          log('User reload unexpected error: $e. Continuing with current user.');
-        }
-
-        // reload() 실패 시 원본 user로 Firestore 동기화 진행
-        final userDoc = await _syncUserToFirestore(user);
-        return _mapFirebaseUser(user, userDoc);
+        // ⚠️ 여기서는 더 이상 비동기 reload나 Firestore 동기화를 하지 않음 (경량화)
+        // 기본 정보만 매핑하여 즉시 반환
+        return _mapFirebaseUser(user, null);
       });
 
   @override
@@ -212,23 +181,27 @@ class AuthRepositoryImpl implements AuthRepository {
       // google_sign_in 7.2.0+ 에서는 authenticate()를 사용합니다.
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
-      // 2. ID 토큰 가져오기 (Firebase 인증에 필수)
-      // 변경 사항: v7부터 authentication은 Future가 아닌 getter이며, accessToken은 포함하지 않습니다.
-      final String? idToken = googleUser.authentication.idToken;
+      // 2. 인증 정보 가져오기
+      // 변경 사항: v7부터 authentication은 Future가 아닌 getter입니다.
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       // 3. Firebase Credential 생성
       // authorizationForScopes 호출을 없애서 2차 팝업 로그인을 방지합니다. idToken만으로 인증이 가능합니다.
       final AuthCredential credential = GoogleAuthProvider.credential(
-        idToken: idToken,
-        // accessToken은 더 이상 필요하지 않음
+        idToken: googleAuth.idToken,
       );
 
       // 4. Firebase 로그인
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(credential);
 
-      // authStateChanges 스트림에서 이미 Firestore 동기화를 수행하므로 여기서 중복 호출하지 않음
-      return _mapFirebaseUser(userCredential.user, null);
+      final user = userCredential.user;
+      if (user != null) {
+        // 로그인 성공 직후 Firestore 동기화 수행
+        final userDoc = await _syncUserToFirestore(user);
+        return _mapFirebaseUser(user, userDoc);
+      }
+      return null;
     } catch (e) {
       log('Google Sign In Error: $e');
       rethrow;
@@ -290,8 +263,12 @@ class AuthRepositoryImpl implements AuthRepository {
       final UserCredential userCredential = await _firebaseAuth
           .signInWithCredential(oauthCredential);
 
-      // authStateChanges 스트림에서 이미 Firestore 동기화를 수행하므로 여기서 중복 호출하지 않음
-      return _mapFirebaseUser(userCredential.user, null);
+      final user = userCredential.user;
+      if (user != null) {
+        final userDoc = await _syncUserToFirestore(user);
+        return _mapFirebaseUser(user, userDoc);
+      }
+      return null;
     } catch (e) {
       rethrow;
     }
