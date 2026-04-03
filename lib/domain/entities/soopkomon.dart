@@ -1,3 +1,4 @@
+import 'package:soopkomong/core/constants/assets.dart';
 import 'soopkomon_enums.dart';
 
 /// 유저가 획득한 숲코몽의 인스턴스 정보를 담는 엔티티
@@ -11,11 +12,11 @@ class Soopkomon {
   String get imagePath {
     if (!isHatched) {
       if (templateId == '000') {
-        return 'assets/images/egg/egg_tuto.png';
+      return Assets.eggTuto;
       }
-      return eggType?.imagePath ?? 'assets/images/egg/egg_mystery.png';
+      return eggType?.imagePath ?? Assets.eggMystery;
     }
-    return 'assets/images/characters/${templateId}_big.png';
+    return Assets.characterBig(templateId);
   }
 
   // 1. 발견 정보

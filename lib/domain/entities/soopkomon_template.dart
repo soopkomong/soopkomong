@@ -1,3 +1,4 @@
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/enums/region.dart';
 import 'package:soopkomong/domain/entities/soopkomon_enums.dart';
 
@@ -24,7 +25,7 @@ class SoopkomonTemplate {
     // templateId가 비어있지 않은 경우 Firebase Storage 경로를 시도할 수 있음
     // 기본적으로는 로컬 에셋 경로를 반환하지만,
     // 나중에 Firestore 데이터에 따라 URL을 직접 가질 수도 있습니다.
-    return 'assets/images/characters/${templateId}_big.png';
+    return Assets.characterBig(templateId);
   }
 
   /// 🔹 Firebase Storage용 URL 생성 (템플릿 ID 기반)
@@ -34,7 +35,7 @@ class SoopkomonTemplate {
   /// 알 이미지 경로는 타입을 통해 결정됨
   String get eggImagePath {
     if (templateId == '000') {
-      return 'assets/images/egg/egg_tuto.png';
+      return Assets.eggTuto;
     }
     return eggType.imagePath;
   }

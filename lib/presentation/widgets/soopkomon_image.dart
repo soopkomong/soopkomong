@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 
 class SoopkomonImage extends StatelessWidget {
@@ -74,7 +75,7 @@ class SoopkomonImage extends StatelessWidget {
                 color: color,
                 colorBlendMode: colorBlendMode,
                 errorBuilder: (context, error, stackTrace) => Image.asset(
-                  'assets/images/character_silhouette.png',
+                  Assets.charSilhouette,
                   width: width,
                   height: height,
                   fit: fit,
@@ -109,7 +110,7 @@ class SoopkomonImage extends StatelessWidget {
         }
         return errorWidget ??
             Image.asset(
-              'assets/images/characters/000_big.png',
+              Assets.character000Big,
               width: width,
               height: height,
               fit: fit,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:soopkomong/core/constants/assets.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
 import 'package:soopkomong/core/theme/app_shadows.dart';
 import 'package:soopkomong/core/theme/app_text_styles.dart';
@@ -42,12 +43,6 @@ class _AppBottomNavigationBarState
     final labels = isEn
         ? ['Home', 'Collection', 'Parks', 'Friends']
         : ['홈', '도감', '생태공원', '친구'];
-    final baseIconPaths = [
-      'assets/images/Home',
-      'assets/images/Notebook',
-      'assets/images/Globe',
-      'assets/images/Users',
-    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -69,8 +64,21 @@ class _AppBottomNavigationBarState
               children: List.generate(labels.length, (index) {
                 final isSelected = currentIndex == index;
 
-                final iconPath =
-                    '${baseIconPaths[index]}_${isSelected ? 'Fill' : 'Line'}.svg';
+                final iconPaths = isSelected
+                    ? [
+                        Assets.homeFill,
+                        Assets.notebookFill,
+                        Assets.globeFill,
+                        Assets.usersFill
+                      ]
+                    : [
+                        Assets.homeLine,
+                        Assets.notebookLine,
+                        Assets.globeLine,
+                        Assets.usersLine
+                      ];
+
+                final iconPath = iconPaths[index];
 
                 return Expanded(
                   child: GestureDetector(
