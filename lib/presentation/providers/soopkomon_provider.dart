@@ -211,3 +211,25 @@ final totalTemplatesCountProvider = Provider<AsyncValue<int>>((ref) {
     return uniqueIds.length;
   });
 });
+/// 11. 현재 필터링된 지역 내 방문한 공원 개수
+final currentFilteredLocationsCountProvider = Provider<int>((ref) {
+  final filteredLocationsAsync = ref.watch(filteredLocationsProvider);
+  return filteredLocationsAsync.maybeWhen(
+    data: (locations) => locations.where((l) => l.isVisited).length,
+    orElse: () => 0,
+  );
+});
+
+/// 12. 현재 필터링된 지역 내 보유한 숲코몽 개수 (고유 종류 기준)
+final currentFilteredSoopkomonsCountProvider = Provider<int>((ref) {
+  final filteredTemplatesAsync = ref.watch(filteredTemplatesProvider);
+  final userSoopkomonsAsync = ref.watch(userSoopkomonProvider);
+
+  final templates = filteredTemplatesAsync.value ?? [];
+  final userCharacters = userSoopkomonsAsync.value ?? [];
+
+  if (templates.isEmpty) return 0;
+
+  final ownedIds = userCharacters.map((c) => c.templateId).toSet();
+  return templates.where((t) => ownedIds.contains(t.templateId)).length;
+});

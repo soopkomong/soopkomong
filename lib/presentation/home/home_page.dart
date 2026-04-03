@@ -141,8 +141,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       for (var type in uniqueTypes) {
         final String imageId =
             'icon_marker_${type.name}_${DateTime.now().millisecondsSinceEpoch}';
-        final Uint8List markerBytes = await createIconMarkerBitmap(
-          Icons.location_pin,
+        final Uint8List markerBytes = await createSvgMarkerBitmap(
+          'assets/images/Pin.svg',
           type.color,
           size: 150.0,
         );

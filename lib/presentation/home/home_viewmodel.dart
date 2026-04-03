@@ -649,6 +649,26 @@ class HomeNotifier extends Notifier<HomeState> {
     await _startLocationTracking();
     state = state.copyWith(isLoading: false);
   }
+
+  /// [테스트용] 수동으로 걸음수 추가
+  Future<void> addManualSteps(int steps) async {
+    final stepRepo = ref.read(stepRepositoryProvider);
+    final currentToday = await stepRepo.getTodaySteps();
+    final currentTotal = await stepRepo.getTotalSteps();
+
+    // 로컬 저장소 업데이트
+    await stepRepo.setTodaySteps(currentToday + steps);
+    await stepRepo.setTotalSteps(currentTotal + steps);
+
+    // 상태 업데이트 및 부화 체크
+    final newStepData = StepData(
+      todaySteps: currentToday + steps,
+      totalSteps: currentTotal + steps,
+    );
+    _processNewStepCount(newStepData);
+
+    debugPrint('[테스트] 걸음수 수동 추가 완료: $steps보');
+  }
 }
 
 final homeViewModelProvider = NotifierProvider<HomeNotifier, HomeState>(() {
