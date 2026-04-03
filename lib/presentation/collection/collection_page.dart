@@ -306,10 +306,15 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
 
         // 최적화: 유저 캐릭터 리스트를 맵으로 변환하여 O(1) 조회 가능하게 함
         // 안전 조치: null 아이템 제외 및 유효한 templateId만 포함
-        final Map<String, Soopkomon> userCharacterMap = {
-          for (var char in userCharacters.whereType<Soopkomon>())
-            if (char.templateId.isNotEmpty) char.templateId: char,
-        };
+        final Map<String, Soopkomon> userCharacterMap = {};
+        for (var char in userCharacters.whereType<Soopkomon>()) {
+          if (char.templateId.isEmpty) continue;
+          final existing = userCharacterMap[char.templateId];
+          // 기존에 없거나, 기존 것이 미부화인데 새것이 부화 상태라면 교체
+          if (existing == null || (!existing.isHatched && char.isHatched)) {
+            userCharacterMap[char.templateId] = char;
+          }
+        }
 
         return SliverGrid(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -343,13 +348,15 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
     // 모든 필요 데이터가 준비되었을 때만 계산 (안전한 추출로 변경)
     final locations = locationsAsync.value;
     final templates = templatesAsync.value;
-    final userCharacters = userCharactersAsync.value ?? [];
+    // locations와 templates는 각각 이미 필터링된 AsyncValue.data 상태임
 
     if (locations != null && templates != null) {
+      // 신규 추가된 전용 카운터 프로바이더 구독
+      final parkCount = ref.watch(currentFilteredLocationsCountProvider);
+      final soopkomonCount = ref.watch(currentFilteredSoopkomonsCountProvider);
+
       return CollectionProgressBadge(
-        currentCount: tabIndex == 0
-            ? locations.where((l) => l.isVisited).length
-            : userCharacters.map((c) => c.templateId).toSet().length,
+        currentCount: tabIndex == 0 ? parkCount : soopkomonCount,
         totalCount: tabIndex == 0 ? locations.length : templates.length,
         type: tabIndex == 0
             ? CollectionBadgeType.park

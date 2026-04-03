@@ -24,6 +24,17 @@ class StepRepositoryImpl implements StepRepository {
   }
 
   @override
+  Future<void> setTodaySteps(int steps) async {
+    await _prefs.setInt(_keyTodaySteps, steps);
+    
+    // 센서 기반 계산과의 정합성을 위해 baseline 조정
+    final lastPedometer = _prefs.getInt(_keyLastPedometer) ?? 0;
+    if (lastPedometer > 0) {
+      await _prefs.setInt(_keyBaselinePedometer, lastPedometer - steps);
+    }
+  }
+
+  @override
   Future<int> getTodaySteps() async {
     await _checkAndResetDailySteps();
     return _prefs.getInt(_keyTodaySteps) ?? 0;

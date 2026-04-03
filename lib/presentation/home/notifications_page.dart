@@ -101,8 +101,9 @@ class NotificationsPage extends ConsumerWidget {
                         statusText: req.status == FriendRequestStatus.pending
                             ? null
                             : (req.status == FriendRequestStatus.accepted
-                                  ? (isEn ? 'Accepted' : '수락됨')
-                                  : (isEn ? 'Declined' : '거절됨')),
+                                ? (isEn ? 'Accepted' : '수락됨')
+                                : (isEn ? 'Declined' : '거절됨')),
+                        isEn: isEn,
                       ),
                     ),
                   );

@@ -12,6 +12,9 @@ abstract class StepRepository {
   /// 현재까지의 총 누적 걸음수를 가져옵니다. (재부팅 내성 있음, 부화 로직용)
   Future<int> getTotalSteps();
 
+  /// 오늘 하루의 걸음수를 강제로 설정합니다. (테스트용)
+  Future<void> setTodaySteps(int steps);
+
   /// 앱 재설치 등 초기화 상황에서 Firestore의 누적 걸음수로 덮어씌웁니다.
   Future<void> setTotalSteps(int steps);
 

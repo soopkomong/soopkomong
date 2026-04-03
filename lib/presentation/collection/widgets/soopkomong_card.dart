@@ -10,7 +10,6 @@ import 'package:soopkomong/presentation/collection/widgets/undiscovered_characte
 import 'package:soopkomong/presentation/providers/soopkomon_provider.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/home/home_viewmodel.dart';
-import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
 
 class SoopkomongCard extends ConsumerStatefulWidget {
@@ -30,8 +29,6 @@ class SoopkomongCard extends ConsumerStatefulWidget {
 }
 
 class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
-  bool _imageLoaded = false;
-
   bool get isDiscovered => widget.userCharacter != null;
   bool get isHatched {
     if (widget.userCharacter == null) return false;
@@ -51,12 +48,12 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
               ? widget.template.eggImagePath
               : widget.template.actualImagePath);
 
-    final displayRemoteUrl = (widget.template.templateId == '000' && !isHatched)
-        ? null
-        : widget.template.remoteImagePath;
-
-    // 000번이 아니거나 부화한 경우에는 파이어 스토리지 이미지를 우선하되,
-    // 000번 알 상태일 때만 로컬 에셋(egg_tuto.png)을 사용하도록 합니다.
+    // 부화 상태이거나 아예 미획득(실루엣 표시용) 상태일 때 Firebase 원격 이미지를 시도합니다.
+    // 알 상태(isDiscovered && !isHatched)일 때만 원격 이미지를 사용하지 않고 로컬 알 이미지를 보여줍니다.
+    final bool shouldShowRemoteCharacter = isHatched || !isDiscovered;
+    final displayRemoteUrl = (shouldShowRemoteCharacter && widget.template.templateId != '000')
+        ? widget.template.remoteImagePath
+        : null;
 
     return GestureDetector(
       onTap:
@@ -89,7 +86,7 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
                 template: widget.template,
                 soopkomon: widget.userCharacter,
                 isRegionVisited: true,
-                currentSteps: widget.userCharacter?.currentTotalSteps ?? 0,
+                currentSteps: ref.read(homeViewModelProvider).totalStepCount,
               ),
             );
           },
@@ -98,101 +95,75 @@ class _SoopkomongCardState extends ConsumerState<SoopkomongCard> {
         children: [
           AspectRatio(
             aspectRatio: 1.0,
-            child: Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.gray50,
-                    borderRadius: BorderRadius.circular(24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.gray50,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SoopkomonImage(
+                        assetPath: displayAssetPath,
+                        remoteUrl: displayRemoteUrl,
+                        fit: BoxFit.contain,
+                        color: isDiscovered
+                            ? null
+                            : AppColors.black.withValues(alpha: 0.85),
+                        colorBlendMode: isDiscovered
+                            ? null
+                            : BlendMode.srcIn,
+                        errorWidget: Image.asset(
+                          'assets/images/character_silhouette.png',
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: SoopkomonImage(
-                            assetPath: displayAssetPath,
-                            remoteUrl: displayRemoteUrl,
-                            fit: BoxFit.contain,
-                            color: isDiscovered
-                                ? null
-                                : AppColors.black.withValues(alpha: 0.7),
-                            colorBlendMode: isDiscovered
-                                ? null
-                                : BlendMode.srcIn,
-                            errorWidget: Image.asset(
-                              'assets/images/character_silhouette.png',
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.contain,
-                            ),
-                            onLoaded: () {
-                              if (!_imageLoaded && mounted) {
-                                setState(() => _imageLoaded = true);
-                              }
-                            },
+                  if (isDiscovered)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: SvgPicture.asset(
+                            widget.template.eggType.iconPath,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      if (isDiscovered)
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                            ),
-                            child: ClipOval(
-                              child: SvgPicture.asset(
-                                widget.template.eggType.iconPath,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                if (!_imageLoaded)
-                  Positioned.fill(
-                    child: ShimmerLoading(
-                      width: double.infinity,
-                      height: double.infinity,
-                      borderRadius: 24,
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _imageLoaded
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.template.templateId,
-                        style: AppTextStyles.label,
-                      ),
-                      Text(
-                        isHatched ? widget.template.name : '????',
-                        style: AppTextStyles.subTitleL,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  )
-                : const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ShimmerLoading(width: 40, height: 14),
-                      SizedBox(height: 4),
-                      ShimmerLoading(width: 80, height: 20),
-                    ],
-                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.template.templateId,
+                  style: AppTextStyles.label,
+                ),
+                Text(
+                  isHatched ? widget.template.name : '????',
+                  style: AppTextStyles.subTitleL,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),

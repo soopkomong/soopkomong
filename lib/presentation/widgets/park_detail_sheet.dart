@@ -506,9 +506,11 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         ?.value
                                         .where((t) => t.templateId == petId)
                                         .firstOrNull;
-                                    final isAcquired =
+                                    final isHatched =
                                         userCharacters.value?.any(
-                                          (c) => c.templateId == petId,
+                                          (c) =>
+                                              c.templateId == petId &&
+                                              c.isHatched,
                                         ) ??
                                         false;
 
@@ -521,12 +523,12 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
                                         assetPath: template.actualImagePath,
                                         remoteUrl: template.remoteImagePath,
                                         fit: BoxFit.contain,
-                                        color: isAcquired
+                                        color: isHatched
                                             ? null
                                             : AppColors.black.withValues(
-                                                alpha: 0.7,
+                                                alpha: 0.85,
                                               ),
-                                        colorBlendMode: isAcquired
+                                        colorBlendMode: isHatched
                                             ? null
                                             : BlendMode.srcIn,
                                         errorWidget: Image.asset(

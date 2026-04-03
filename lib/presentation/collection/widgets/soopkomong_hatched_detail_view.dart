@@ -11,6 +11,7 @@ import 'package:soopkomong/domain/entities/soopkomon_template.dart';
 import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/presentation/widgets/info_card.dart';
 import 'package:soopkomong/presentation/widgets/soopkomon_image.dart';
+import 'package:soopkomong/presentation/home/home_viewmodel.dart';
 
 class SoopkomongHatchedDetailView extends ConsumerWidget {
   final SoopkomonTemplate template;
@@ -76,7 +77,7 @@ class SoopkomongHatchedDetailView extends ConsumerWidget {
               Expanded(
                 child: _buildStatCard(
                   isEn ? 'Steps walked together' : '함께 걸은 걸음',
-                  '${NumberFormat('#,###').format(soopkomon?.traveledSteps ?? 0)} ${isEn ? 'steps' : '걸음'}',
+                  '${NumberFormat('#,###').format((soopkomon != null) ? (ref.watch(homeViewModelProvider).totalStepCount - soopkomon!.stepsAtDiscovery).clamp(0, double.infinity).toInt() : 0)} ${isEn ? 'steps' : '걸음'}',
                   null,
                 ),
               ),

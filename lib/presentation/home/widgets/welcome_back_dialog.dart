@@ -4,17 +4,26 @@ import 'package:soopkomong/core/theme/app_text_styles.dart';
 
 class WelcomeBackDialog extends StatelessWidget {
   final VoidCallback onConfirm;
+  final bool isEn;
 
-  const WelcomeBackDialog({super.key, required this.onConfirm});
+  const WelcomeBackDialog({
+    super.key,
+    required this.onConfirm,
+    this.isEn = false,
+  });
 
   static Future<void> show(
     BuildContext context, {
     required VoidCallback onConfirm,
+    bool isEn = false,
   }) {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WelcomeBackDialog(onConfirm: onConfirm),
+      builder: (context) => WelcomeBackDialog(
+        onConfirm: onConfirm,
+        isEn: isEn,
+      ),
     );
   }
 
@@ -25,22 +34,26 @@ class WelcomeBackDialog extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.all(20),
-      title: const Text(
-        '반가워요!',
+      title: Text(
+        isEn ? 'Welcome back!' : '반가워요!',
         style: AppTextStyles.title,
         textAlign: TextAlign.center,
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            '다시 돌아오셨군요!\n기존에 모았던 도감과 기록들은\n그대로 안전하게 보관되어 있어요.',
+          Text(
+            isEn
+                ? 'You\'re back!\nYour collected encyclopedia and records\nare kept safe.'
+                : '다시 돌아오셨군요!\n기존에 모았던 도감과 기록들은\n그대로 안전하게 보관되어 있어요.',
             textAlign: TextAlign.center,
             style: AppTextStyles.body,
           ),
           const SizedBox(height: 20),
           Text(
-            '자, 이제 남은 모험을 다시 즐겨볼까요?',
+            isEn
+                ? 'Now, shall we enjoy the rest of the adventure?'
+                : '자, 이제 남은 모험을 다시 즐겨볼까요?',
             textAlign: TextAlign.center,
             style: AppTextStyles.subTitleM.copyWith(
               color: AppColors.primary700,
@@ -67,7 +80,10 @@ class WelcomeBackDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text('좋아요!', style: AppTextStyles.subTitleL),
+            child: Text(
+              isEn ? 'Great!' : '좋아요!',
+              style: AppTextStyles.subTitleL,
+            ),
           ),
         ),
       ],

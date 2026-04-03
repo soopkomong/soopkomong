@@ -75,6 +75,7 @@ class SettingsPage extends ConsumerWidget {
                     ),
                 onTap: null,
               ),
+              const SizedBox(height: 32),
               const SizedBox(height: 40),
               _BottomActions(ref: ref),
             ],

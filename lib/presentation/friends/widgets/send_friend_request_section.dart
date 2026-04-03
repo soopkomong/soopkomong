@@ -46,9 +46,11 @@ class _SendFriendRequestSectionState
 
       final errorMsg = isEn
           ? (e.toString().contains('already')
-                ? 'Wait for response or check your friend list.'
-                : 'Invalid code or error occurred.')
-          : e.toString().replaceAll('Exception: ', '');
+              ? 'Wait for response or check your friend list.'
+              : 'Invalid code or error occurred.')
+          : e.toString().contains('already')
+              ? '이미 친구이거나 요청 대기 중입니다.'
+              : e.toString().replaceAll('Exception: ', '');
 
       _showResultDialog(errorMsg, isEn);
     }
