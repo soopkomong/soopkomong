@@ -1,8 +1,13 @@
 class StepData {
   final int todaySteps;
   final int totalSteps;
+  final int delta; // 이번 업데이트에서 증가한 걸음수
 
-  StepData({required this.todaySteps, required this.totalSteps});
+  StepData({
+    required this.todaySteps,
+    required this.totalSteps,
+    required this.delta,
+  });
 }
 
 abstract class StepRepository {
@@ -20,6 +25,9 @@ abstract class StepRepository {
 
   /// 새로운 센서 데이터(Pedometer)를 기반으로 걸음수를 업데이트합니다.
   Future<StepData> updateFromPedometer(int pedometerValue);
+
+  /// 가입 완료 시점 등 특정 시점을 0보 기준점으로 초기화합니다.
+  Future<void> initializeBaseline(int currentSensorValue);
 
   /// 마지막으로 저장된 누적 걸음수를 초기화합니다. (테스트용)
   Future<void> clearSteps();
