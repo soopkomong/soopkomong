@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:soopkomong/presentation/widgets/shimmer_loading.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
@@ -189,33 +191,35 @@ class _ParkDetailSheetState extends ConsumerState<ParkDetailSheet> {
               });
             },
             itemBuilder: (context, index) {
+              final imageWidget = CachedNetworkImage(
+                imageUrl: images[index],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                memCacheHeight: 800, // 상세 화면이므로 명시적으로 높이 제한 (해상도 최적화)
+                placeholder: (context, url) => Container(
+                  color: AppColors.gray100,
+                  child: const Center(
+                    child: ShimmerLoading(
+                      width: double.infinity,
+                      height: double.infinity,
+                      borderRadius: 0,
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: AppColors.gray100,
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: AppColors.gray500,
+                    ),
+                  ),
+                ),
+              );
+
               return GestureDetector(
                 onTap: () => _showFullScreenImage(images, index),
-                child: Image.network(
-                  images[index],
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: AppColors.gray100,
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: AppColors.gray100,
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: AppColors.gray500,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                child: imageWidget,
               );
             },
           ),
@@ -843,27 +847,22 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
                   child: InteractiveViewer(
                     minScale: 0.5,
                     maxScale: 4.0,
-                    child: Image.network(
-                      widget.images[index],
+                    child: CachedNetworkImage(
+                      imageUrl: widget.images[index],
                       fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.white,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Icon(
-                            Icons.image_not_supported,
-                            color: AppColors.white.withValues(alpha: 0.54),
-                            size: 64,
-                          ),
-                        );
-                      },
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.white,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: AppColors.white.withValues(alpha: 0.54),
+                          size: 64,
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -23,7 +23,13 @@ class ParkCard extends ConsumerWidget {
     final bool isVisited = park.isVisited;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        if (imageUrl.startsWith('http')) {
+          // 상세 화면 진입 전 이미지 프리캐싱
+          precacheImage(CachedNetworkImageProvider(imageUrl), context);
+        }
+        onTap?.call();
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,

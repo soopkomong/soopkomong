@@ -15,6 +15,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   debugPrint("DEBUG: Application main() started.");
 
+  // 이미지 캐시 설정 상향 (기본 100MB -> 200MB, 100개 -> 200개)
+  PaintingBinding.instance.imageCache.maximumSize = 200;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 200 * 1024 * 1024;
+
   // SharedPreferences 초기화
   final prefs = await SharedPreferences.getInstance();
 

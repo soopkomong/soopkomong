@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soopkomong/core/theme/app_colors.dart';
@@ -104,6 +105,20 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         );
       },
     );
+  }
+
+  /// 선제적 프리캐싱: 현재 인덱스 기준으로 다음 몇 개의 이미지를 미리 로딩함
+  void _precacheNextImages(int currentIndex, List<Location> locations) {
+    const int cacheLimit = 4; // 다음 4개 항목(한 페이지 분량) 미리 로드
+    for (int i = currentIndex + 1;
+        i <= currentIndex + cacheLimit && i < locations.length;
+        i++) {
+      final imageUrl = locations[i].imageUrl;
+      if (imageUrl.isNotEmpty && imageUrl.startsWith('http')) {
+        // CachedNetworkImage와 캐시를 공유하기 위해 동일한 Provider 사용 (디스크 캐시 활용)
+        precacheImage(CachedNetworkImageProvider(imageUrl), context);
+      }
+    }
   }
 
   @override
@@ -251,6 +266,9 @@ class _CollectionPageState extends ConsumerState<CollectionPage> {
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
           final park = locations[index];
+          // 선제적 프리캐싱 실행 (성능 최적화)
+          _precacheNextImages(index, locations);
+          
           return ParkCard(
             park: park,
             onTap: () => _showParkDetailBottomSheet(context, park),
