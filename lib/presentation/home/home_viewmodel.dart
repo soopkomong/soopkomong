@@ -14,6 +14,7 @@ import 'package:soopkomong/presentation/providers/locale_provider.dart';
 import 'package:soopkomong/core/enums/app_locale.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:soopkomong/core/background_service.dart';
+import 'package:soopkomong/core/utils/app_toast.dart';
 
 /// Home State
 class HomeState {
@@ -480,8 +481,6 @@ class HomeNotifier extends Notifier<HomeState> {
     if (state.currentParkId != null &&
         !state.isPetAcquiredInCurrentPark &&
         state.stepsAtParkEntry != null) {
-      // 공원 진입 시 걸음수와의 차이 계산 (이 로직은 오늘 걸음수 기준으로 할지 누적 기준으로 할지 결정 필요)
-      // 여기서는 획득 로직의 일관성을 위해 일단 오늘 걸음수 기준으로 유지 (공원 내에서 100보 걷기)
       final stepsInPark = stepData.todaySteps - state.stepsAtParkEntry!;
       if (stepsInPark >= 100) {
         _acquirePet(state.currentParkId!, stepData.totalSteps);
@@ -490,8 +489,33 @@ class HomeNotifier extends Notifier<HomeState> {
 
     _syncTotalStepsToFirestore(stepData.totalSteps);
 
-    // 부화 조건 체크 및 개별 숲코몽 걸음수 실시간 동기화
-    _checkHatchingCondition(stepData.totalSteps);
+    // 증분(Delta)이 0보다 큰 경우 모든 활성 숲코몽 연동
+    if (stepData.delta > 0) {
+      _applyDeltaToSoopkomons(stepData.delta, stepData.totalSteps);
+    }
+  }
+
+  /// 모든 활성화된(부화 전 알) 숲코몽에게 동일한 증분(Delta) 적용
+  Future<void> _applyDeltaToSoopkomons(int delta, int currentTotalSteps) async {
+    final user = ref.read(userProvider).value;
+    if (user == null) return;
+
+    final pets = ref.read(userSoopkomonProvider).value ?? [];
+    final repo = ref.read(soopkomonRepositoryProvider);
+
+    for (final pet in pets) {
+      if (!pet.isHatched) {
+        // Delta만큼 더하고 최신 누적치 업데이트
+        await repo.updateSoopkomonSteps(
+          user.id,
+          pet.instanceId,
+          currentTotalSteps,
+        );
+      }
+    }
+
+    // 부화 조건 체크 (업데이트된 데이터 기반)
+    _checkHatchingCondition(currentTotalSteps);
   }
 
   void _syncTotalStepsToFirestore(int currentTotalSteps) {
@@ -664,6 +688,7 @@ class HomeNotifier extends Notifier<HomeState> {
     final newStepData = StepData(
       todaySteps: currentToday + steps,
       totalSteps: currentTotal + steps,
+      delta: steps, // 수동 추가된 만큼이 delta
     );
     _processNewStepCount(newStepData);
 

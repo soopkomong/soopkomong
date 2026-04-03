@@ -24,6 +24,18 @@ class StepRepositoryImpl implements StepRepository {
   }
 
   @override
+  Future<void> initializeBaseline(int currentSensorValue) async {
+    debugPrint('[StepRepo] Initializing mandatory baseline at signup: $currentSensorValue');
+    await _prefs.setInt(_keyLastPedometer, currentSensorValue);
+    await _prefs.setInt(_keyBaselinePedometer, currentSensorValue);
+    await _prefs.setInt(_keyTodaySteps, 0);
+    await _prefs.setInt(_keyTotalSteps, 0);
+    
+    final now = DateTime.now();
+    await _prefs.setString(_keyLastUpdateDate, "${now.year}-${now.month}-${now.day}");
+  }
+
+  @override
   Future<void> setTodaySteps(int steps) async {
     await _prefs.setInt(_keyTodaySteps, steps);
     
@@ -80,7 +92,7 @@ class StepRepositoryImpl implements StepRepository {
       final now = DateTime.now();
       await _prefs.setString(_keyLastUpdateDate, "${now.year}-${now.month}-${now.day}");
       
-      return StepData(todaySteps: 0, totalSteps: 0);
+      return StepData(todaySteps: 0, totalSteps: 0, delta: 0);
     }
 
     // 2. 날짜 갱신 여부 체크: 날짜가 바뀌면 전달받은 값을 Baseline으로 설정
@@ -111,7 +123,11 @@ class StepRepositoryImpl implements StepRepository {
     await _prefs.setInt(_keyTodaySteps, calculatedToday);
     await _prefs.setInt(_keyLastPedometer, pedometerValue);
 
-    return StepData(todaySteps: calculatedToday, totalSteps: totalSteps);
+    return StepData(
+      todaySteps: calculatedToday,
+      totalSteps: totalSteps,
+      delta: delta > 0 ? delta : 0,
+    );
   }
 
   @override
