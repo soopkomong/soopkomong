@@ -51,9 +51,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         '디버그: [Router] 리다이렉트 체크 - 경로: $matchedLocation, 인증상태: ${authState.isLoading ? "로딩중" : (authState.value != null ? "로그인됨" : "로그아웃됨")}',
       );
 
-      // (1) 로딩 중일 때는 절대 이동 판단을 내리지 않음 (중요: 리다이렉트 루프 방지)
-      if (userAsync.isLoading || authState.isLoading) {
-        debugPrint('디버그: [Router] 데이터 로딩 대기 중... (현재 경로: $matchedLocation)');
+      // (1) 로딩 중일 때는 판단을 미룸
+      if (authState.isLoading) {
+        debugPrint('디버그: [Router] 인증 상태 로딩 중...');
         return null;
       }
 
@@ -69,41 +69,52 @@ final routerProvider = Provider<GoRouter>((ref) {
       // (3) 로그아웃 상태 확인
       if (authState.hasValue && authState.value == null) {
         if (isLoggingIn || isOnboarding) return null;
-        debugPrint('디버그: [Router] -> 로그인 화면으로 이동');
+        debugPrint('디버그: [Router] 인증 만료 -> 로그인 화면으로 이동');
         return AppRoute.signIn.path;
       }
 
-      // (4) 유저 데이터 확인 (로그인 성공 상태)
-      final user = userAsync.value;
-      if (user != null) {
-        // 로그인/온보딩 페이지에 남아있으면 안 되므로 적절한 다음 단계로 이동
-        if (isLoggingIn || isOnboarding) {
+      // (4) 로그인 성공 상태
+      if (isLoggedIn) {
+        // 상세 유저 데이터 로딩 대기
+        if (userAsync.isLoading) {
+          debugPrint('디버그: [Router] 유저 상세 데이터 로딩 중...');
+          return null;
+        }
+
+        final user = userAsync.value;
+        if (user != null) {
           // 필수 설정이 남아있으면 해당 단계로, 아니면 홈으로
-          if (!user.hasCharacter) return AppRoute.characterCustomize.path;
-          if (!user.hasName) return AppRoute.nameSetting.path;
-          if (!user.hasSeenTutorial) return AppRoute.tutorialGuide.path;
-          debugPrint('디버그: [Router] -> 메인 홈으로 이동');
-          return AppRoute.home.path;
+          if (isLoggingIn || isOnboarding) {
+            if (!user.hasCharacter) return AppRoute.characterCustomize.path;
+            if (!user.hasName) return AppRoute.nameSetting.path;
+            if (!user.hasSeenTutorial) return AppRoute.tutorialGuide.path;
+            debugPrint('디버그: [Router] -> 메인 홈으로 이동');
+            return AppRoute.home.path;
+          }
+
+          // 필수 설정 단계 체크
+          if (!user.hasCharacter) {
+            if (isCustomizing) return null;
+            return AppRoute.characterCustomize.path;
+          }
+          if (!user.hasName) {
+            if (isNameSetting) return null;
+            return AppRoute.nameSetting.path;
+          }
+          if (!user.hasSeenTutorial) {
+            if (isTutorial) return null;
+            return AppRoute.tutorialGuide.path;
+          }
+
+          return null;
         }
 
-        // 필수 설정 단계 체크 (이미 해당 페이지라면 null 반환하여 이동 중단)
-        if (!user.hasCharacter) {
-          if (isCustomizing) return null;
-          debugPrint('디버그: [Router] -> 캐릭터 생성(커스텀) 창으로 이동');
-          return AppRoute.characterCustomize.path;
+        // 로그인되어 있는데 유저 데이터가 에러인 경우 (잠시 대기 후 재시도하거나 로그아웃 처리 고민)
+        if (userAsync.hasError) {
+          debugPrint('디버그: [Router] 유저 데이터 로드 에러: ${userAsync.error}');
+          // 일단 홈으로 보내서 에러 UI를 보여주거나 대기하게 함 (로그인 화면으로 무작정 튕기지 않음)
+          return null;
         }
-        if (!user.hasName) {
-          if (isNameSetting) return null;
-          debugPrint('디버그: [Router] -> 닉네임 설정 창으로 이동');
-          return AppRoute.nameSetting.path;
-        }
-        if (!user.hasSeenTutorial) {
-          if (isTutorial) return null;
-          debugPrint('디버그: [Router] -> 튜토리얼 가이드 창으로 이동');
-          return AppRoute.tutorialGuide.path;
-        }
-
-        return null;
       }
 
       // (5) user가 null이고 authState도 값이 없는 경우 (isDeleted 등으로 null 반환된 경우)
